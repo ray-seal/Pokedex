@@ -238,6 +238,83 @@
     "stage": 3
   },
   {
+    "id": 35,
+    "name": "Clefairy",
+    "type": ["Fairy"],
+    "sprite": "/images/clefairy.png",
+    "stage": 1
+  },
+  {
+    "id": 36,
+    "name": "Clefable",
+    "type": ["Fairy"],
+    "sprite": "/images/clefable.png",
+    "stage": 2
+  },
+  {
+    "id": 37,
+    "name": "Vulpix",
+    "type": ["Fire"],
+    "sprite": "/images/vulpix.png",
+    "stage": 1
+  },
+  {
+    "id": 38,
+    "name": "Ninetales",
+    "type": ["Fire"],
+    "sprite": "/images/ninetales.png",
+    "stage": 2
+  },
+  {
+    "id": 39,
+    "name": "Jigglypuff",
+    "type": ["Normal", "Fairy"],
+    "sprite": "/images/jigglypuff.png",
+    "stage": 1
+  },
+  {
+    "id": 40,
+    "name": "Wigglytuff",
+    "type": ["Normal", "Fairy"],
+    "sprite": "/images/wigglytuff.png",
+    "stage": 2
+  },
+  {
+    "id": 41,
+    "name": "Zubat",
+    "type": ["Flying", "Poison"],
+    "sprite": "/images/zubat.png",
+    "stage": 1
+  },
+  {
+    "id": 42,
+    "name": "Golbat",
+    "type": ["Flying", "Poison"],
+    "sprite": "/images/golbat.png",
+    "stage": 2
+  },
+  {
+    "id": 43,
+    "name": "Oddish",
+    "type": ["Grass", "Poison"],
+    "sprite": "/images/oddish.png",
+    "stage": 1
+  },
+  {
+    "id": 44,
+    "name": "Gloom",
+    "type": ["Grass", "Poison"],
+    "sprite": "/images/gloom.png",
+    "stage": 2
+  },
+  {
+    "id": 45,
+    "name": "Vileplume",
+    "type": ["Grass", "Poison"],
+    "sprite": "/images/vileplume.png",
+    "stage": 3
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
