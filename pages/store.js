@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import data from '../public/pokedex.json';
 
 export default function Store() {
@@ -25,7 +26,6 @@ export default function Store() {
   const handlePurchase = (type) => {
     if (!game) return;
 
-    // Check if Master Ball is unlocked
     if (type === "masterball") {
       const nonLegendary = data.filter(p => !p.legendary).map(p => p.id);
       const caughtAll = nonLegendary.every(id => game.pokedex.includes(id));
@@ -43,7 +43,7 @@ export default function Store() {
 
     const updatedGame = { ...game };
     updatedGame.coins -= cost;
-    updatedGame[`${type}s`] += 1; // adds to pokeballs, greatballs, etc.
+    updatedGame[`${type}s`] += 1;
 
     saveGame(updatedGame);
     setMessage(`✅ You bought a ${type.replace("ball", " Ball")}!`);
@@ -73,6 +73,9 @@ export default function Store() {
       </button>
 
       <p style={{ marginTop: '20px' }}>{message}</p>
+
+      <br />
+      <Link href="/">🏠 Back to Main Page</Link>
     </main>
   );
 }
