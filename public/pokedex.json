@@ -197,7 +197,7 @@
   },
   {
     "id": 29,
-    "name": "Nidoran Fem",
+    "name": "Nidoran♀",
     "type": ["Poison"],
     "sprite": "/images/nidoranf.png",
     "stage": 1
@@ -218,7 +218,7 @@
   },
   {
     "id": 32,
-    "name": "Nidoran Male",
+    "name": "Nidoran♂",
     "type": ["Poison"],
     "sprite": "/images/nidoranm.png",
     "stage": 1
