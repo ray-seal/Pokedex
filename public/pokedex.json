@@ -3,7 +3,7 @@
     "id": 1,
     "name": "Bulbasaur",
     "type": ["Grass", "Poison"],
-    "sprite": "/images/IMG_4126.png",
+    "sprite": "/images/bulbasaur.png",
     "stage": 1
   },
   {
