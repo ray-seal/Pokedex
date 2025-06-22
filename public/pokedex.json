@@ -79,7 +79,7 @@
   {
     "id": 12,
     "name": "Butterfree",
-    "type": ["Bug", Flying"],
+    "type": ["Bug", "Flying"],
     "sprite": "/images/butterfree.png",
     "stage": 3
   },
