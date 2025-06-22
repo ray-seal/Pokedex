@@ -3,30 +3,71 @@
     "id": 1,
     "name": "Bulbasaur",
     "type": ["Grass", "Poison"],
-    "sprite": "/images/001.png",
+    "sprite": "/images/bulbasaur.png",
     "stage": 1
   },
   {
     "id": 2,
     "name": "Ivysaur",
     "type": ["Grass", "Poison"],
-    "sprite": "/images/002.png",
+    "sprite": "/images/ivysaur.png",
     "stage": 2
   },
   {
     "id": 3,
     "name": "Venusaur",
     "type": ["Grass", "Poison"],
-    "sprite": "/images/003.png",
+    "sprite": "/images/venusaur.png",
     "stage": 3
   },
-  ...
   {
-    "id": 151,
-    "name": "Mew",
-    "type": ["Psychic"],
-    "sprite": "/images/151.png",
-    "stage": 1,
+    "id": 4,
+    "name": "Charmander",
+    "type": ["Fire"],
+    "sprite": "/images/charmander.png",
+    "stage": 1
+  },
+  {
+    "id": 5,
+    "name": "Charmeleon",
+    "type": ["Fire"],
+    "sprite": "/images/charmeleon.png",
+    "stage": 2
+  },
+  {
+    "id": 6,
+    "name": "Charizard",
+    "type": ["Fire", "Flying"],
+    "sprite": "/images/charizard.png",
+    "stage": 3
+  },
+  {
+    "id": 7,
+    "name": "Squirtle",
+    "type": ["Water"],
+    "sprite": "/images/squirtle.png",
+    "stage": 1
+  },
+  {
+    "id": 8,
+    "name": "Wartortle",
+    "type": ["Water"],
+    "sprite": "/images/wartortle.png",
+    "stage": 2
+  },
+  {
+    "id": 9,
+    "name": "Blastoise",
+    "type": ["Water"],
+    "sprite": "/images/blastoise.png",
+    "stage": 3
+  },
+  {
+    "id": 144,
+    "name": "Articuno",
+    "type": ["Ice", "Flying"],
+    "sprite": "/images/articuno.png",
+    "stage": 3,
     "legendary": true
   }
 ]
