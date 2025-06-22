@@ -98,6 +98,13 @@
     "stage": 2
   },
   {
+    "id": 15,
+    "name": "Beedrill",
+    "type": ["Bug", "Poison"],
+    "sprite": "/images/beedrill.png",
+    "stage": 3
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
