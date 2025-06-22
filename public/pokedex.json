@@ -105,6 +105,27 @@
     "stage": 3
   },
   {
+    "id": 16,
+    "name": "Pidgey",
+    "type": ["Normal", "Flying"],
+    "sprite": "/images/pidgey.png",
+    "stage": 1
+  },
+  {
+    "id": 17,
+    "name": "Pidgeotto",
+    "type": ["Normal", "Flying"],
+    "sprite": "/images/pidgeotto.png",
+    "stage": 2
+  },
+  {
+    "id": 18,
+    "name": "Pidgeot",
+    "type": ["Normal", "Flying"],
+    "sprite": "/images/pidgeot.png",
+    "stage": 3
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
