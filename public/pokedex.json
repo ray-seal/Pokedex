@@ -182,6 +182,62 @@
     "stage": 2
   },
   {
+    "id": 27,
+    "name": "Sandshrew",
+    "type": ["Ground"],
+    "sprite": "/images/sandshrew.png",
+    "stage": 1
+  },
+  {
+    "id": 28,
+    "name": "Sandslash",
+    "type": ["Ground"],
+    "sprite": "/images/sandslash.png",
+    "stage": 2
+  },
+  {
+    "id": 29,
+    "name": "Nidoran Fem",
+    "type": ["Poison"],
+    "sprite": "/images/nidoranf.png",
+    "stage": 1
+  },
+  {
+    "id": 30,
+    "name": "Nidorina",
+    "type": ["Poison"],
+    "sprite": "/images/nidorina.png",
+    "stage": 2
+  },
+  {
+    "id": 31,
+    "name": "Nidoqueen",
+    "type": ["Ground", "Poison"],
+    "sprite": "/images/nidoqueen.png",
+    "stage": 3
+  },
+  {
+    "id": 32,
+    "name": "Nidoran Male",
+    "type": ["Poison"],
+    "sprite": "/images/nidoranm.png",
+    "stage": 1
+  },
+  {
+    "id": 33,
+    "name": "Nidorino",
+    "type": ["Poison"],
+    "sprite": "/images/nidorino.png",
+    "stage": 2
+  },
+  {
+    "id": 34,
+    "name": "Nidoking",
+    "type": ["Ground", "Poison"],
+    "sprite": "/images/nidoking.png",
+    "stage": 3
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
