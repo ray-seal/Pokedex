@@ -126,6 +126,62 @@
     "stage": 3
   },
   {
+    "id": 19,
+    "name": "Rattata",
+    "type": ["Normal"],
+    "sprite": "/images/rattata.png",
+    "stage": 1
+  },
+  {
+    "id": 20,
+    "name": "Raticate",
+    "type": ["Normal"],
+    "sprite": "/images/raticate.png",
+    "stage": 2
+  },
+  {
+    "id": 21,
+    "name": "Spearow",
+    "type": ["Normal", "Flying"],
+    "sprite": "/images/spearow.png",
+    "stage": 1
+  },
+  {
+    "id": 22,
+    "name": "Fearow",
+    "type": ["Normal", "Flying"],
+    "sprite": "/images/fearow.png",
+    "stage": 2
+  },
+  {
+    "id": 23,
+    "name": "Ekans",
+    "type": ["Poison"],
+    "sprite": "/images/ekans.png",
+    "stage": 1
+  },
+  {
+    "id": 24,
+    "name": "Arbok",
+    "type": ["Poison"],
+    "sprite": "/images/arbok.png",
+    "stage": 2
+  },
+  {
+    "id": 25,
+    "name": "Pikachu",
+    "type": ["Electric"],
+    "sprite": "/images/pikachu.png",
+    "stage": 1
+  },
+  {
+    "id": 26,
+    "name": "Raichu",
+    "type": ["Electric"],
+    "sprite": "/images/raichu.png",
+    "stage": 2
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
