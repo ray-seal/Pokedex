@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import data from '../public/pokedex.json';
 
 export default function Home() {
@@ -6,7 +7,6 @@ export default function Home() {
   const [wild, setWild] = useState(null);
   const [message, setMessage] = useState("");
 
-  // Load or start new game
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (!saved) {
@@ -29,20 +29,17 @@ export default function Home() {
     }
   }, []);
 
-  // Save game state
   const saveGame = (updatedGame) => {
     setGame(updatedGame);
     localStorage.setItem("gameState", JSON.stringify(updatedGame));
   };
 
-  // Random encounter
   const search = () => {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
   };
 
-  // Catching logic
   const tryCatch = (ballType) => {
     if (!wild) return;
 
@@ -54,7 +51,7 @@ export default function Home() {
 
     const updatedGame = { ...game };
 
-    // Deduct ball
+    // Deduct ball and apply rules
     if (ballType === 'pokeball') {
       if (game.pokeballs < 1) return setMessage("No Pokéballs left!");
       if (stage > 1 || legendary) return setMessage("This Pokémon resists a Pokéball!");
@@ -79,7 +76,7 @@ export default function Home() {
       updatedGame.masterballs -= 1;
     }
 
-    // Success — add to inventory and Pokédex
+    // Success
     inventory[wild.id] = caughtBefore + 1;
     if (!pokedex.includes(wild.id)) pokedex.push(wild.id);
 
@@ -97,7 +94,9 @@ export default function Home() {
     <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🎮 Pokémon Catcher</h1>
       <p>💰 Coins: {game.coins}</p>
-      <p>🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}</p>
+      <p>
+        🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}
+      </p>
 
       <button onClick={search}>🔍 Search for Pokémon</button>
 
@@ -117,7 +116,6 @@ export default function Home() {
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
       <hr />
-
       <h2>📘 Pokédex</h2>
       <ul>
         {game.pokedex.map(id => {
@@ -129,6 +127,9 @@ export default function Home() {
           );
         })}
       </ul>
+
+      <br />
+      <Link href="/store">🛍️ Visit the PokéMart</Link>
     </main>
   );
 }
