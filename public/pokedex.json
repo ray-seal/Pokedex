@@ -84,6 +84,20 @@
     "stage": 3
   },
   {
+    "id": 13,
+    "name": "Weedle",
+    "type": ["Bug", "Poison"],
+    "sprite": "/images/weedle.png",
+    "stage": 1
+  },
+  {
+    "id": 14,
+    "name": "Kakuna",
+    "type": ["Bug", "Poison"],
+    "sprite": "/images/kakuna.png",
+    "stage": 2
+  },
+  {
     "id": 144,
     "name": "Articuno",
     "type": ["Ice", "Flying"],
