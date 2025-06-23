@@ -97,13 +97,22 @@ export default function Home() {
 
   // --- BATTLE RENDERING ---
   if (view === 'battle') {
-    return (
-      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-        <h1>⚔️ Battle Mode</h1>
-        <Battle game={game} setGame={setGame} back={() => { setView('encounter'); }} />
-        <button onClick={() => { setView('encounter'); }} style={{ marginTop: '20px' }}>
-          ⬅️ Back to Encounter
-        </button>
+  return (
+    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+      <h1>⚔️ Battle Mode</h1>
+      <Battle
+        game={game}
+        setGame={setGame}
+        wild={wild}           // pass the current wild pokemon
+        setWild={setWild}     // pass setter (optional)
+        back={() => { setView('encounter'); }}
+      />
+      <button onClick={() => { setView('encounter'); }} style={{ marginTop: '20px' }}>
+        ⬅️ Back to Encounter
+      </button>
+    </main>
+  );
+}
       </main>
     );
   }
