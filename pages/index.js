@@ -141,6 +141,7 @@ export default function Home() {
       <Link href="/store">🛍️ Visit the PokéMart</Link>
       <br />
       <Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
+      <br />
       <Link href="/arena">⚔️ Enter Arena</Link>
     </main>
   );
