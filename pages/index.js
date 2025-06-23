@@ -3,6 +3,7 @@ import Store from './components/Store';
 import Pokedex from './components/Pokedex';
 import Catch from './components/Catch';
 import Lab from './components/Lab';
+import Battle from './components/Battle';
 
 export default function App() {
   const [game, setGame] = useState(null);
@@ -27,14 +28,13 @@ export default function App() {
     }
   }, []);
 
-  // Save game to localStorage whenever it changes
+  // Save to localStorage on change
   useEffect(() => {
     if (game) {
       localStorage.setItem('gameState', JSON.stringify(game));
     }
   }, [game]);
 
-  // Reset game completely
   const resetGame = () => {
     localStorage.removeItem('gameState');
     window.location.reload();
@@ -55,6 +55,7 @@ export default function App() {
       {view === 'main' && (
         <>
           <button onClick={() => setView('catch')}>🔍 Search for Pokémon</button>
+          <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
           <button onClick={() => setView('pokedex')}>📖 View Pokédex</button>
           <button onClick={() => setView('store')}>🏪 Visit Store</button>
           <button onClick={() => setView('lab')}>🔬 Professor Oak’s Lab</button>
@@ -64,6 +65,9 @@ export default function App() {
 
       {view === 'catch' && (
         <Catch game={game} setGame={setGame} back={() => setView('main')} />
+      )}
+      {view === 'battle' && (
+        <Battle game={game} setGame={setGame} back={() => setView('main')} />
       )}
       {view === 'pokedex' && (
         <Pokedex game={game} back={() => setView('main')} />
