@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import data from '../public/pokedex.js';
-import Battle from '../components/battle.js';
+import { Battle } from '../components/battle.js';
 
 export default function Home() {
   const [game, setGame] = useState(null);
@@ -97,22 +97,19 @@ export default function Home() {
 
   // --- BATTLE RENDERING ---
   if (view === 'battle') {
-  return (
-    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-      <h1>⚔️ Battle Mode</h1>
-      <Battle
-        game={game}
-        setGame={setGame}
-        wild={wild}           // pass the current wild pokemon
-        setWild={setWild}     // pass setter (optional)
-        back={() => { setView('encounter'); }}
-      />
-      <button onClick={() => { setView('encounter'); }} style={{ marginTop: '20px' }}>
-        ⬅️ Back to Encounter
-      </button>
-    </main>
-  );
-}
+    return (
+      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+        <h1>⚔️ Battle Mode</h1>
+        <Battle
+          game={game}
+          setGame={setGame}
+          wild={wild}
+          setWild={setWild}
+          back={() => { setView('encounter'); }}
+        />
+        <button onClick={() => { setView('encounter'); }} style={{ marginTop: '20px' }}>
+          ⬅️ Back to Encounter
+        </button>
       </main>
     );
   }
