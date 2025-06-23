@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import pokedex from '../public/pokedex.json';
+import pokedex from '../public/pokedex.js';
 
 export default function Battle({ game, setGame, back }) {
   const [wild, setWild] = useState(null);
