@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import data from '../public/pokedex.js';
-
-function Battle({ game, setGame, back }) {
-  const [wild, setWild] = useState(null);
+function Battle({ game, setGame, back, wild: propWild, setWild: setParentWild }) {
+  const [wild, setWild] = useState(propWild || null);
   const [enemyHP, setEnemyHP] = useState(100);
   const [playerHP, setPlayerHP] = useState(100);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const random = data[Math.floor(Math.random() * data.length)];
-    setWild(random);
-    setEnemyHP(100);
-    setPlayerHP(100);
-    setMessage(`A wild ${random.name} appeared!`);
-  }, []);
+    if (propWild) {
+      setWild(propWild);
+      setEnemyHP(100);
+      setPlayerHP(100);
+      setMessage(`A wild ${propWild.name} appeared!`);
+    } else {
+      const random = data[Math.floor(Math.random() * data.length)];
+      setWild(random);
+      setEnemyHP(100);
+      setPlayerHP(100);
+      setMessage(`A wild ${random.name} appeared!`);
+      if (setParentWild) setParentWild(random); // sync up if possible
+    }
+    // eslint-disable-next-line
+  }, [propWild]);
 
   const attack = () => {
     if (!wild) return;
@@ -42,6 +48,7 @@ function Battle({ game, setGame, back }) {
   const nextBattle = () => {
     const random = data[Math.floor(Math.random() * data.length)];
     setWild(random);
+    if (setParentWild) setParentWild(random);
     setEnemyHP(100);
     setPlayerHP(100);
     setMessage(`A wild ${random.name} appeared!`);
@@ -75,5 +82,4 @@ function Battle({ game, setGame, back }) {
   );
 }
 
-// Export as named export for index.js re-export compatibility
 export { Battle };
