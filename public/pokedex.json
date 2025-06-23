@@ -1007,7 +1007,7 @@
     "sprite": "/images/articuno.png",
     "stage": 3,
     "legendary": true
-  }
+  },
   {
     "id": 145,
     "name": "Zapdos",
@@ -1060,5 +1060,5 @@
     "sprite": "/images/mew.png",
     "stage": 3,
     "legendary": true
-  },
+  }
 ]
