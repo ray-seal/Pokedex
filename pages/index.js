@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import Store from './components/Store';
-import Pokedex from './components/Pokedex';
-import Catch from './components/Catch';
-import Lab from './components/Lab';
-import Battle from './components/Battle';
+import Store from './pages/store';
+import Pokedex from './public/pokedex';
+import Catch from './components/catch';
+import Lab from './pages/lab';
+import Battle from './components/battle';
 
 export default function App() {
   const [game, setGame] = useState(null);
