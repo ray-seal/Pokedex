@@ -717,7 +717,7 @@
     "id": 103,
     "name": "Exeggutor",
     "type": ["Grass", "Psychic"],
-    "sprite": "/images/exeggcutor.png",
+    "sprite": "/images/exeggutor.png",
     "stage": 2
   },
   {
