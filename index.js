@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import data from '../public/pokedex.js';
@@ -37,12 +36,12 @@ export default function Home() {
     localStorage.setItem("gameState", JSON.stringify(updatedGame));
   };
 
-  // Modified: automatically enter battle on encounter
+  // Search for a wild Pokémon
   const search = () => {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
-    setView('battle');
+    setView('encounter');
   };
 
   const tryCatch = (ballType) => {
@@ -91,19 +90,70 @@ export default function Home() {
     saveGame(updatedGame);
     setMessage(`You caught ${wild.name}!`);
     setWild(null);
+    setView('main');
   };
 
   if (!game) return <p>Loading...</p>;
 
-  // --- FIXED BATTLE RENDERING ---
+  // --- BATTLE RENDERING ---
   if (view === 'battle') {
     return (
       <main style={{ fontFamily: 'monospace', padding: '20px' }}>
         <h1>⚔️ Battle Mode</h1>
-        <Battle game={game} setGame={setGame} back={() => { setView('main'); setWild(null); }} />
-        <button onClick={() => { setView('main'); setWild(null); }} style={{ marginTop: '20px' }}>
-          ⬅️ Back to Catching
+        <Battle game={game} setGame={setGame} back={() => { setView('encounter'); }} />
+        <button onClick={() => { setView('encounter'); }} style={{ marginTop: '20px' }}>
+          ⬅️ Back to Encounter
         </button>
+      </main>
+    );
+  }
+  // ------------------------------
+
+  // --- ENCOUNTER RENDERING ---
+  if (view === 'encounter' && wild) {
+    return (
+      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+        <h1>🎮 Pokémon Catcher</h1>
+        <p>💰 Coins: {game.coins}</p>
+        <p>
+          🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}
+        </p>
+        <hr />
+        <h2>🌲 Wild Encounter</h2>
+        <p>
+          <img src={wild.sprite} alt={wild.name} width="64" style={{ verticalAlign: 'middle' }} /> <b>{wild.name}</b>
+          {wild.legendary && <span> ⭐ Legendary</span>}
+        </p>
+        <p>Stage: {wild.stage}</p>
+        <div>
+          <button onClick={() => tryCatch('pokeball')}>Throw Pokéball</button>{" "}
+          <button onClick={() => tryCatch('greatball')}>Throw Great Ball</button>{" "}
+          <button onClick={() => tryCatch('ultraball')}>Throw Ultra Ball</button>{" "}
+          <button onClick={() => tryCatch('masterball')}>Throw Master Ball</button>
+        </div>
+        <div style={{ marginTop: '12px' }}>
+          <button onClick={() => setView('battle')}>⚔️ Battle Instead</button>
+        </div>
+        <div style={{ marginTop: '12px' }}>
+          <button onClick={() => { setWild(null); setView('main'); setMessage(""); }}>Run Away</button>
+        </div>
+        {message && <p style={{ marginTop: '10px' }}>{message}</p>}
+        <hr />
+        <h2>📘 Pokédex</h2>
+        <ul>
+          {game.pokedex.map(id => {
+            const p = data.find(mon => mon.id === id);
+            return (
+              <li key={id}>
+                <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{game.inventory[id]}
+              </li>
+            );
+          })}
+        </ul>
+        <br />
+        <Link href="/store">🛍️ Visit the PokéMart</Link>
+        <br />
+        <Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
       </main>
     );
   }
@@ -118,11 +168,7 @@ export default function Home() {
         🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}
       </p>
       <button onClick={search}>🔍 Search for Pokémon</button>
-
-      {/* Removed the {wild && ...} block for encounter details and battle button */}
-
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
-
       <hr />
       <h2>📘 Pokédex</h2>
       <ul>
@@ -135,7 +181,6 @@ export default function Home() {
           );
         })}
       </ul>
-
       <br />
       <Link href="/store">🛍️ Visit the PokéMart</Link>
       <br />
