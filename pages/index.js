@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import data from '../public/pokedex.js';
 import dynamic from 'next/dynamic';
 
 const Battle = dynamic(() => import('../components/battle.js'), { ssr: false });
 
 export default function Home() {
+  const [data, setData] = useState([]); // pokedex data
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [message, setMessage] = useState('');
   const [inBattle, setInBattle] = useState(false);
 
+  // Fetch pokedex.json from public folder
   useEffect(() => {
+    fetch('/pokedex.json')
+      .then(res => res.json())
+      .then(json => setData(json))
+      .catch(err => console.error('Failed to load pokedex:', err));
+  }, []);
+
+  useEffect(() => {
+    if (!data.length) return; // wait until pokedex is loaded
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved) {
       const starter = prompt('Choose your starter: Bulbasaur, Charmander or Squirtle');
@@ -31,7 +40,7 @@ export default function Home() {
     } else {
       setGame(saved);
     }
-  }, []);
+  }, [data]);
 
   const saveGame = (updatedGame) => {
     setGame(updatedGame);
@@ -42,7 +51,7 @@ export default function Home() {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
-    setInBattle(false); // reset any active battle
+    setInBattle(false);
   };
 
   const tryCatch = (ballType) => {
@@ -91,7 +100,7 @@ export default function Home() {
     setInBattle(false);
   };
 
-  if (!game) return <p>Loading...</p>;
+  if (!data.length || !game) return <p>Loading...</p>;
 
   return (
     <main style={{ fontFamily: 'monospace', padding: '20px' }}>
