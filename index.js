@@ -42,7 +42,7 @@ export default function Home() {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
-    setView('battle'); // <-- automatically switch to battle view
+    setView('battle');
   };
 
   const tryCatch = (ballType) => {
