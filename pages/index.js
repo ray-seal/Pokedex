@@ -40,10 +40,6 @@ export default function Home() {
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
   };
-  <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
-  {view === 'battle' && (
-  <Battle game={game} setGame={setGame} back={() => setView('main')} />
-)}
 
   const tryCatch = (ballType) => {
     if (!wild) return;
@@ -117,6 +113,10 @@ export default function Home() {
           <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
         </div>
       )}
+ <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
+    {view === 'battle' && (
+  <Battle game={game} setGame={setGame} back={() => setView('main')} />
+)}
 
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
