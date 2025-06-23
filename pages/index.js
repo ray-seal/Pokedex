@@ -33,6 +33,7 @@ export default function Home() {
         masterballs: 0,
         pokedex: [starterData.id],
         inventory: { [starterData.id]: 1 }
+        playerHP: 100
       };
       setGame(newGame);
       localStorage.setItem('gameState', JSON.stringify(newGame));
