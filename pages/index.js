@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import data from '../public/pokedex.js
-import Battle from './components/battle.js';
+import data from '../public/pokedex.js';
+import Battle from '../components/battle.js'; // <-- fixed import path
 
 export default function Home() {
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [message, setMessage] = useState("");
+  const [view, setView] = useState('main'); // <-- add view state
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
@@ -91,6 +92,17 @@ export default function Home() {
 
   if (!game) return <p>Loading...</p>;
 
+  // Main view
+  if (view === 'battle') {
+    return (
+      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+        <h1>⚔️ Battle Mode</h1>
+        <Battle game={game} setGame={setGame} back={() => setView('main')} />
+        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>⬅️ Back to Catching</button>
+      </main>
+    );
+  }
+
   return (
     <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🎮 Pokémon Catcher</h1>
@@ -100,7 +112,7 @@ export default function Home() {
       </p>
 
       <button onClick={search}>🔍 Search for Pokémon</button>
- <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
+      <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
 
       {wild && (
         <div style={{ marginTop: '20px' }}>
@@ -114,10 +126,6 @@ export default function Home() {
           <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
         </div>
       )}
-
-    {view === 'battle' && (
-  <Battle game={game} setGame={setGame} back={() => setView('main')} />
-)}
 
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
@@ -136,8 +144,8 @@ export default function Home() {
 
       <br />
       <Link href="/store">🛍️ Visit the PokéMart</Link>
-          <br />
-<Link href="/lab">🧪 Visit Professor Oak's Lab</link>
+      <br />
+      <Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
     </main>
   );
 }
