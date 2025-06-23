@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import data from '../public/pokedex.json';
+import data from '../public/pokedex.js
+import Battle from './components/battle.js';
 
 export default function Home() {
   const [game, setGame] = useState(null);
@@ -39,6 +40,10 @@ export default function Home() {
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
   };
+  <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
+  {view === 'battle' && (
+  <Battle game={game} setGame={setGame} back={() => setView('main')} />
+)}
 
   const tryCatch = (ballType) => {
     if (!wild) return;
