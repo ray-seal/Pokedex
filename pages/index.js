@@ -8,7 +8,7 @@ export default function Home() {
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [message, setMessage] = useState("");
-  const [view, setView] = useState('main'); // <-- add view state
+  const [view, setView] = useState('main');
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
@@ -93,11 +93,21 @@ export default function Home() {
 
   if (!game) return <p>Loading...</p>;
 
-  // Main view
+  // --- FIXED BATTLE RENDERING ---
+  if (view === 'battle') {
+    return (
+      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+        <h1>⚔️ Battle Mode</h1>
+        <Battle game={game} setGame={setGame} back={() => setView('main')} />
+        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>
+          ⬅️ Back to Catching
+        </button>
       </main>
     );
   }
+  // ------------------------------
 
+  // Main view
   return (
     <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🎮 Pokémon Catcher</h1>
@@ -118,13 +128,7 @@ export default function Home() {
           <button onClick={() => tryCatch('greatball')}>🎯 Great Ball</button>
           <button onClick={() => tryCatch('ultraball')}>🎯 Ultra Ball</button>
           <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
-         <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
-        if (view === 'battle') {
-    return (
-      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-        <h1>⚔️ Battle Mode</h1>
-        <Battle game={game} setGame={setGame} back={() => setView('main')} />
-        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>⬅️ Back to Catching</button>
+          <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
         </div>
       )}
 
