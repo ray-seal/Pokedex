@@ -1013,7 +1013,7 @@
     "name": "Zapdos",
     "type": ["Electric", "Flying"],
     "sprite": "/images/zapdos.png",
-    "stage": 3
+    "stage": 3,
     "legendary": true
   },
   {
@@ -1021,7 +1021,7 @@
     "name": "Moltres",
     "type": ["Fire", "Flying"],
     "sprite": "/images/moltres.png",
-    "stage": 3
+    "stage": 3,
     "legendary": true
   },
   {
@@ -1050,7 +1050,7 @@
     "name": "Mewtwo",
     "type": ["Psychic"],
     "sprite": "/images/mewtwo.png",
-    "stage": 3
+    "stage": 3,
     "legendary": true
   },
   {
@@ -1058,7 +1058,7 @@
     "name": "Mew",
     "type": ["Psychic"],
     "sprite": "/images/mew.png",
-    "stage": 3
+    "stage": 3,
     "legendary": true
   },
 ]
