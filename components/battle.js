@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import pokedex from '../public/pokedex.js';
+import data from '../public/pokedex.js';
 
 export default function Battle({ game, setGame, back }) {
   const [wild, setWild] = useState(null);
   const [enemyHP, setEnemyHP] = useState(100);
-  const [message, setMessage] = useState('');
   const [playerHP, setPlayerHP] = useState(100);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const random = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const random = data[Math.floor(Math.random() * data.length)];
     setWild(random);
     setEnemyHP(100);
     setPlayerHP(100);
@@ -17,61 +17,57 @@ export default function Battle({ game, setGame, back }) {
 
   const attack = () => {
     if (!wild) return;
-    const playerDmg = Math.floor(Math.random() * 30) + 10;
-    const enemyDmg = Math.floor(Math.random() * 20) + 5;
 
-    let newEnemyHP = Math.max(enemyHP - playerDmg, 0);
-    let newPlayerHP = Math.max(playerHP - enemyDmg, 0);
+    const playerDmg = Math.floor(Math.random() * 30) + 10;
+    const wildDmg = Math.floor(Math.random() * 20) + 5;
+
+    const newEnemyHP = Math.max(enemyHP - playerDmg, 0);
+    const newPlayerHP = Math.max(playerHP - wildDmg, 0);
 
     setEnemyHP(newEnemyHP);
     setPlayerHP(newPlayerHP);
 
     if (newEnemyHP === 0) {
       setMessage(`You defeated ${wild.name}! +50 coins`);
-      setGame({ ...game, coins: game.coins + 50 });
+      const updated = { ...game, coins: game.coins + 50 };
+      setGame(updated);
+      localStorage.setItem("gameState", JSON.stringify(updated));
     } else if (newPlayerHP === 0) {
-      setMessage(`${wild.name} defeated you! No reward.`);
+      setMessage(`${wild.name} defeated you! Better luck next time.`);
     } else {
-      setMessage(`You dealt ${playerDmg} damage. ${wild.name} hit back for ${enemyDmg}.`);
+      setMessage(`You dealt ${playerDmg}. ${wild.name} dealt ${wildDmg}.`);
     }
   };
 
   const nextBattle = () => {
-    const random = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const random = data[Math.floor(Math.random() * data.length)];
     setWild(random);
     setEnemyHP(100);
     setPlayerHP(100);
     setMessage(`A wild ${random.name} appeared!`);
   };
 
-  const runAway = () => {
-    setMessage('You ran away safely.');
-    setTimeout(() => back(), 1000);
-  };
-
   return (
-    <div>
-      <h2>⚔️ Battle Mode</h2>
+    <div style={{ fontFamily: 'monospace', padding: 20 }}>
       {wild && (
         <>
-          <h3>Wild {wild.name}</h3>
+          <h2>⚔️ Wild Battle</h2>
+          <p><strong>{wild.name}</strong></p>
           <img src={wild.sprite} alt={wild.name} width="96" height="96" />
-          <p><strong>Enemy HP:</strong> {enemyHP}</p>
-          <p><strong>Your HP:</strong> {playerHP}</p>
-        </>
-      )}
-      <p>{message}</p>
-
-      {enemyHP > 0 && playerHP > 0 && (
-        <>
-          <button onClick={attack}>Attack</button>
-          <button onClick={runAway}>Run</button>
+          <p>Enemy HP: {enemyHP} / 100</p>
+          <p>Your HP: {playerHP} / 100</p>
+          <p>{message}</p>
         </>
       )}
 
-      {(enemyHP === 0 || playerHP === 0) && (
+      {enemyHP > 0 && playerHP > 0 ? (
         <>
-          <button onClick={nextBattle}>Next Battle</button>
+          <button onClick={attack}>Attack</button>{' '}
+          <button onClick={back}>Run Away</button>
+        </>
+      ) : (
+        <>
+          <button onClick={nextBattle}>Next Battle</button>{' '}
           <button onClick={back}>Back to Main</button>
         </>
       )}
