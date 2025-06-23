@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-const Battle = dynamic(() => import('../components/battle.js'), { ssr: false });
 
 export default function Home() {
   const [data, setData] = useState([]); // pokedex data
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [message, setMessage] = useState('');
-  const [inBattle, setInBattle] = useState(false);
 
   // Fetch pokedex.json from public folder
   useEffect(() => {
@@ -51,7 +47,6 @@ export default function Home() {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
-    setInBattle(false);
   };
 
   const tryCatch = (ballType) => {
@@ -97,7 +92,6 @@ export default function Home() {
     saveGame(updatedGame);
     setMessage(`You caught ${wild.name}!`);
     setWild(null);
-    setInBattle(false);
   };
 
   if (!data.length || !game) return <p>Loading...</p>;
@@ -111,13 +105,10 @@ export default function Home() {
       </p>
 
       <button onClick={search}>🔍 Search for Pokémon</button>
-      <button onClick={() => setInBattle(true)} disabled={!wild} style={{ marginLeft: '10px' }}>
-        ⚔️ Enter Battle
-      </button>
 
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
-      {wild && !inBattle && (
+      {wild && (
         <div style={{ marginTop: '20px' }}>
           <h2>🌿 A wild {wild.name} appears!</h2>
           <img src={wild.sprite} alt={wild.name} width="64" />
@@ -127,15 +118,6 @@ export default function Home() {
             <button onClick={() => tryCatch('ultraball')}>🎯 Ultra Ball</button>
             <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
           </div>
-        </div>
-      )}
-
-      {wild && inBattle && (
-        <div style={{ marginTop: '20px' }}>
-          <Battle wild={wild} game={game} setGame={saveGame} />
-          <button onClick={() => { setInBattle(false); setWild(null); }} style={{ marginTop: '10px' }}>
-            ❌ Flee Battle
-          </button>
         </div>
       )}
 
