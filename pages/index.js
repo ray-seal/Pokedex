@@ -37,10 +37,12 @@ export default function Home() {
     localStorage.setItem("gameState", JSON.stringify(updatedGame));
   };
 
+  // Modified: automatically enter battle on encounter
   const search = () => {
     const encounter = data[Math.floor(Math.random() * data.length)];
     setWild(encounter);
     setMessage(`A wild ${encounter.name} appeared!`);
+    setView('battle'); // <-- automatically switch to battle view
   };
 
   const tryCatch = (ballType) => {
@@ -98,8 +100,8 @@ export default function Home() {
     return (
       <main style={{ fontFamily: 'monospace', padding: '20px' }}>
         <h1>⚔️ Battle Mode</h1>
-        <Battle game={game} setGame={setGame} back={() => setView('main')} />
-        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>
+        <Battle game={game} setGame={setGame} back={() => { setView('main'); setWild(null); }} />
+        <button onClick={() => { setView('main'); setWild(null); }} style={{ marginTop: '20px' }}>
           ⬅️ Back to Catching
         </button>
       </main>
@@ -115,22 +117,9 @@ export default function Home() {
       <p>
         🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}
       </p>
-
       <button onClick={search}>🔍 Search for Pokémon</button>
 
-      {wild && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>Wild {wild.name} appeared!</h2>
-          <img src={wild.sprite} alt={wild.name} width="96" />
-          <p>Type: {wild.type.join(', ')} | Stage: {wild.stage}</p>
-
-          <button onClick={() => tryCatch('pokeball')}>🎯 Throw Pokéball</button>
-          <button onClick={() => tryCatch('greatball')}>🎯 Great Ball</button>
-          <button onClick={() => tryCatch('ultraball')}>🎯 Ultra Ball</button>
-          <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
-          <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
-        </div>
-      )}
+      {/* Removed the {wild && ...} block for encounter details and battle button */}
 
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
