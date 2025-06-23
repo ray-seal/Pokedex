@@ -100,6 +100,7 @@ export default function Home() {
       </p>
 
       <button onClick={search}>🔍 Search for Pokémon</button>
+ <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
 
       {wild && (
         <div style={{ marginTop: '20px' }}>
@@ -113,7 +114,7 @@ export default function Home() {
           <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
         </div>
       )}
- <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
+
     {view === 'battle' && (
   <Battle game={game} setGame={setGame} back={() => setView('main')} />
 )}
