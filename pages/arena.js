@@ -7,7 +7,6 @@ export default function Arena() {
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [enemyHP, setEnemyHP] = useState(100);
-  const [playerHP, setPlayerHP] = useState(100);
   const [battleOver, setBattleOver] = useState(false);
   const [won, setWon] = useState(false);
 
@@ -21,16 +20,23 @@ export default function Arena() {
   // Load game state
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
-    if (saved) setGame(saved);
+    if (saved) {
+      // ensure playerHP exists in old saves
+      if (saved.playerHP === undefined) saved.playerHP = 100;
+      setGame(saved);
+    }
   }, []);
 
-  // Start new battle
+  // Start new battle if player is alive
   useEffect(() => {
-    if (data.length && game) {
+    if (data.length && game && game.playerHP > 0) {
       const rand = data[Math.floor(Math.random() * data.length)];
       setWild(rand);
+      setEnemyHP(100); // reset wild HP every time
+      setBattleOver(false);
+      setWon(false);
     }
-  }, [data, game]);
+  }, [data, game?.playerHP]);
 
   const saveGame = (g) => {
     setGame(g);
@@ -38,13 +44,19 @@ export default function Arena() {
   };
 
   const attack = () => {
-    if (!wild || battleOver) return;
-    const pDmg = Math.floor(Math.random() * 30) + 10;
-    const eDmg = Math.floor(Math.random() * 20) + 5;
-    const newEnemy = Math.max(enemyHP - pDmg, 0);
-    const newPlayer = Math.max(playerHP - eDmg, 0);
+    if (!wild || battleOver || game.playerHP <= 0) return;
+
+    const playerDmg = Math.floor(Math.random() * 30) + 10;
+    const enemyDmg = Math.floor(Math.random() * 20) + 5;
+
+    const newEnemy = Math.max(enemyHP - playerDmg, 0);
+    const newPlayer = Math.max(game.playerHP - enemyDmg, 0);
+
     setEnemyHP(newEnemy);
-    setPlayerHP(newPlayer);
+
+    const updatedGame = { ...game, playerHP: newPlayer };
+    saveGame(updatedGame);
+
     if (newEnemy === 0 || newPlayer === 0) {
       setBattleOver(true);
       setWon(newEnemy === 0);
@@ -73,44 +85,66 @@ export default function Arena() {
       alert(`You need a ${needBall.replace('balls',' Ball')} to catch ${name}!`);
       return;
     }
+
     updated[needBall] -= 1;
-    inv[id] = (inv[id]||0) + 1;
+    inv[id] = (inv[id] || 0) + 1;
     if (!pokedex.includes(id)) pokedex.push(id);
     updated.inventory = inv;
     updated.pokedex = pokedex;
 
     saveGame(updated);
-    setMessage(`You caught ${name}!`);
+    alert(`You caught ${name}!`);
     setBattleOver(false);
   };
 
-  if (!game || !wild) return <p>Loading battle...</p>;
+  if (!game || !wild) return <p>Loading arena...</p>;
+
+  if (game.playerHP <= 0) {
+    return (
+      <main style={{ fontFamily: 'monospace', padding: 20 }}>
+        <h1>⚔️ Battle Arena</h1>
+        <p>Your Pokémon are too tired to fight.</p>
+        <Link href="/center">🏥 Go to Pokémon Center</Link>
+        <br />
+        <Link href="/">⬅️ Back to Home</Link>
+      </main>
+    );
+  }
 
   return (
-    <main style={{ fontFamily:'monospace', padding:20 }}>
+    <main style={{
+      fontFamily: 'monospace',
+      padding: 20,
+      backgroundImage: 'url("/backgrounds/arena.jpg")',
+      backgroundSize: 'cover',
+      minHeight: '100vh',
+      color: 'white'
+    }}>
       <h1>⚔️ Battle Arena</h1>
       <p>💰 Coins: {game.coins}</p>
-      <p>Wild {wild.name} (Stage {wild.stage}{wild.legendary ? ', Legendary':''})</p>
+      <p>❤️ Your HP: {game.playerHP}</p>
+      <hr />
+      <p>👾 Wild {wild.name} (Stage {wild.stage}{wild.legendary ? ', Legendary' : ''})</p>
       <img src={wild.sprite} alt={wild.name} width="96" />
-      <p>Enemy HP: {enemyHP} | Your HP: {playerHP}</p>
+      <p>Enemy HP: {enemyHP}</p>
 
       {!battleOver && (
         <button onClick={attack}>Attack</button>
       )}
 
       {battleOver && won && (
-        <div>
+        <>
           <p>🏆 You defeated {wild.name}!</p>
-          <button onClick={takeReward}>Take 50 coins</button>
+          <button onClick={takeReward}>Take 50 Coins</button>
           <button onClick={attemptCatch}>Try to Catch</button>
-        </div>
+        </>
       )}
 
       {battleOver && !won && (
-        <p>You lost... better luck next time.</p>
+        <p>You lost the battle...</p>
       )}
 
-      <br/><br/>
+      <br /><br />
       <Link href="/">🏠 Back to Main</Link>
     </main>
   );
