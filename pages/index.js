@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import data from '../public/pokedex.js';
 import dynamic from 'next/dynamic';
-const Battle = dynamic(() => import('../pages/battle.js'), { ssr: false });
+const Battle = dynamic(() => import('../components/battle.js'), { ssr: false });
 
 export default function Home() {
   const [game, setGame] = useState(null);
