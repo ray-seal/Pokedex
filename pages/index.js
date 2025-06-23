@@ -131,7 +131,24 @@ export default function Home() {
       <br />
       <Link href="/store">🛍️ Visit the PokéMart</Link>
           <br />
-<Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
+<Link href="/lab">🧪 Visit Professor Oak's Lab</// Load game from localStorage
+useEffect(() => {
+  const saved = localStorage.getItem("gameState");
+  if (saved) setGame(JSON.parse(saved));
+}, []);
+
+// Save game when it updates
+useEffect(() => {
+  if (game) {
+    localStorage.setItem("gameState", JSON.stringify(game));
+  }
+}, [game]);
+
+// Reset button
+<button onClick={() => {
+  localStorage.removeItem("gameState");
+  window.location.reload();
+}}>Reset Game</button>
     </main>
   );
 }
