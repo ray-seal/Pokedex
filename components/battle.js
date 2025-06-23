@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import data from '../public/pokedex.js';
 
-export default function Battle({ game, setGame, back }) {
+function Battle({ game, setGame, back }) {
   const [wild, setWild] = useState(null);
   const [enemyHP, setEnemyHP] = useState(100);
   const [playerHP, setPlayerHP] = useState(100);
@@ -74,3 +74,6 @@ export default function Battle({ game, setGame, back }) {
     </div>
   );
 }
+
+// Export as named export for index.js re-export compatibility
+export { Battle };
