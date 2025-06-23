@@ -94,12 +94,6 @@ export default function Home() {
   if (!game) return <p>Loading...</p>;
 
   // Main view
-  if (view === 'battle') {
-    return (
-      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-        <h1>⚔️ Battle Mode</h1>
-        <Battle game={game} setGame={setGame} back={() => setView('main')} />
-        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>⬅️ Back to Catching</button>
       </main>
     );
   }
@@ -125,6 +119,12 @@ export default function Home() {
           <button onClick={() => tryCatch('ultraball')}>🎯 Ultra Ball</button>
           <button onClick={() => tryCatch('masterball')}>🎯 Master Ball</button>
          <button onClick={() => setView('battle')}>⚔️ Battle Mode</button>
+        if (view === 'battle') {
+    return (
+      <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+        <h1>⚔️ Battle Mode</h1>
+        <Battle game={game} setGame={setGame} back={() => setView('main')} />
+        <button onClick={() => setView('main')} style={{ marginTop: '20px' }}>⬅️ Back to Catching</button>
         </div>
       )}
 
