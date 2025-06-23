@@ -1,30 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import pokedex from '../../public/pokedex.json';
+import React, { useState, useEffect, useRef } from 'react';
+import pokedex from '/pokedex.json';
 
 export default function Battle({ game, setGame, back, wild: propWild, setWild: setParentWild }) {
   const [wild, setWild] = useState(propWild || null);
   const [enemyHP, setEnemyHP] = useState(100);
   const [playerHP, setPlayerHP] = useState(100);
   const [message, setMessage] = useState('');
+  const hasEnded = useRef(false);
 
   useEffect(() => {
-    if (propWild) {
-      setWild(propWild);
-      setEnemyHP(100);
-      setPlayerHP(100);
-      setMessage(`A wild ${propWild.name} appeared!`);
-    } else {
+    const spawn = () => {
       const random = pokedex[Math.floor(Math.random() * pokedex.length)];
       setWild(random);
       setEnemyHP(100);
       setPlayerHP(100);
       setMessage(`A wild ${random.name} appeared!`);
       if (setParentWild) setParentWild(random);
+      hasEnded.current = false;
+    };
+
+    if (propWild) {
+      setWild(propWild);
+      setEnemyHP(100);
+      setPlayerHP(100);
+      setMessage(`A wild ${propWild.name} appeared!`);
+      hasEnded.current = false;
+    } else {
+      spawn();
     }
   }, [propWild, setParentWild]);
 
   const attack = () => {
-    if (!wild) return;
+    if (!wild || hasEnded.current) return;
 
     const playerDmg = Math.floor(Math.random() * 30) + 10;
     const wildDmg = Math.floor(Math.random() * 20) + 5;
@@ -37,11 +44,15 @@ export default function Battle({ game, setGame, back, wild: propWild, setWild: s
 
     if (newEnemyHP === 0) {
       setMessage(`You defeated ${wild.name}! +50 coins`);
-      const updated = { ...game, coins: game.coins + 50 };
-      setGame(updated);
-      localStorage.setItem('gameState', JSON.stringify(updated));
+      if (!hasEnded.current) {
+        hasEnded.current = true;
+        const updated = { ...game, coins: game.coins + 50 };
+        setGame(updated);
+        localStorage.setItem('gameState', JSON.stringify(updated));
+      }
     } else if (newPlayerHP === 0) {
       setMessage(`${wild.name} defeated you! Better luck next time.`);
+      hasEnded.current = true;
     } else {
       setMessage(`You dealt ${playerDmg} damage. ${wild.name} dealt ${wildDmg} damage.`);
     }
@@ -54,6 +65,7 @@ export default function Battle({ game, setGame, back, wild: propWild, setWild: s
     setEnemyHP(100);
     setPlayerHP(100);
     setMessage(`A wild ${random.name} appeared!`);
+    hasEnded.current = false;
   };
 
   return (
