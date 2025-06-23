@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import data from '../public/pokedex.js';
+
 function Battle({ game, setGame, back, wild: propWild, setWild: setParentWild }) {
   const [wild, setWild] = useState(propWild || null);
   const [enemyHP, setEnemyHP] = useState(100);
@@ -16,7 +19,7 @@ function Battle({ game, setGame, back, wild: propWild, setWild: setParentWild })
       setEnemyHP(100);
       setPlayerHP(100);
       setMessage(`A wild ${random.name} appeared!`);
-      if (setParentWild) setParentWild(random); // sync up if possible
+      if (setParentWild) setParentWild(random);
     }
     // eslint-disable-next-line
   }, [propWild]);
