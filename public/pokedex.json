@@ -996,7 +996,7 @@
   {
     "id": 143,
     "name": "Snorlax",
-    "Type": ["Normal"]
+    "type": ["Normal"],
     "sprite": "/images/IMG_4126.png",
     "stage": 1
   },
