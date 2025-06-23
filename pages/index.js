@@ -144,6 +144,8 @@ export default function Home() {
       <Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
       <br />
       <Link href="/arena">⚔️ Enter Arena</Link>
+          <br />
+<Link href="/center">🏥 Visit the Pokémon Center</Link>
     </main>
   );
 }
