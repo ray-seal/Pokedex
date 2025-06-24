@@ -16,34 +16,12 @@ export default function Arena() {
   const [disabledSwitch, setDisabledSwitch] = useState(false);
   const router = useRouter();
 
-  // On mount: load save, upgrade team, set active Pokémon, pick wild opponent
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('gameState'));
-    if (!saved || !saved.team || saved.team.length === 0) {
-      alert('No team found. Returning to home.');
-      router.push('/');
-      return;
-    }
-    // Upgrade team to full objects with correct HP if needed
-    let upgradedTeam = saved.team.map(member => {
-      const mon = pokedex.find(p => p.id === member.id);
-      const stats = getPokemonStats(mon);
-      return { ...mon, hp: member.hp ?? stats.hp };
-    });
-    setGame({ ...saved, team: upgradedTeam });
-    setTeam(upgradedTeam);
-    setActiveIdx(0);
-
-    // Select random wild opponent
-    const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
-    const wildStats = getPokemonStats(wild);
-    setOpponent({ ...wild, hp: wildStats.hp });
-  }, []);
-
+  // Helper: get max HP for a mon
   function getMaxHP(mon) {
     return getPokemonStats(mon).hp;
   }
 
+  // Helper: which balls can catch this opponent
   function availableBallsForOpponent(opponent, inventory) {
     const { stage, legendary } = opponent;
     const balls = [];
@@ -54,6 +32,40 @@ export default function Arena() {
     }
     if (legendary && inventory.masterballs > 0) balls.push('masterball');
     return balls;
+  }
+
+  // Load game and team on mount
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('gameState'));
+    if (!saved || !saved.team || saved.team.length === 0) {
+      alert('No team found. Returning to home.');
+      router.push('/');
+      return;
+    }
+    let upgradedTeam = saved.team.map(member => {
+      const mon = pokedex.find(p => p.id === member.id);
+      const stats = getPokemonStats(mon);
+      return { ...mon, hp: member.hp ?? stats.hp };
+    });
+    setGame({ ...saved, team: upgradedTeam });
+    setTeam(upgradedTeam);
+    setActiveIdx(0);
+    spawnWild(upgradedTeam, { ...saved, team: upgradedTeam });
+  }, []);
+
+  // Spawn a new wild Pokémon
+  function spawnWild(currentTeam = team, currentGame = game) {
+    const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const wildStats = getPokemonStats(wild);
+    setOpponent({ ...wild, hp: wildStats.hp });
+    setMessage('');
+    setBattleOver(false);
+    setRewardOptions(false);
+    setCanCatch(false);
+    setBalls([]);
+    // Don't heal player team on new wild spawn
+    setTeam(currentTeam);
+    setGame(currentGame);
   }
 
   function handleSwitch(idx) {
@@ -172,6 +184,12 @@ export default function Arena() {
     router.push('/center');
   }
 
+  // Battle another wild Pokémon after victory
+  function battleAnother() {
+    spawnWild(team, game);
+    setMessage("A new wild Pokémon appears!");
+  }
+
   if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
 
   return (
@@ -248,6 +266,11 @@ export default function Arena() {
               ))}
             </>
           }
+          <div style={{ marginTop: 18 }}>
+            <button className="poke-button" onClick={battleAnother}>
+              ⚔️ Battle Another Wild Pokémon
+            </button>
+          </div>
         </div>
       )}
 
