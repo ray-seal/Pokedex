@@ -1,32 +1,37 @@
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import data from '../public/pokedex.json';
+
 export default function Center() {
-  const heal = () => {
+  const [game, setGame] = useState(null);
+
+  useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
-    if (saved) {
-      saved.playerHP = 100;
-      localStorage.setItem("gameState", JSON.stringify(saved));
-      alert("✅ Your Pokémon have been fully healed!");
-    } else {
-      alert("⚠️ No game state found.");
+    if (saved && saved.team) {
+      const healedTeam = saved.team.map(p => ({ ...p, hp: 100 }));
+      const updated = { ...saved, team: healedTeam };
+      setGame(updated);
+      localStorage.setItem("gameState", JSON.stringify(updated));
     }
-  };
+  }, []);
+
+  if (!game) return <p>Healing in progress...</p>;
 
   return (
-    <main style={{
-      fontFamily: 'monospace',
-      padding: '20px',
-      background: 'url(/backgrounds/center.png) center/cover no-repeat',
-      minHeight: '100vh',
-      color: '#fff'
-    }}>
+    <main style={{ fontFamily: 'monospace', padding: 20 }}>
       <h1>🏥 Pokémon Center</h1>
-      <p>Welcome! Let Nurse Joy heal your Pokémon back to full health.</p>
-      <button onClick={heal} style={{
-        padding: '10px 20px',
-        fontSize: '16px',
-        cursor: 'pointer'
-      }}>❤️ Heal Pokémon</button>
-      <br /><br />
-      <a href="/" style={{ color: '#fff', textDecoration: 'underline' }}>⬅️ Back to Main Menu</a>
+      <p>Your team has been fully healed.</p>
+
+      <h2>❤️ Team Status</h2>
+      <ul>
+        {game.team.map((p, i) => {
+          const mon = data.find(m => m.id === p.id);
+          return <li key={i}>{mon.name} — HP: {p.hp}</li>;
+        })}
+      </ul>
+
+      <br />
+      <Link href="/">⬅ Back to Home</Link>
     </main>
   );
 }
