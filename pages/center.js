@@ -1,33 +1,25 @@
-// pages/center.js
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 export default function Center() {
-  const [game, setGame] = useState(null);
+  const [restored, setRestored] = useState(false);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('gameState'));
-    if (saved) {
-      saved.playerHP = 100;
-      setGame(saved);
-      localStorage.setItem('gameState', JSON.stringify(saved));
+    const g = JSON.parse(localStorage.getItem('gameState'));
+    if (g) {
+      g.playerHP = 100;
+      localStorage.setItem('gameState', JSON.stringify(g));
+      setRestored(true);
     }
   }, []);
 
-  if (!game) return <p>Restoring your team...</p>;
+  if (!restored) return <p>Healing your Pokémon...</p>;
 
   return (
-    <main style={{
-      fontFamily: 'monospace',
-      padding: 20,
-      backgroundImage: 'url("/backgrounds/center.jpg")',
-      backgroundSize: 'cover',
-      minHeight: '100vh',
-      color: 'white'
-    }}>
+    <main style={{ fontFamily:'monospace', padding:20 }}>
       <h1>🏥 Pokémon Center</h1>
-      <p>Your Pokémon have been fully healed!</p>
-      <Link href="/">🏠 Return to Main</Link><br />
+      <p>Your Pokémon have been healed!</p>
+      <Link href="/">⬅️ Home</Link><br />
       <Link href="/arena">⚔️ Return to Arena</Link>
     </main>
   );
