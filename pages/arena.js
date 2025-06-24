@@ -11,6 +11,7 @@ export default function Arena() {
   const [message, setMessage] = useState('');
   const [battleOver, setBattleOver] = useState(false);
   const [rewardOptions, setRewardOptions] = useState(false);
+  const [rewardClaimed, setRewardClaimed] = useState(false); // NEW STATE
   const [canCatch, setCanCatch] = useState(false);
   const [balls, setBalls] = useState([]);
   const [disabledSwitch, setDisabledSwitch] = useState(false);
@@ -69,6 +70,7 @@ export default function Arena() {
     setMessage('');
     setBattleOver(false);
     setRewardOptions(false);
+    setRewardClaimed(false); // RESET when new wild appears
     setCanCatch(false);
     setBalls([]);
     setTurn('player');
@@ -105,6 +107,7 @@ export default function Arena() {
       setMessage(`You attacked and defeated the wild ${opponent.name}!`);
       setBattleOver(true);
       setRewardOptions(true);
+      setRewardClaimed(false); // new battle, so reward not yet claimed
       const balls = availableBallsForOpponent(opponent, game);
       setBalls(balls);
       setCanCatch(balls.length > 0);
@@ -141,6 +144,7 @@ export default function Arena() {
         setMessage(`Wild ${opponent.name} dealt ${opponentDamage}! All your Pokémon fainted! You lose the battle.`);
         setBattleOver(true);
         setRewardOptions(false);
+        setRewardClaimed(false);
       }
     } else {
       setMessage(`Wild ${opponent.name} dealt ${opponentDamage} damage!`);
@@ -153,6 +157,7 @@ export default function Arena() {
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
     setRewardOptions(false);
+    setRewardClaimed(true);
     setMessage("You received 50 coins!");
   }
 
@@ -185,6 +190,7 @@ export default function Arena() {
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
     setRewardOptions(false);
+    setRewardClaimed(true);
     setMessage(`You caught ${opponent.name}!`);
   }
 
@@ -204,12 +210,14 @@ export default function Arena() {
     spawnWild(team, game);
     setMessage("A new wild Pokémon appears!");
     setTurn('player');
+    setRewardClaimed(false);
   }
 
   function runAway() {
     setMessage("You ran away safely! A new wild Pokémon appears...");
     spawnWild(team, game);
     setTurn('player');
+    setRewardClaimed(false);
   }
 
   if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
@@ -280,26 +288,31 @@ export default function Arena() {
       </p>
       <p>{message}</p>
 
-      {battleOver && rewardOptions && (
+      {/* Rewards and Battle Another button logic */}
+      {battleOver && (rewardOptions || rewardClaimed) && (
         <div>
-          <h3>🎉 You Won! Choose your reward:</h3>
-          <button className="poke-button" onClick={claimCoins}>💰 50 Coins</button>
-          {canCatch &&
+          {rewardOptions && (
             <>
-              <span style={{ margin: "0 10px" }} />
-              <span>or try to catch:</span>
-              {balls.map(ball => (
-                <button
-                  key={ball}
-                  className="poke-button"
-                  onClick={() => tryCatch(ball)}
-                  style={{ marginLeft: '10px' }}
-                >
-                  🎯 {ball[0].toUpperCase() + ball.slice(1).replace('ball', ' Ball')}
-                </button>
-              ))}
+              <h3>🎉 You Won! Choose your reward:</h3>
+              <button className="poke-button" onClick={claimCoins}>💰 50 Coins</button>
+              {canCatch &&
+                <>
+                  <span style={{ margin: "0 10px" }} />
+                  <span>or try to catch:</span>
+                  {balls.map(ball => (
+                    <button
+                      key={ball}
+                      className="poke-button"
+                      onClick={() => tryCatch(ball)}
+                      style={{ marginLeft: '10px' }}
+                    >
+                      🎯 {ball[0].toUpperCase() + ball.slice(1).replace('ball', ' Ball')}
+                    </button>
+                  ))}
+                </>
+              }
             </>
-          }
+          )}
           <div style={{ marginTop: 18 }}>
             <button className="poke-button" onClick={battleAnother}>
               ⚔️ Battle Another Wild Pokémon
