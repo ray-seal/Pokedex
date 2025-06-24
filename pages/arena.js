@@ -14,28 +14,32 @@ export default function Arena() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (!saved || !saved.team || saved.team.length === 0) {
-      alert("No team selected. Go to Team page first.");
+      alert("No team selected. Please build a team first.");
       router.push('/');
       return;
     }
+
     setGame(saved);
-    setPlayerHP(saved.team[0].hp ?? 100);
+    setPlayerHP(saved.team[0]?.hp ?? 100);
+
     const random = data[Math.floor(Math.random() * data.length)];
     setWild(random);
     setWildHP(100);
   }, []);
 
   const attack = () => {
-    if (!game || !wild) return;
+    if (!wild || !game) return;
     const newWildHP = wildHP - 25;
+
     if (newWildHP <= 0) {
-      setMessage(`You defeated ${wild.name}!`);
+      setMessage(`You defeated ${wild.name}! Choose your reward.`);
     } else {
       setWildHP(newWildHP);
       const newPlayerHP = playerHP - 20;
+
       if (newPlayerHP <= 0) {
-        setMessage("You fainted! Visit the Pokémon Center.");
         setPlayerHP(0);
+        setMessage("Your Pokémon fainted! Visit the Center.");
       } else {
         setPlayerHP(newPlayerHP);
       }
@@ -43,14 +47,13 @@ export default function Arena() {
   };
 
   const run = () => {
-    const newWild = data[Math.floor(Math.random() * data.length)];
-    setWild(newWild);
+    const random = data[Math.floor(Math.random() * data.length)];
+    setWild(random);
     setWildHP(100);
-    setMessage("You ran into another Pokémon!");
+    setMessage("You fled! A new wild Pokémon appears.");
   };
 
   const healAndReturn = () => {
-    if (!game) return;
     const healed = {
       ...game,
       team: game.team.map(p => ({ ...p, hp: 100 }))
@@ -60,15 +63,29 @@ export default function Arena() {
     router.push('/');
   };
 
-  if (!game || !wild || !game.team) return <p>Loading Arena...</p>;
+  if (!game || !wild || !game.team || !game.team[activeIndex]) {
+    return <main><p>Loading battle...</p></main>;
+  }
 
   const activePokemon = game.team[activeIndex];
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px', minHeight: '100vh', background: '#fafafa' }}>
+    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🏟️ Arena</h1>
-      <p>🎮 Your Pokémon: {activePokemon?.name} | HP: {playerHP}</p>
-      <p>👾 Wild Pokémon: {wild?.name} | HP: {wildHP}</p>
+
+      <p>🎮 Your Pokémon: {activePokemon.name} | HP: {playerHP}</p>
+      <p>👾 Wild Pokémon: {wild.name} | HP: {wildHP}</p>
 
       <button onClick={attack} disabled={playerHP <= 0 || wildHP <= 0}>⚔️ Attack</button>
-      <button onClick={run}>🏃 Run
+      <button onClick={run}>🏃 Run</button>
+
+      {message && <p style={{ marginTop: '10px' }}>{message}</p>}
+
+      {playerHP <= 0 && (
+        <button onClick={healAndReturn} style={{ marginTop: '20px' }}>
+          🏥 Go to Pokémon Center
+        </button>
+      )}
+    </main>
+  );
+}
