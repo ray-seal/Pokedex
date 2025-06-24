@@ -1,79 +1,50 @@
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import data from '../public/pokedex.json';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Home() {
-  const [game, setGame] = useState(null);
-  const [wild, setWild] = useState(null);
-  const [message, setMessage] = useState("");
+  const [game, setGame] = useState(null); // state for user game data
+  const [wildPokemon, setWildPokemon] = useState(null); // current wild pokemon
+  const [message, setMessage] = useState('');
+  const router = useRouter();
 
+  // Load game state from localStorage on mount
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("gameState"));
+    const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved) {
-      const starter = prompt("Choose your starter: Bulbasaur, Charmander, or Squirtle");
-      const starterData = data.find(p => p.name.toLowerCase() === starter?.toLowerCase());
-      if (!starterData) return alert("Invalid starter. Reload to try again.");
-      const starterStats = getPokemonStats(starterData);
-      const newGame = {
-        coins: 500,
-        pokeballs: 10,
-        greatballs: 0,
-        ultraballs: 0,
-        masterballs: 0,
-        pokedex: [starterData.id],
-        inventory: { [starterData.id]: 1 },
-        team: [{ id: starterData.id, hp: starterStats.hp }],
-        activeIndex: 0
-      };
-      setGame(newGame);
-      localStorage.setItem("gameState", JSON.stringify(newGame));
-    } else {
-      setGame(saved);
+      router.push('/setup'); // Or any setup page you use
+      return;
     }
+    setGame(saved);
   }, []);
 
-  const saveGame = (updated) => {
-    setGame(updated);
-    localStorage.setItem("gameState", JSON.stringify(updated));
-  };
+  // Helper for max HP (optional, for display)
+  function getMaxHP(mon) {
+    if (!mon) return 0;
+    return getPokemonStats(mon).hp;
+  }
 
-  const search = () => {
-    const rand = data[Math.floor(Math.random() * data.length)];
-    const wildStats = getPokemonStats(rand);
-    setWild({ ...rand, hp: wildStats.hp });
-    setMessage(`A wild ${rand.name} appeared!`);
-  };
+  // Find new wild Pokémon
+  function searchWild() {
+    const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const stats = getPokemonStats(wild);
+    setWildPokemon({ ...wild, hp: stats.hp });
+    setMessage(`A wild ${wild.name} appeared!`);
+  }
 
-  const tryCatch = (ballType) => {
-    if (!wild) return;
-    const updated = { ...game };
-    const { stage, legendary } = wild;
-
-    if (ballType === 'pokeball') {
-      if (updated.pokeballs < 1) return setMessage("No Pokéballs left!");
-      if (stage > 1 || legendary) return setMessage("Too strong for a Pokéball.");
-      updated.pokeballs--;
-    } else if (ballType === 'greatball') {
-      if (updated.greatballs < 1) return setMessage("No Great Balls left!");
-      if (stage > 2 || legendary) return setMessage("Too strong for a Great Ball.");
-      updated.greatballs--;
-    } else if (ballType === 'ultraball') {
-      if (updated.ultraballs < 1) return setMessage("No Ultra Balls left!");
-      if (legendary) return setMessage("Use a Master Ball for legendary Pokémon.");
-      updated.ultraballs--;
-    } else if (ballType === 'masterball') {
-      if (updated.masterballs < 1) return setMessage("No Master Balls left!");
-      if (!legendary) return setMessage("Master Balls are for legendary Pokémon only.");
-      updated.masterballs--;
+  // Example: Add wild Pokémon to pokedex
+  function addToPokedex(pokemon) {
+    if (!game) return;
+    if (game.pokedex.includes(pokemon.id)) {
+      setMessage(`${pokemon.name} is already in your Pokédex!`);
+      return;
     }
-
-    updated.inventory[wild.id] = (updated.inventory[wild.id] || 0) + 1;
-    if (!updated.pokedex.includes(wild.id)) updated.pokedex.push(wild.id);
-    saveGame(updated);
-    setWild(null);
-    setMessage(`You caught ${wild.name}!`);
-  };
+    const updated = { ...game, pokedex: [...game.pokedex, pokemon.id] };
+    setGame(updated);
+    localStorage.setItem('gameState', JSON.stringify(updated));
+    setMessage(`${pokemon.name} added to your Pokédex!`);
+  }
 
   if (!game) return <p>Loading...</p>;
 
@@ -82,59 +53,60 @@ export default function Home() {
       style={{
         fontFamily: 'monospace',
         padding: 20,
-        background: 'url("/main-bg.jpg") no-repeat center center',
+        background: 'url("/arena-bg.jpg") no-repeat center center',
         backgroundSize: 'cover',
         color: 'white',
         minHeight: '100vh',
         textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
       }}
     >
-      <h1>🎮 Pokémon Catcher</h1>
-      <p>💰 Coins: {game.coins}</p>
-      <p>🎯 Balls: Poké {game.pokeballs}, Great {game.greatballs}, Ultra {game.ultraballs}, Master {game.masterballs}</p>
-      
-      <button className="poke-button" onClick={search}>🔍 Search for Pokémon</button>
+      <h1>Pokédex Home</h1>
+      <button className="poke-button" onClick={searchWild}>
+        Search for Wild Pokémon
+      </button>
+      <br /><br />
 
-      {wild && (
-        <div style={{ marginTop: '10px' }}>
-          <p>A wild {wild.name} appeared!</p>
-          <img src={wild.sprite} alt={wild.name} width="96" />
-          <button className="poke-button" onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
-          <button className="poke-button" onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
-          <button className="poke-button" onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
-          <button className="poke-button" onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
+      {wildPokemon && (
+        <div style={{ position: 'relative', display: 'inline-block', marginBottom: 20 }}>
+          <img src={wildPokemon.sprite} alt={wildPokemon.name} width="96" />
+          {/* Pokéball if already caught */}
+          {game.pokedex.includes(wildPokemon.id) && (
+            <img
+              src="/pokeball.png"
+              alt="Caught"
+              width="28"
+              style={{
+                position: 'absolute',
+                left: 64, // adjust as needed
+                bottom: 10,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+          <br />
+          <b>{wildPokemon.name}</b> (HP: {wildPokemon.hp} / {getMaxHP(wildPokemon)})
+          <div>
+            <button
+              className="poke-button"
+              onClick={() => addToPokedex(wildPokemon)}
+              disabled={game.pokedex.includes(wildPokemon.id)}
+              style={{ marginTop: 8 }}
+            >
+              {game.pokedex.includes(wildPokemon.id) ? 'Already in Pokédex' : 'Add to Pokédex'}
+            </button>
+          </div>
         </div>
       )}
 
       <p>{message}</p>
 
-      <hr />
-      <h2>👥 Your Team</h2>
-      <ul>
-        {game.team && game.team.length > 0 ? (
-          game.team.map((member, idx) => {
-            const mon = data.find(p => p.id === member.id);
-            return (
-              <li key={idx}>
-                <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name} — HP: {member.hp}
-              </li>
-            );
-          })
-        ) : (
-          <li>No team selected yet.</li>
-        )}
-      </ul>
+      <button className="poke-button" onClick={() => router.push('/arena')}>
+        🏟️ Go to Arena
+      </button>
+      <button className="poke-button" onClick={() => router.push('/center')} style={{ marginLeft: 10 }}>
+        🏥 Go to Pokémon Center
+      </button>
 
-      <hr />
-      <h3>🔗 Locations</h3>
-      <div className="locations">
-        <Link href="/store"><a className="poke-button">🛍️ PokéMart</a></Link>
-        <Link href="/lab"><a className="poke-button">🧪 Professor Oak's Lab</a></Link>
-        <Link href="/arena"><a className="poke-button">🏟️ Battle Arena</a></Link>
-        <Link href="/center"><a className="poke-button">🏥 Pokémon Center</a></Link>
-        <Link href="/team"><a className="poke-button">👥 Choose Team</a></Link>
-        <Link href="/pokedex"><a className="poke-button">📖 Pokédex</a></Link>
-      </div>
       <style jsx>{`
         .poke-button {
           border: 1px solid #ccc;
@@ -154,9 +126,6 @@ export default function Home() {
         .poke-button:hover {
           background: #e0e0e0;
           border-color: #888;
-        }
-        .locations {
-          margin-top: 10px;
         }
       `}</style>
     </main>
