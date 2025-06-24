@@ -1,144 +1,151 @@
 import { useEffect, useState } from 'react';
-import pokedex from '../public/pokedex.json';
+import data from '../public/pokedex.json';
+import { useRouter } from 'next/router';
 
 export default function Arena() {
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
   const [wildHP, setWildHP] = useState(100);
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
-    if (!saved) return;
-
-    if (!saved.playerHP) saved.playerHP = 100; // Init player HP if missing
-    setGame(saved);
-    spawnWild();
+    if (!saved || !saved.playerHP) {
+      router.push('/'); // Go home if no game
+    } else {
+      setGame(saved);
+      newEncounter(); // Start with wild encounter
+    }
   }, []);
 
-  const spawnWild = () => {
-    const random = pokedex[Math.floor(Math.random() * pokedex.length)];
-    setWild(random);
-    setWildHP(100);
-    setMessage(`A wild ${random.name} appeared!`);
+  const saveGame = (updated) => {
+    setGame(updated);
+    localStorage.setItem("gameState", JSON.stringify(updated));
   };
 
-  const saveGame = (updated) => {
-    localStorage.setItem("gameState", JSON.stringify(updated));
-    setGame(updated);
+  const newEncounter = () => {
+    const encounter = data[Math.floor(Math.random() * data.length)];
+    setWild(encounter);
+    setWildHP(100);
+    setMessage(`⚔️ A wild ${encounter.name} appeared!`);
   };
 
   const attack = () => {
-    if (!wild || !game || game.playerHP <= 0) return;
+    if (!wild || !game) return;
 
-    const damageToWild = Math.floor(Math.random() * 30) + 10;
-    const damageToPlayer = Math.floor(Math.random() * 20) + 5;
+    if (game.playerHP <= 0) {
+      setMessage("💀 You’ve fainted! Heal at the Pokémon Center.");
+      return;
+    }
+
+    if (wildHP <= 0) {
+      setMessage(`⚠️ ${wild.name} has already fainted! Choose a reward.`);
+      return;
+    }
+
+    const damageToWild = Math.floor(Math.random() * 20) + 10;
+    const damageToPlayer = Math.floor(Math.random() * 15) + 5;
 
     const newWildHP = Math.max(0, wildHP - damageToWild);
     const newPlayerHP = Math.max(0, game.playerHP - damageToPlayer);
 
     setWildHP(newWildHP);
+
     const updated = { ...game, playerHP: newPlayerHP };
     saveGame(updated);
 
     if (newPlayerHP === 0) {
-      setMessage(`You fainted! Visit the Pokémon Center to heal.`);
+      setMessage(`💥 You took ${damageToPlayer} damage and fainted! Heal at the Center.`);
       return;
     }
 
     if (newWildHP === 0) {
-      setMessage(`You defeated ${wild.name}! Choose a reward below.`);
+      setMessage(`🎉 You defeated ${wild.name}! Choose your reward.`);
     } else {
-      setMessage(`You dealt ${damageToWild} and took ${damageToPlayer} damage.`);
+      setMessage(`💥 You hit ${wild.name} for ${damageToWild} and took ${damageToPlayer} damage.`);
     }
   };
 
-  const rewardCoins = () => {
+  const claimReward = () => {
     if (!wild || wildHP > 0) return;
-
     const updated = { ...game, coins: game.coins + 50 };
     saveGame(updated);
     setMessage(`💰 You earned 50 coins!`);
-    spawnWild();
+    newEncounter();
   };
 
-  const tryCatch = (type) => {
+  const catchWild = () => {
     if (!wild || wildHP > 0) return;
 
     const { stage, legendary } = wild;
     const updated = { ...game };
-    const inventory = { ...game.inventory };
-    const dex = [...game.pokedex];
-    const id = wild.id;
+    const inv = { ...updated.inventory };
+    const pokedex = [...updated.pokedex];
 
-    const alreadyCaught = inventory[id] || 0;
-
-    const ballCheck = {
-      pokeball: stage === 1 && updated.pokeballs > 0,
-      greatball: stage <= 2 && updated.greatballs > 0,
-      ultraball: stage <= 3 && !legendary && updated.ultraballs > 0,
-      masterball: legendary && updated.masterballs > 0 && dex.length === pokedex.length - 1,
-    };
-
-    if (!ballCheck[type]) {
-      setMessage("❌ Cannot catch this Pokémon with that ball.");
-      return;
+    if (legendary) {
+      if (updated.masterballs < 1) return setMessage("❌ You need a Master Ball!");
+      updated.masterballs -= 1;
+    } else if (stage === 3) {
+      if (updated.ultraballs < 1) return setMessage("❌ You need an Ultra Ball!");
+      updated.ultraballs -= 1;
+    } else if (stage === 2) {
+      if (updated.greatballs < 1) return setMessage("❌ You need a Great Ball!");
+      updated.greatballs -= 1;
+    } else {
+      if (updated.pokeballs < 1) return setMessage("❌ You need a Pokéball!");
+      updated.pokeballs -= 1;
     }
 
-    // Deduct ball
-    updated[`${type}s`] -= 1;
-
-    // Add to inventory and dex
-    inventory[id] = alreadyCaught + 1;
-    if (!dex.includes(id)) dex.push(id);
-
-    updated.inventory = inventory;
-    updated.pokedex = dex;
+    inv[wild.id] = (inv[wild.id] || 0) + 1;
+    if (!pokedex.includes(wild.id)) pokedex.push(wild.id);
+    updated.inventory = inv;
+    updated.pokedex = pokedex;
 
     saveGame(updated);
-    setMessage(`🎉 You caught ${wild.name}!`);
-    spawnWild();
+    setMessage(`✅ You caught ${wild.name}!`);
+    newEncounter();
   };
 
-  const runAway = () => {
-    setMessage("🏃 You ran away safely...");
-    spawnWild();
+  const run = () => {
+    if (game.playerHP <= 0) {
+      setMessage("💀 You’re too weak to run! Heal first.");
+      return;
+    }
+    setMessage("🏃 You ran away!");
+    newEncounter();
   };
 
-  if (!game || !wild) return <p>Loading arena...</p>;
+  if (!game || !wild) return <p>Loading...</p>;
 
   return (
-    <main style={{
-      fontFamily: 'monospace',
-      padding: '20px',
-      background: 'url(/backgrounds/arena.png) center/cover no-repeat',
-      minHeight: '100vh',
-      color: '#fff'
-    }}>
-      <h1>⚔️ Battle Arena</h1>
-      <p>❤️ Your HP: {game.playerHP}</p>
-      <hr />
-      <h2>🌿 Wild Encounter</h2>
-      <p>{wild.name} (HP: {wildHP})</p>
-      <img src={wild.sprite} alt={wild.name} width="64" />
+    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+      <h1>🏟️ Battle Arena</h1>
+      <p>❤️ Your HP: {game.playerHP} / 100</p>
+      <p>🆚 Wild: {wild.name} | HP: {wildHP} / 100</p>
+      <img src={wild.sprite} alt={wild.name} width="80" style={{ imageRendering: 'pixelated' }} />
+
       <br /><br />
-      {wildHP > 0 ? (
+      {wildHP > 0 && game.playerHP > 0 && (
         <>
-          <button onClick={attack}>🗡️ Attack</button>{' '}
-          <button onClick={runAway}>🏃 Run</button>
-        </>
-      ) : (
-        <>
-          <button onClick={rewardCoins}>💰 Claim 50 Coins</button>{' '}
-          <button onClick={() => tryCatch("pokeball")}>🔴 Pokéball</button>{' '}
-          <button onClick={() => tryCatch("greatball")}>🔵 Great Ball</button>{' '}
-          <button onClick={() => tryCatch("ultraball")}>🟣 Ultra Ball</button>{' '}
-          <button onClick={() => tryCatch("masterball")}>🟡 Master Ball</button>
+          <button onClick={attack}>🗡️ Attack</button>{" "}
+          <button onClick={run}>🏃 Run</button>
         </>
       )}
-      <p style={{ marginTop: '10px' }}>{message}</p>
+
+      {wildHP === 0 && game.playerHP > 0 && (
+        <>
+          <button onClick={claimReward}>💰 Claim 50 Coins</button>{" "}
+          <button onClick={catchWild}>🎯 Catch</button>
+        </>
+      )}
+
+      <p style={{ marginTop: '20px' }}>{message}</p>
+
       <hr />
-      <a href="/" style={{ color: '#fff' }}>⬅️ Back to Main Menu</a>
+      <p>
+        <a href="/">⬅️ Back to Main</a> | <a href="/center">❤️ Go to Center</a>
+      </p>
     </main>
   );
 }
