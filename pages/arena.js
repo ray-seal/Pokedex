@@ -17,6 +17,17 @@ export default function Arena() {
   const [turn, setTurn] = useState('player'); // 'player' or 'opponent'
   const router = useRouter();
 
+  // ---- Damage logic helpers ----
+  function getStageMultiplier(mon) {
+    if (mon.legendary) return 1.7;
+    if (mon.stage === 3) return 1.4;
+    if (mon.stage === 2) return 1.2;
+    return 1;
+  }
+  function randomDamage(base, multiplier) {
+    return Math.round((base + Math.floor(Math.random() * 11)) * multiplier); // 15–25 * multiplier
+  }
+
   function getMaxHP(mon) {
     return getPokemonStats(mon).hp;
   }
@@ -82,9 +93,8 @@ export default function Arena() {
       setMessage("That Pokémon has fainted! Switch to another.");
       return;
     }
-
-    const playerStats = getPokemonStats(player);
-    const playerDamage = Math.round(20 * playerStats.damageMultiplier);
+    const playerMultiplier = getStageMultiplier(player);
+    const playerDamage = randomDamage(15, playerMultiplier);
 
     let newOpponentHP = opponent.hp - playerDamage;
     newOpponentHP = Math.max(newOpponentHP, 0);
@@ -113,8 +123,8 @@ export default function Arena() {
       setTurn('player');
       return;
     }
-    const opponentStats = getPokemonStats(opponent);
-    const opponentDamage = Math.round(15 * opponentStats.damageMultiplier);
+    const opponentMultiplier = getStageMultiplier(opponent);
+    const opponentDamage = randomDamage(15, opponentMultiplier);
 
     let newPlayerHP = player.hp - opponentDamage;
     newPlayerHP = Math.max(newPlayerHP, 0);
@@ -196,7 +206,6 @@ export default function Arena() {
     setTurn('player');
   }
 
-  // RUN AWAY LOGIC
   function runAway() {
     setMessage("You ran away safely! A new wild Pokémon appears...");
     spawnWild(team, game);
