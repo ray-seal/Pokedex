@@ -9,91 +9,77 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/pokedex.json')
-      .then((res) => res.json())
-      .then(setData)
-      .catch((err) => console.error('Failed to load pokedex:', err));
+      .then(r => r.json())
+      .then(setData);
   }, []);
 
   useEffect(() => {
     if (!data.length) return;
-
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved) {
-      const starter = prompt('Choose your starter: Bulbasaur, Charmander, or Squirtle');
-      const starterData = data.find(p => p.name.toLowerCase() === starter?.toLowerCase());
-      if (!starterData) {
-        alert('Invalid starter. Reload to try again.');
-        return;
-      }
+      const starter = prompt('Choose Bulbasaur, Charmander or Squirtle:');
+      const sd = data.find(p => p.name.toLowerCase() === starter?.toLowerCase());
+      if (!sd) return alert('Invalid starter!');
       const newGame = {
         coins: 500,
         pokeballs: 10,
         greatballs: 0,
         ultraballs: 0,
         masterballs: 0,
-        pokedex: [starterData.id],
-        inventory: { [starterData.id]: 1 }
+        pokedex: [sd.id],
+        inventory: { [sd.id]: 1 },
         playerHP: 100
       };
-      setGame(newGame);
       localStorage.setItem('gameState', JSON.stringify(newGame));
+      setGame(newGame);
     } else {
       setGame(saved);
     }
   }, [data]);
 
-  const saveGame = (updated) => {
-    setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
+  const save = g => {
+    setGame(g);
+    localStorage.setItem('gameState', JSON.stringify(g));
   };
 
   const search = () => {
-    const random = data[Math.floor(Math.random() * data.length)];
-    setWild(random);
-    setMessage(`A wild ${random.name} appeared!`);
+    const rnd = data[Math.floor(Math.random() * data.length)];
+    setWild(rnd);
+    setMessage(`A wild ${rnd.name} appeared!`);
   };
 
-  const tryCatch = (ballType) => {
+  const tryCatch = ball => {
     if (!wild) return;
-
     const { id, name, stage, legendary } = wild;
-    const updated = { ...game };
-    const inventory = { ...game.inventory };
-    const pokedex = [...game.pokedex];
-    const caughtBefore = inventory[id] || 0;
+    const g = { ...game };
+    const inv = { ...g.inventory };
+    const pdex = [...g.pokedex];
+    const count = inv[id] || 0;
 
-    // ✅ Catch rules
-    if (ballType === 'pokeball') {
+    if (ball === 'pokeballs') {
       if (stage !== 1) return setMessage(`${name} resists a Pokéball!`);
-      if (game.pokeballs < 1) return setMessage('No Pokéballs left!');
-      updated.pokeballs -= 1;
-    }
-
-    if (ballType === 'greatball') {
+      if (g.pokeballs < 1) return setMessage('No Pokéballs left!');
+      g.pokeballs--;
+    } else if (ball === 'greatballs') {
       if (stage > 2) return setMessage(`${name} resists a Great Ball!`);
-      if (game.greatballs < 1) return setMessage('No Great Balls left!');
-      updated.greatballs -= 1;
-    }
-
-    if (ballType === 'ultraball') {
+      if (g.greatballs < 1) return setMessage('No Great Balls left!');
+      g.greatballs--;
+    } else if (ball === 'ultraballs') {
       if (legendary) return setMessage(`${name} resists an Ultra Ball!`);
-      if (game.ultraballs < 1) return setMessage('No Ultra Balls left!');
-      updated.ultraballs -= 1;
+      if (g.ultraballs < 1) return setMessage('No Ultra Balls left!');
+      g.ultraballs--;
+    } else if (ball === 'masterballs') {
+      if (!legendary) return setMessage(`Save Master Balls for legendaries!`);
+      if (g.masterballs < 1) return setMessage('No Master Balls left!');
+      g.masterballs--;
     }
 
-    if (ballType === 'masterball') {
-      if (!legendary) return setMessage(`Save Master Balls for legendary Pokémon!`);
-      if (game.masterballs < 1) return setMessage('No Master Balls left!');
-      updated.masterballs -= 1;
-    }
+    inv[id] = count + 1;
+    if (!pdex.includes(id)) pdex.push(id);
+    g.inventory = inv;
+    g.pokedex = pdex;
 
-    // Success!
-    inventory[id] = caughtBefore + 1;
-    if (!pokedex.includes(id)) pokedex.push(id);
-    updated.inventory = inventory;
-    updated.pokedex = pokedex;
-
-    saveGame(updated);
+    save(g);
     setMessage(`🎉 You caught ${name}!`);
     setWild(null);
   };
@@ -101,9 +87,9 @@ export default function Home() {
   if (!game || !data.length) return <p>Loading...</p>;
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+    <main style={{ fontFamily:'monospace', padding:20 }}>
       <h1>🎮 Pokémon Catcher</h1>
-      <p>💰 Coins: {game.coins}</p>
+      <p>💰 Coins: {game.coins} | HP: {game.playerHP}</p>
       <p>
         🎯 Pokéballs: {game.pokeballs} | Great: {game.greatballs} | Ultra: {game.ultraballs} | Master: {game.masterballs}
       </p>
@@ -111,24 +97,24 @@ export default function Home() {
       <button onClick={search}>🔍 Search for Pokémon</button>
 
       {wild && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>🌿 A wild {wild.name} appears!</h2>
+        <div style={{ marginTop:20 }}>
+          <h2>A wild {wild.name} appears!</h2>
           <img src={wild.sprite} alt={wild.name} width="64" />
-          <div style={{ marginTop: '10px' }}>
-            <button onClick={() => tryCatch('pokeball')}>Pokéball</button>
-            <button onClick={() => tryCatch('greatball')}>Great Ball</button>
-            <button onClick={() => tryCatch('ultraball')}>Ultra Ball</button>
-            <button onClick={() => tryCatch('masterball')}>Master Ball</button>
+          <div>
+            <button onClick={() => tryCatch('pokeballs')}>Pokéball</button>
+            <button onClick={() => tryCatch('greatballs')}>Great Ball</button>
+            <button onClick={() => tryCatch('ultraballs')}>Ultra Ball</button>
+            <button onClick={() => tryCatch('masterballs')}>Master Ball</button>
           </div>
         </div>
       )}
 
-      {message && <p style={{ marginTop: '10px' }}>{message}</p>}
+      {message && <p style={{ marginTop:10 }}>{message}</p>}
 
-      <hr style={{ marginTop: '30px' }} />
+      <hr />
       <h2>📘 Pokédex</h2>
       <ul>
-        {game.pokedex.sort((a, b) => a - b).map(id => {
+        {game.pokedex.sort((a,b)=>a-b).map(id => {
           const p = data.find(mon => mon.id === id);
           return (
             <li key={id}>
@@ -139,13 +125,10 @@ export default function Home() {
       </ul>
 
       <br />
-      <Link href="/store">🛍️ Visit the PokéMart</Link>
-      <br />
-      <Link href="/lab">🧪 Visit Professor Oak's Lab</Link>
-      <br />
-      <Link href="/arena">⚔️ Enter Arena</Link>
-          <br />
-<Link href="/center">🏥 Visit the Pokémon Center</Link>
+      <Link href="/store">🛍️ Store</Link><br />
+      <Link href="/lab">🧪 Lab</Link><br />
+      <Link href="/arena">⚔️ Arena</Link><br />
+      <Link href="/center">🏥 Center</Link>
     </main>
   );
 }
