@@ -126,7 +126,8 @@ export default function Home() {
       <Link href="/lab">🧪 Professor Oak's Lab</Link><br />
       <Link href="/arena">🏟️ Battle Arena</Link><br />
       <Link href="/center">🏥 Pokémon Center</Link><br />
-      <Link href="/team">👥 Choose Team</Link>
+      <Link href="/team">👥 Choose Team</Link><br />
+      <Link href="/pokedex"> 📖 Pokédex</Link>
     </main>
   );
 }
