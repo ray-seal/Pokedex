@@ -107,7 +107,7 @@ export default function Arena() {
       setMessage(`You attacked and defeated the wild ${opponent.name}!`);
       setBattleOver(true);
       setRewardOptions(true);
-      setRewardClaimed(false); // new battle, so reward not yet claimed
+      setRewardClaimed(false);
       const balls = availableBallsForOpponent(opponent, game);
       setBalls(balls);
       setCanCatch(balls.length > 0);
@@ -263,8 +263,23 @@ export default function Arena() {
       </div>
 
       <h2>Wild Opponent</h2>
-      <div style={{ marginBottom: 20 }}>
-        <img src={opponent.sprite} alt={opponent.name} width="64" /> <br />
+      <div style={{ marginBottom: 20, position: 'relative', display: 'inline-block' }}>
+        <img src={opponent.sprite} alt={opponent.name} width="64" />
+        {/* Pokéball Sprite if already caught */}
+        {game?.pokedex?.includes(opponent.id) && (
+          <img
+            src="/pokeball.png"
+            alt="Caught"
+            width="24"
+            style={{
+              position: 'absolute',
+              left: 44, // adjust for placement
+              bottom: 8,
+              pointerEvents: 'none'
+            }}
+          />
+        )}
+        <br />
         <b>{opponent.name}</b> (HP: {opponent.hp} / {getMaxHP(opponent)})
       </div>
 
