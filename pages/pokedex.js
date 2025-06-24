@@ -12,8 +12,26 @@ export default function Pokedex() {
 
   if (!game) return <p>Loading...</p>;
 
+  // Calculate caught count
+  const caughtCount = game.pokedex.length;
+  const totalCount = 151;
+
   return (
     <div style={{ fontFamily: 'monospace', padding: '20px' }}>
+      {/* Caught Counter Box */}
+      <div style={{
+        background: '#f9f9f9',
+        border: '1px solid #ccc',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '18px',
+        color: '#222',
+        fontWeight: 'bold',
+        display: 'inline-block',
+        fontSize: '1.2rem'
+      }}>
+        You’ve caught {caughtCount} out of {totalCount} Pokémon!
+      </div>
       <h1>📖 Pokédex</h1>
       <ul>
         {data.map(p => {
