@@ -98,5 +98,4 @@ export default function Home() {
       {wild && (
         <div style={{ marginTop: '10px' }}>
           <p>A wild {wild.name} appeared!</p>
-          <img src={wild.sprite} alt={wild.name} width="96*
-
+          <img src={wild.sprite} alt={wild.name} width="96" />
