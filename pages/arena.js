@@ -24,7 +24,7 @@ export default function Arena() {
     }
   }, []);
 
-  // Helper to save game with updated team and active index
+  // Save game with updated team and active index
   const saveGame = (updatedGame, updatedTeam, updatedActiveIndex) => {
     const newGame = {
       ...updatedGame,
@@ -45,11 +45,9 @@ export default function Arena() {
     setReward(null);
   };
 
-  // Get current active Pokémon
+  // Current active Pokémon
   const activePoke = team[activeIndex];
-
-  // Check if all team Pokémon are fainted
-  const allFainted = team.every((p) => p.hp <= 0);
+  const allFainted = team.length > 0 && team.every((p) => p.hp <= 0);
 
   const attack = () => {
     if (!activePoke || activePoke.hp <= 0) {
@@ -78,16 +76,12 @@ export default function Arena() {
     saveGame(game, updatedTeam, activeIndex);
 
     if (newPokeHP === 0) {
-      setMessage(
-        `${activePoke.name} fainted! Switch to another Pokémon or visit the Pokémon Center.`
-      );
+      setMessage(`${activePoke.name} fainted! Switch to another Pokémon or visit the Pokémon Center.`);
     } else if (newWildHP === 0) {
       setMessage(`You defeated ${wild.name}!`);
       setReward(true);
     } else {
-      setMessage(
-        `${activePoke.name} dealt ${damage} and took ${received} in return.`
-      );
+      setMessage(`${activePoke.name} dealt ${damage} and took ${received} in return.`);
     }
   };
 
@@ -112,7 +106,7 @@ export default function Arena() {
   };
 
   const tryCatch = (ballType) => {
-    // Same logic as your original for catching Pokémon, omitted for brevity
+    // === Custom catch logic here ===
     setMessage(`You caught ${wild.name}!`);
     setReward(null);
     encounterWild();
@@ -129,7 +123,10 @@ export default function Arena() {
   };
 
   if (!game || !team.length || !wild)
-    return <p>Loading Arena... Make sure you have a team!</p>;
+    return <p style={{ color: "#fff", textShadow: "2px 2px 8px #000" }}>Loading Arena... Make sure you have a team!</p>;
+
+  // Style for strong text shadow
+  const shadow = "0 2px 8px #000, 0 0 2px #000, 2px 2px 8px #000, 0 0 4px #000";
 
   return (
     <main
@@ -139,12 +136,12 @@ export default function Arena() {
         background: 'url("/arena-bg.jpg") no-repeat center center',
         backgroundSize: "cover",
         color: "white",
-        textShadow: "2px 2px 4px black",
+        textShadow: shadow,
         minHeight: "100vh",
       }}
     >
-      <h1>🏟️ Battle Arena</h1>
-      <h2>Your Team</h2>
+      <h1 style={{ textShadow: shadow }}>🏟️ Battle Arena</h1>
+      <h2 style={{ textShadow: shadow }}>Your Team</h2>
       <ul style={{ display: "flex", gap: "20px", listStyle: "none", padding: 0 }}>
         {team.map((p, i) => (
           <li key={p.id} style={{ textAlign: "center" }}>
@@ -163,7 +160,7 @@ export default function Arena() {
               onClick={() => switchActive(i)}
               title={p.hp > 0 ? "Switch to this Pokémon" : "Fainted"}
             />
-            <div>
+            <div style={{ textShadow: shadow }}>
               {p.name}
               <br />
               HP: {p.hp}/100
@@ -175,19 +172,23 @@ export default function Arena() {
 
       <hr />
 
-      <h2>Wild Encounter</h2>
-      <p>⚔️ Wild {wild.name}'s HP: {wildHP} / 100</p>
+      <h2 style={{ textShadow: shadow }}>Wild Encounter</h2>
+      <p style={{ textShadow: shadow }}>⚔️ Wild {wild.name}'s HP: {wildHP} / 100</p>
       <img src={wild.sprite} alt={wild.name} width="96" />
 
       <div style={{ marginTop: "20px" }}>
-        <button onClick={attack} disabled={allFainted || activePoke.hp <= 0}>
+        <button
+          onClick={attack}
+          style={{ textShadow: shadow }}
+          disabled={allFainted || activePoke.hp <= 0}
+        >
           ⚔️ Attack
         </button>
-        <button onClick={run}>🏃 Run</button>
+        <button onClick={run} style={{ textShadow: shadow }}>🏃 Run</button>
       </div>
 
       {reward && (
-        <div style={{ marginTop: "20px" }}>
+        <div style={{ marginTop: "20px", textShadow: shadow }}>
           <p>🎉 Victory! Choose your reward:</p>
           <button onClick={claimCoins}>💰 50 Coins</button>
           <div>
@@ -199,11 +200,11 @@ export default function Arena() {
         </div>
       )}
 
-      {message && <p style={{ marginTop: "20px" }}>{message}</p>}
+      {message && <p style={{ marginTop: "20px", textShadow: shadow }}>{message}</p>}
 
       <hr />
-      <Link href="/">🏠 Back to Home</Link> |{" "}
-      <Link href="/center">❤️ Pokémon Center</Link>
+      <Link href="/" style={{ textShadow: shadow }}>🏠 Back to Home</Link> |{" "}
+      <Link href="/center" style={{ textShadow: shadow }}>❤️ Pokémon Center</Link>
     </main>
   );
 }
