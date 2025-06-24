@@ -1,210 +1,87 @@
-import { useState, useEffect } from "react";
-import data from "../public/pokedex.json";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import pokedex from '../public/pokedex.json';
+import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Arena() {
   const [game, setGame] = useState(null);
-  const [team, setTeam] = useState([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [wild, setWild] = useState(null);
-  const [wildHP, setWildHP] = useState(100);
-  const [message, setMessage] = useState("");
-  const [reward, setReward] = useState(null);
+  const [player, setPlayer] = useState(null);
+  const [opponent, setOpponent] = useState(null);
+  const [message, setMessage] = useState('');
+  const router = useRouter();
 
-  // Load game and team on mount
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("gameState"));
-    if (saved && saved.team && saved.team.length > 0) {
-      setGame(saved);
-      setTeam(saved.team);
-      setActiveIndex(saved.activeIndex ?? 0);
-      encounterWild();
-    } else {
-      setMessage("No team found. Go build a team first!");
+    const saved = JSON.parse(localStorage.getItem('gameState'));
+    if (!saved || !saved.team || saved.team.length === 0) {
+      alert('No team found. Returning to home.');
+      router.push('/');
+      return;
     }
+    setGame(saved);
+
+    // Pick first team member as player, get full pokedex info
+    const playerMon = pokedex.find(p => p.id === saved.team[0].id);
+    const playerStats = getPokemonStats(playerMon);
+    setPlayer({ ...playerMon, hp: playerStats.hp });
+
+    // Random opponent
+    const randomOpponent = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const opponentStats = getPokemonStats(randomOpponent);
+    setOpponent({ ...randomOpponent, hp: opponentStats.hp });
   }, []);
 
-  // Save game with updated team and active index
-  const saveGame = (updatedGame, updatedTeam, updatedActiveIndex) => {
-    const newGame = {
-      ...updatedGame,
-      team: updatedTeam,
-      activeIndex: updatedActiveIndex,
-    };
-    setGame(newGame);
-    setTeam(updatedTeam);
-    setActiveIndex(updatedActiveIndex);
-    localStorage.setItem("gameState", JSON.stringify(newGame));
-  };
-
-  const encounterWild = () => {
-    const wildMon = data[Math.floor(Math.random() * data.length)];
-    setWild(wildMon);
-    setWildHP(100);
-    setMessage(`A wild ${wildMon.name} appeared!`);
-    setReward(null);
-  };
-
-  // Current active Pokémon
-  const activePoke = team[activeIndex];
-  const allFainted = team.length > 0 && team.every((p) => p.hp <= 0);
-
   const attack = () => {
-    if (!activePoke || activePoke.hp <= 0) {
-      setMessage("Your active Pokémon has fainted! Switch to another.");
-      return;
+    if (!player || !opponent) return;
+
+    // Example base damages
+    const basePlayerDamage = 20;
+    const baseOpponentDamage = 15;
+
+    // Use stat multipliers
+    const playerStats = getPokemonStats(player);
+    const opponentStats = getPokemonStats(opponent);
+
+    const playerDamage = Math.round(basePlayerDamage * playerStats.damageMultiplier);
+    const opponentDamage = Math.round(baseOpponentDamage * opponentStats.damageMultiplier);
+
+    let newOpponentHP = opponent.hp - playerDamage;
+    let newPlayerHP = player.hp - opponentDamage;
+
+    let resultMessage = `You dealt ${playerDamage} damage! Opponent dealt ${opponentDamage} damage!`;
+
+    if (newOpponentHP <= 0 && newPlayerHP <= 0) {
+      resultMessage += " It's a tie!";
+    } else if (newOpponentHP <= 0) {
+      resultMessage += " You win!";
+    } else if (newPlayerHP <= 0) {
+      resultMessage += " You lose!";
     }
-    if (allFainted) {
-      setMessage("All your Pokémon are fainted! Visit the Pokémon Center.");
-      return;
-    }
 
-    const damage = Math.floor(Math.random() * 20) + 10;
-    const received = Math.floor(Math.random() * 15) + 5;
-
-    const newWildHP = Math.max(wildHP - damage, 0);
-    const newPokeHP = Math.max(activePoke.hp - received, 0);
-
-    // Update team HP
-    const updatedTeam = team.map((p, i) =>
-      i === activeIndex ? { ...p, hp: newPokeHP } : p
-    );
-    setTeam(updatedTeam);
-    setWildHP(newWildHP);
-
-    // Save changes
-    saveGame(game, updatedTeam, activeIndex);
-
-    if (newPokeHP === 0) {
-      setMessage(`${activePoke.name} fainted! Switch to another Pokémon or visit the Pokémon Center.`);
-    } else if (newWildHP === 0) {
-      setMessage(`You defeated ${wild.name}!`);
-      setReward(true);
-    } else {
-      setMessage(`${activePoke.name} dealt ${damage} and took ${received} in return.`);
-    }
+    setPlayer({ ...player, hp: Math.max(newPlayerHP, 0) });
+    setOpponent({ ...opponent, hp: Math.max(newOpponentHP, 0) });
+    setMessage(resultMessage);
   };
 
-  const run = () => {
-    if (allFainted) {
-      setMessage("You can't run while all your Pokémon are fainted!");
-      return;
-    }
-    encounterWild();
-  };
-
-  const claimCoins = () => {
-    const updatedGame = {
-      ...game,
-      coins: (game.coins || 0) + 50,
-    };
-    setMessage("You earned 50 coins!");
-    setReward(null);
-    encounterWild();
-    localStorage.setItem("gameState", JSON.stringify({ ...updatedGame, team, activeIndex }));
-    setGame({ ...updatedGame, team, activeIndex });
-  };
-
-  const tryCatch = (ballType) => {
-    // === Custom catch logic here ===
-    setMessage(`You caught ${wild.name}!`);
-    setReward(null);
-    encounterWild();
-  };
-
-  const switchActive = (index) => {
-    if (team[index].hp > 0) {
-      setActiveIndex(index);
-      saveGame(game, team, index);
-      setMessage(`Go, ${team[index].name}!`);
-    } else {
-      setMessage(`${team[index].name} has fainted and can't battle!`);
-    }
-  };
-
-  if (!game || !team.length || !wild)
-    return <p style={{ color: "#fff", textShadow: "2px 2px 8px #000" }}>Loading Arena... Make sure you have a team!</p>;
-
-  // Style for strong text shadow
-  const shadow = "0 2px 8px #000, 0 0 2px #000, 2px 2px 8px #000, 0 0 4px #000";
+  if (!player || !opponent) return <p>Loading battle...</p>;
 
   return (
-    <main
-      style={{
-        fontFamily: "monospace",
-        padding: "20px",
-        background: 'url("/arena-bg.jpg") no-repeat center center',
-        backgroundSize: "cover",
-        color: "white",
-        textShadow: shadow,
-        minHeight: "100vh",
-      }}
-    >
-      <h1 style={{ textShadow: shadow }}>🏟️ Battle Arena</h1>
-      <h2 style={{ textShadow: shadow }}>Your Team</h2>
-      <ul style={{ display: "flex", gap: "20px", listStyle: "none", padding: 0 }}>
-        {team.map((p, i) => (
-          <li key={p.id} style={{ textAlign: "center" }}>
-            <img
-              src={p.sprite}
-              alt={p.name}
-              width="48"
-              style={{
-                border: i === activeIndex ? "3px solid gold" : "1px solid gray",
-                borderRadius: "8px",
-                background: i === activeIndex ? "#222" : "transparent",
-                boxShadow: i === activeIndex ? "0 0 8px gold" : "none",
-                cursor: p.hp > 0 ? "pointer" : "not-allowed",
-                opacity: p.hp > 0 ? 1 : 0.5,
-              }}
-              onClick={() => switchActive(i)}
-              title={p.hp > 0 ? "Switch to this Pokémon" : "Fainted"}
-            />
-            <div style={{ textShadow: shadow }}>
-              {p.name}
-              <br />
-              HP: {p.hp}/100
-              {i === activeIndex && <span> (Active)</span>}
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <hr />
-
-      <h2 style={{ textShadow: shadow }}>Wild Encounter</h2>
-      <p style={{ textShadow: shadow }}>⚔️ Wild {wild.name}'s HP: {wildHP} / 100</p>
-      <img src={wild.sprite} alt={wild.name} width="96" />
-
-      <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={attack}
-          style={{ textShadow: shadow }}
-          disabled={allFainted || activePoke.hp <= 0}
-        >
-          ⚔️ Attack
-        </button>
-        <button onClick={run} style={{ textShadow: shadow }}>🏃 Run</button>
+    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
+      <h1>🏟️ Battle Arena</h1>
+      <div>
+        <h2>Your Pokémon</h2>
+        <p>
+          <img src={player.sprite} alt={player.name} width="64" /> {player.name} (HP: {player.hp})
+        </p>
       </div>
-
-      {reward && (
-        <div style={{ marginTop: "20px", textShadow: shadow }}>
-          <p>🎉 Victory! Choose your reward:</p>
-          <button onClick={claimCoins}>💰 50 Coins</button>
-          <div>
-            <button onClick={() => tryCatch("pokeball")}>Pokéball</button>
-            <button onClick={() => tryCatch("greatball")}>Great Ball</button>
-            <button onClick={() => tryCatch("ultraball")}>Ultra Ball</button>
-            <button onClick={() => tryCatch("masterball")}>Master Ball</button>
-          </div>
-        </div>
-      )}
-
-      {message && <p style={{ marginTop: "20px", textShadow: shadow }}>{message}</p>}
-
-      <hr />
-      <Link href="/" style={{ textShadow: shadow }}>🏠 Back to Home</Link> |{" "}
-      <Link href="/center" style={{ textShadow: shadow }}>❤️ Pokémon Center</Link>
+      <div>
+        <h2>Opponent</h2>
+        <p>
+          <img src={opponent.sprite} alt={opponent.name} width="64" /> {opponent.name} (HP: {opponent.hp})
+        </p>
+      </div>
+      <button onClick={attack}>Attack!</button>
+      <p>{message}</p>
+      <button onClick={() => router.push('/')}>🏠 Back to Home Page</button>
     </main>
   );
 }
