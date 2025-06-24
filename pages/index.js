@@ -83,14 +83,15 @@ export default function Home() {
       <button onClick={search}>🔍 Search for Pokémon</button>
 
       {wild && (
-        <div style={{ marginTop: '10px' }}>
-          <p>A wild {wild.name} appeared!</p>
-          <button onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
-          <button onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
-          <button onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
-          <button onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
-        </div>
-      )}
+  <div style={{ marginTop: '10px' }}>
+    <p>A wild {wild.name} appeared!</p>
+    <img src={wild.sprite} alt={wild.name} width="96" />
+    <button onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
+    <button onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
+    <button onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
+    <button onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
+  </div>
+)}
 
       <p>{message}</p>
 
