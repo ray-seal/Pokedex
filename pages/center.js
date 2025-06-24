@@ -1,26 +1,32 @@
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function Center() {
-  const [restored, setRestored] = useState(false);
+  const [game, setGame] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const g = JSON.parse(localStorage.getItem('gameState'));
-    if (g) {
-      g.playerHP = 100;
-      localStorage.setItem('gameState', JSON.stringify(g));
-      setRestored(true);
-    }
+    const saved = JSON.parse(localStorage.getItem("gameState"));
+    if (!saved) router.push("/");
+    else setGame(saved);
   }, []);
 
-  if (!restored) return <p>Healing your Pokémon...</p>;
+  const heal = () => {
+    const healed = { ...game, playerHP: 100 };
+    setGame(healed);
+    localStorage.setItem("gameState", JSON.stringify(healed));
+    alert("You are fully healed!");
+  };
+
+  if (!game) return <p>Loading...</p>;
 
   return (
-    <main style={{ fontFamily:'monospace', padding:20 }}>
+    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🏥 Pokémon Center</h1>
-      <p>Your Pokémon have been healed!</p>
-      <Link href="/">⬅️ Home</Link><br />
-      <Link href="/arena">⚔️ Return to Arena</Link>
+      <p>Your HP: {game.playerHP}</p>
+      <button onClick={heal}>💉 Heal to Full</button>
+      <br /><br />
+      <button onClick={() => router.push("/")}>⬅️ Back</button>
     </main>
   );
 }
