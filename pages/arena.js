@@ -9,22 +9,20 @@ export default function Arena() {
   const [wildHP, setWildHP] = useState(100);
   const [message, setMessage] = useState('');
   const [reward, setReward] = useState(null);
-  const [teamSelection, setTeamSelection] = useState([]);
-  const [team, setTeam] = useState([]);
 
+  // Load game state & team
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (saved) {
       setGame(saved);
-      if (saved.team) setTeam(saved.team);
-      if (saved.playerHP !== undefined) setPlayerHP(saved.playerHP);
+      setPlayerHP(saved.playerHP ?? 100);
       encounterWild();
     }
   }, []);
 
   const saveGame = (updated) => {
-    setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
+    setGame(updated);
   };
 
   const encounterWild = () => {
@@ -35,29 +33,47 @@ export default function Arena() {
   };
 
   const attack = () => {
-    if (playerHP <= 0) return setMessage("You have no HP left! Go heal at the Pokémon Center.");
+    if (playerHP <= 0) {
+      setMessage("You have no HP left! Visit the Pokémon Center.");
+      return;
+    }
+
     const damage = Math.floor(Math.random() * 20) + 10;
     const received = Math.floor(Math.random() * 15) + 5;
-    setWildHP((hp) => Math.max(hp - damage, 0));
-    setPlayerHP((hp) => {
-      const newHP = Math.max(hp - received, 0);
-      if (newHP === 0) setMessage("You fainted! Go to the Pokémon Center.");
-      return newHP;
-    });
 
-    if (wildHP - damage <= 0) {
+    const newWildHP = Math.max(wildHP - damage, 0);
+    const newPlayerHP = Math.max(playerHP - received, 0);
+    setWildHP(newWildHP);
+    setPlayerHP(newPlayerHP);
+
+    const updatedGame = { ...game, playerHP: newPlayerHP };
+    saveGame(updatedGame);
+
+    if (newPlayerHP === 0) {
+      setMessage("You fainted! Go heal at the Pokémon Center.");
+    } else if (newWildHP === 0) {
       setMessage(`You defeated ${wild.name}!`);
       setReward(true);
+    } else {
+      setMessage(`You dealt ${damage} and took ${received}.`);
     }
   };
 
   const run = () => {
+    if (playerHP <= 0) {
+      setMessage("You can't run while fainted!");
+      return;
+    }
     encounterWild();
     setReward(null);
   };
 
   const claimCoins = () => {
-    const updated = { ...game, coins: game.coins + 50 };
+    const updated = {
+      ...game,
+      coins: game.coins + 50,
+      playerHP,
+    };
     saveGame(updated);
     setMessage('You earned 50 coins!');
     setReward(null);
@@ -98,26 +114,7 @@ export default function Arena() {
     encounterWild();
   };
 
-  const handleTeamChange = (id) => {
-    const exists = teamSelection.includes(id);
-    if (!exists && teamSelection.length >= 6) return;
-    const updated = exists
-      ? teamSelection.filter((i) => i !== id)
-      : [...teamSelection, id];
-    setTeamSelection(updated);
-  };
-
-  const confirmTeam = () => {
-    if (teamSelection.length > 6) return setMessage("Choose up to 6 Pokémon.");
-    const updated = { ...game, team: teamSelection };
-    saveGame(updated);
-    setTeam(teamSelection);
-    setMessage("Team saved!");
-  };
-
   if (!game || !wild) return <p>Loading...</p>;
-
-  const pokedexMon = data.find(p => p.id === wild.id);
 
   return (
     <main style={{
@@ -126,6 +123,7 @@ export default function Arena() {
       background: 'url("/arena-bg.jpg") no-repeat center center',
       backgroundSize: 'cover',
       color: 'white',
+      textShadow: '2px 2px 4px black',
       minHeight: '100vh'
     }}>
       <h1>🏟️ Battle Arena</h1>
@@ -152,25 +150,6 @@ export default function Arena() {
       )}
 
       {message && <p style={{ marginTop: '20px' }}>{message}</p>}
-
-      <hr />
-      <h3>🎯 Choose Your Team (Max 6)</h3>
-      <ul>
-        {game.pokedex.map(id => {
-          const mon = data.find(m => m.id === id);
-          return (
-            <li key={id}>
-              <input
-                type="checkbox"
-                checked={teamSelection.includes(id)}
-                onChange={() => handleTeamChange(id)}
-              />
-              <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name}
-            </li>
-          );
-        })}
-      </ul>
-      <button onClick={confirmTeam}>✅ Confirm Team</button>
 
       <hr />
       <Link href="/">🏠 Back to Home</Link> | <Link href="/center">❤️ Pokémon Center</Link>
