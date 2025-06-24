@@ -75,7 +75,17 @@ export default function Home() {
   if (!game) return <p>Loading...</p>;
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: 20 }}>
+   <main
+  style={{
+    fontFamily: 'monospace',
+    padding: 20,
+    background: 'url("/main-bg.jpg") no-repeat center center',
+    backgroundSize: 'cover',
+    color: 'white',
+    minHeight: '100vh',
+    textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
+  }}
+>
       <h1>🎮 Pokémon Catcher</h1>
       <p>💰 Coins: {game.coins}</p>
       <p>🎯 Balls: Poké {game.pokeballs}, Great {game.greatballs}, Ultra {game.ultraballs}, Master {game.masterballs}</p>
