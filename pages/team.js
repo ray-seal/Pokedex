@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
+import Link from 'next/link';
 
 export default function TeamBuilder() {
   const [game, setGame] = useState(null);
@@ -33,25 +34,19 @@ export default function TeamBuilder() {
   };
 
   const saveTeam = () => {
-    <ul>
-  {game.pokedex.map(id => {
-    const p = pokedex.find(mon => mon.id === id);
-    const selected = !!team.find(t => t.id === id);
+    const updated = { ...game, team };
+    localStorage.setItem("gameState", JSON.stringify(updated));
+    router.push('/arena');
+  };
 
-    return (
-      <li key={id}>
-        <label>
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => handleSelect(id)}
-          />
-          <img src={p.sprite} alt={p.name} width="32" /> {p.name}
-        </label>
-      </li>
-    );
-  })}
-</ul>
+  // NEW: Reset Team button functionality
+  const resetTeam = () => {
+    setTeam([]);
+    if (game) {
+      const updated = { ...game, team: [] };
+      localStorage.setItem("gameState", JSON.stringify(updated));
+    }
+  };
 
   if (!game) return <p>Loading team builder...</p>;
 
@@ -60,27 +55,53 @@ export default function TeamBuilder() {
       <h1>🧩 Build Your Team</h1>
       <p>Select up to 6 Pokémon:</p>
       <ul>
-        {game.pokedex.map(id => {
-          const p = pokedex.find(mon => mon.id === id);
-          const selected = !!team.find(t => t.id === id);
-
-          return (
-            <li key={id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={() => handleSelect(id)}
-                />
-                <img src={p.sprite} alt={p.name} width="32" /> {p.name}
-              </label>
-            </li>
-          );
-        })}
+        {pokedex
+          .filter(mon => game.pokedex.includes(mon.id))
+          .map(mon => {
+            const selected = !!team.find(t => t.id === mon.id);
+            return (
+              <li key={mon.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => handleSelect(mon.id)}
+                  />
+                  <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name}
+                </label>
+              </li>
+            );
+          })}
       </ul>
       {/* Reset and Save buttons */}
       <button onClick={resetTeam} style={{ marginRight: '10px' }}>🗑️ Reset Team</button>
       <button onClick={saveTeam}>✅ Save Team and Go to Arena</button>
+
+      <Link href="/">
+        <a className="poke-button" style={{ marginTop: '15px', display: 'inline-block' }}>🏠 Back to Home Page</a>
+      </Link>
+
+      <style jsx>{`
+        .poke-button {
+          border: 1px solid #ccc;
+          background: #f9f9f9;
+          padding: 10px 20px;
+          border-radius: 6px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+          margin: 6px 8px 6px 0;
+          cursor: pointer;
+          color: #222;
+          text-decoration: none;
+          font-family: inherit;
+          font-size: 1rem;
+          display: inline-block;
+          transition: background 0.2s, border 0.2s;
+        }
+        .poke-button:hover {
+          background: #e0e0e0;
+          border-color: #888;
+        }
+      `}</style>
     </main>
   );
 }
