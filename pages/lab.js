@@ -33,32 +33,42 @@ export default function Lab() {
   const duplicates = Object.entries(game.inventory).filter(([id, count]) => count > 1);
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-      <h1>🧪 Professor Oak's Lab</h1>
-      <p>💰 Coins: {game.coins}</p>
+    <div
+  style={{
+    minHeight: '100vh',
+    backgroundImage: 'url("/lab-bg.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    fontFamily: 'monospace',
+    padding: '20px'
+  }}
+>
+  <h1>🧪 Professor Oak's Lab</h1>
+  <p>💰 Coins: {game.coins}</p>
 
-      {duplicates.length === 0 ? (
-        <p>You have no duplicates to sell.</p>
-      ) : (
-        <ul>
-          {duplicates.map(([id, count]) => {
-            const p = data.find(mon => mon.id === parseInt(id));
-            return (
-              <li key={id}>
-                <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{count}
-                <button onClick={() => handleSell(p.id)} style={{ marginLeft: '10px' }}>
-                  Sell for 25 coins
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+  {duplicates.length === 0 ? (
+    <p>You have no duplicates to sell.</p>
+  ) : (
+    <ul>
+      {duplicates.map(([id, count]) => {
+        const p = data.find(mon => mon.id === parseInt(id));
+        return (
+          <li key={id}>
+            <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{count}
+            <button onClick={() => handleSell(p.id)} style={{ marginLeft: '10px' }}>
+              Sell for 25 coins
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  )}
 
-      <p style={{ marginTop: '20px' }}>{message}</p>
+  <p style={{ marginTop: '20px' }}>{message}</p>
 
-      <br />
-      <Link href="/">🏠 Back to Main Page</Link>
-    </main>
+  <br />
+  <Link href="/">🏠 Back to Main Page</Link>
+</div>
   );
 }
