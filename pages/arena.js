@@ -78,6 +78,52 @@ export default function Arena() {
 
       <button onClick={attack} disabled={playerHP <= 0 || wildHP <= 0}>⚔️ Attack</button>
       <button onClick={run}>🏃 Run</button>
+  {message.includes("defeated") && wildHP <= 0 && (
+  <div style={{ marginTop: '20px' }}>
+    <p>🎉 Choose your reward:</p>
+    <button onClick={() => {
+      const updated = { ...game, coins: game.coins + 50 };
+      setGame(updated);
+      localStorage.setItem("gameState", JSON.stringify(updated));
+      setMessage(`${wild.name} defeated. You earned 50 coins!`);
+    }}>💰 Claim 50 Coins</button>
+
+    <button onClick={() => {
+      const stage = wild.stage;
+      const inventory = { ...game.inventory };
+      const pokedex = [...game.pokedex];
+      let updated = { ...game };
+
+      let used = null;
+
+      if (stage === 1 && game.pokeballs > 0) {
+        updated.pokeballs -= 1;
+        used = "Pokéball";
+      } else if (stage === 2 && game.greatballs > 0) {
+        updated.greatballs -= 1;
+        used = "Great Ball";
+      } else if (stage === 3 && game.ultraballs > 0) {
+        updated.ultraballs -= 1;
+        used = "Ultra Ball";
+      } else if (wild.legendary && game.masterballs > 0 && pokedex.length === pokedex.length) {
+        updated.masterballs -= 1;
+        used = "Master Ball";
+      } else {
+        return alert("No suitable ball available.");
+      }
+
+      inventory[wild.id] = (inventory[wild.id] || 0) + 1;
+      if (!pokedex.includes(wild.id)) pokedex.push(wild.id);
+
+      updated.inventory = inventory;
+      updated.pokedex = pokedex;
+
+      setGame(updated);
+      localStorage.setItem("gameState", JSON.stringify(updated));
+      setMessage(`🎯 You used a ${used} and caught ${wild.name}!`);
+    }}>🎯 Catch Pokémon</button>
+  </div>
+)}
 
       {message && <p style={{ marginTop: '10px' }}>{message}</p>}
 
