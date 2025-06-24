@@ -33,19 +33,25 @@ export default function TeamBuilder() {
   };
 
   const saveTeam = () => {
-    const updated = { ...game, team };
-    localStorage.setItem("gameState", JSON.stringify(updated));
-    router.push('/arena');
-  };
+    <ul>
+  {game.pokedex.map(id => {
+    const p = pokedex.find(mon => mon.id === id);
+    const selected = !!team.find(t => t.id === id);
 
-  // NEW: Reset Team button functionality
-  const resetTeam = () => {
-    setTeam([]);
-    if (game) {
-      const updated = { ...game, team: [] };
-      localStorage.setItem("gameState", JSON.stringify(updated));
-    }
-  };
+    return (
+      <li key={id}>
+        <label>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => handleSelect(id)}
+          />
+          <img src={p.sprite} alt={p.name} width="32" /> {p.name}
+        </label>
+      </li>
+    );
+  })}
+</ul>
 
   if (!game) return <p>Loading team builder...</p>;
 
