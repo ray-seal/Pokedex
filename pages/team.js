@@ -14,7 +14,8 @@ export default function TeamBuilder() {
       router.push('/');
     } else {
       setGame(saved);
-      setTeam(saved.team || []);
+      // Cap the team to 6 Pokémon on load
+      setTeam((saved.team || []).slice(0, 6));
     }
   }, []);
 
@@ -35,6 +36,15 @@ export default function TeamBuilder() {
     const updated = { ...game, team };
     localStorage.setItem("gameState", JSON.stringify(updated));
     router.push('/arena');
+  };
+
+  // NEW: Reset Team button functionality
+  const resetTeam = () => {
+    setTeam([]);
+    if (game) {
+      const updated = { ...game, team: [] };
+      localStorage.setItem("gameState", JSON.stringify(updated));
+    }
   };
 
   if (!game) return <p>Loading team builder...</p>;
@@ -62,7 +72,8 @@ export default function TeamBuilder() {
           );
         })}
       </ul>
-
+      {/* Reset and Save buttons */}
+      <button onClick={resetTeam} style={{ marginRight: '10px' }}>🗑️ Reset Team</button>
       <button onClick={saveTeam}>✅ Save Team and Go to Arena</button>
     </main>
   );
