@@ -14,6 +14,7 @@ export default function Arena() {
   const [canCatch, setCanCatch] = useState(false);
   const [balls, setBalls] = useState([]);
   const [disabledSwitch, setDisabledSwitch] = useState(false);
+  const [turn, setTurn] = useState('player'); // 'player' or 'opponent'
   const router = useRouter();
 
   // Helper: get max HP for a mon
@@ -63,71 +64,81 @@ export default function Arena() {
     setRewardOptions(false);
     setCanCatch(false);
     setBalls([]);
-    // Don't heal player team on new wild spawn
+    setTurn('player');
     setTeam(currentTeam);
     setGame(currentGame);
   }
 
   function handleSwitch(idx) {
-    if (battleOver || idx === activeIdx || team[idx].hp <= 0) return;
+    if (battleOver || idx === activeIdx || team[idx].hp <= 0 || turn !== 'player') return;
     setActiveIdx(idx);
     setMessage(`You switched to ${team[idx].name}!`);
     setDisabledSwitch(true);
-    setTimeout(() => setDisabledSwitch(false), 600); // Prevent spam
+    setTimeout(() => setDisabledSwitch(false), 600);
+    setTurn('opponent'); // Switching ends your turn, opponent attacks next
+    setTimeout(() => wildAttack(idx), 900);
   }
 
-  function attack() {
-    if (!team.length || !opponent || battleOver) return;
-
+  function playerAttack() {
+    if (!team.length || !opponent || battleOver || turn !== 'player') return;
     const player = team[activeIdx];
     if (player.hp <= 0) {
       setMessage("That Pokémon has fainted! Switch to another.");
       return;
     }
 
-    // Damage logic
     const playerStats = getPokemonStats(player);
-    const opponentStats = getPokemonStats(opponent);
     const playerDamage = Math.round(20 * playerStats.damageMultiplier);
-    const opponentDamage = Math.round(15 * opponentStats.damageMultiplier);
 
     let newOpponentHP = opponent.hp - playerDamage;
     newOpponentHP = Math.max(newOpponentHP, 0);
 
-    let newPlayerHP = player.hp - opponentDamage;
-    newPlayerHP = Math.max(newPlayerHP, 0);
-
-    // Team update
-    const newTeam = [...team];
-    newTeam[activeIdx] = { ...player, hp: newPlayerHP };
-    setTeam(newTeam);
-
     setOpponent({ ...opponent, hp: newOpponentHP });
 
-    // End conditions
-    if (newOpponentHP === 0 && newPlayerHP === 0) {
-      setMessage(`You dealt ${playerDamage} but both Pokémon fainted. It's a tie!`);
-      setBattleOver(true);
-      setRewardOptions(false);
-    } else if (newOpponentHP === 0) {
-      setMessage(`You defeated the wild ${opponent.name}!`);
+    if (newOpponentHP === 0) {
+      setMessage(`You attacked and defeated the wild ${opponent.name}!`);
       setBattleOver(true);
       setRewardOptions(true);
       const balls = availableBallsForOpponent(opponent, game);
       setBalls(balls);
       setCanCatch(balls.length > 0);
-    } else if (newPlayerHP === 0) {
-      // Check if any Pokémon left
+    } else {
+      setMessage(`You dealt ${playerDamage}!`);
+      setTurn('opponent');
+      setTimeout(() => wildAttack(activeIdx), 900);
+    }
+  }
+
+  function wildAttack(idxForAttack) {
+    if (!team.length || !opponent || battleOver) return;
+    const idx = idxForAttack ?? activeIdx;
+    const player = team[idx];
+    if (player.hp <= 0 || opponent.hp <= 0) {
+      setTurn('player');
+      return;
+    }
+    const opponentStats = getPokemonStats(opponent);
+    const opponentDamage = Math.round(15 * opponentStats.damageMultiplier);
+
+    let newPlayerHP = player.hp - opponentDamage;
+    newPlayerHP = Math.max(newPlayerHP, 0);
+    const newTeam = [...team];
+    newTeam[idx] = { ...player, hp: newPlayerHP };
+    setTeam(newTeam);
+
+    if (newPlayerHP === 0) {
       const anyAlive = newTeam.some(mon => mon.hp > 0);
       if (anyAlive) {
-        setMessage(`Your Pokémon fainted! Switch to another.`);
+        setMessage(`Wild ${opponent.name} dealt ${opponentDamage}! Your Pokémon fainted, switch to another.`);
+        setTurn('player');
       } else {
-        setMessage("All your Pokémon fainted! You lose the battle.");
+        setMessage(`Wild ${opponent.name} dealt ${opponentDamage}! All your Pokémon fainted! You lose the battle.`);
         setBattleOver(true);
         setRewardOptions(false);
       }
     } else {
-      setMessage(`You dealt ${playerDamage}, opponent dealt ${opponentDamage}.`);
+      setMessage(`Wild ${opponent.name} dealt ${opponentDamage} damage!`);
+      setTurn('player');
     }
   }
 
@@ -171,7 +182,6 @@ export default function Arena() {
     setMessage(`You caught ${opponent.name}!`);
   }
 
-  // Heal: go to center, restore all team HP and route to /center
   function goToCenter() {
     if (!game || !team) return;
     const healedTeam = team.map(mon => ({
@@ -184,10 +194,10 @@ export default function Arena() {
     router.push('/center');
   }
 
-  // Battle another wild Pokémon after victory
   function battleAnother() {
     spawnWild(team, game);
     setMessage("A new wild Pokémon appears!");
+    setTurn('player');
   }
 
   if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
@@ -222,7 +232,7 @@ export default function Arena() {
             HP: {mon.hp} / {getMaxHP(mon)}
             <br />
             <button
-              disabled={battleOver || idx === activeIdx || mon.hp <= 0 || disabledSwitch}
+              disabled={battleOver || idx === activeIdx || mon.hp <= 0 || disabledSwitch || turn !== 'player'}
               className="poke-button"
               style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || mon.hp <= 0) ? 0.5 : 1 }}
               onClick={() => handleSwitch(idx)}
@@ -238,12 +248,19 @@ export default function Arena() {
         <b>{opponent.name}</b> (HP: {opponent.hp} / {getMaxHP(opponent)})
       </div>
 
-      {!battleOver && (
-        <button className="poke-button" onClick={attack} disabled={team[activeIdx].hp <= 0}>
+      {!battleOver && turn === 'player' && (
+        <button className="poke-button" onClick={playerAttack} disabled={team[activeIdx].hp <= 0}>
           Attack!
         </button>
       )}
 
+      <p>
+        {battleOver
+          ? null
+          : turn === 'player'
+          ? "Your turn! Attack or Switch."
+          : "Wild Pokémon's turn..."}
+      </p>
       <p>{message}</p>
 
       {battleOver && rewardOptions && (
