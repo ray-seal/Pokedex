@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import Link from 'next/link';
+import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function TeamBuilder() {
   const [game, setGame] = useState(null);
@@ -15,7 +16,6 @@ export default function TeamBuilder() {
       router.push('/');
     } else {
       setGame(saved);
-      // Cap the team to 6 Pokémon on load
       setTeam((saved.team || []).slice(0, 6));
     }
   }, []);
@@ -27,7 +27,8 @@ export default function TeamBuilder() {
       setTeam(prev => prev.filter(p => p.id !== id));
     } else if (team.length < 6) {
       const poke = pokedex.find(p => p.id === id);
-      setTeam(prev => [...prev, { ...poke, hp: 100 }]);
+      const stats = getPokemonStats(poke);
+      setTeam(prev => [...prev, { ...poke, hp: stats.hp }]);
     } else {
       alert("You can only choose up to 6 Pokémon.");
     }
@@ -39,7 +40,6 @@ export default function TeamBuilder() {
     router.push('/arena');
   };
 
-  // NEW: Reset Team button functionality
   const resetTeam = () => {
     setTeam([]);
     if (game) {
@@ -73,14 +73,11 @@ export default function TeamBuilder() {
             );
           })}
       </ul>
-      {/* Reset and Save buttons */}
       <button onClick={resetTeam} style={{ marginRight: '10px' }}>🗑️ Reset Team</button>
       <button onClick={saveTeam}>✅ Save Team and Go to Arena</button>
-
       <Link href="/">
         <a className="poke-button" style={{ marginTop: '15px', display: 'inline-block' }}>🏠 Back to Home Page</a>
       </Link>
-
       <style jsx>{`
         .poke-button {
           border: 1px solid #ccc;
@@ -92,16 +89,5 @@ export default function TeamBuilder() {
           cursor: pointer;
           color: #222;
           text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.2s, border 0.2s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
-    </main>
-  );
-}
+         
+
