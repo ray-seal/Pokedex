@@ -75,17 +75,17 @@ export default function Home() {
   if (!game) return <p>Loading...</p>;
 
   return (
-   <main
-  style={{
-    fontFamily: 'monospace',
-    padding: 20,
-    background: 'url("/main-bg.jpg") no-repeat center center',
-    backgroundSize: 'cover',
-    color: 'white',
-    minHeight: '100vh',
-    textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
-  }}
->
+    <main
+      style={{
+        fontFamily: 'monospace',
+        padding: 20,
+        background: 'url("/main-bg.jpg") no-repeat center center',
+        backgroundSize: 'cover',
+        color: 'white',
+        minHeight: '100vh',
+        textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
+      }}
+    >
       <h1>🎮 Pokémon Catcher</h1>
       <p>💰 Coins: {game.coins}</p>
       <p>🎯 Balls: Poké {game.pokeballs}, Great {game.greatballs}, Ultra {game.ultraballs}, Master {game.masterballs}</p>
@@ -93,31 +93,33 @@ export default function Home() {
       <button onClick={search}>🔍 Search for Pokémon</button>
 
       {wild && (
-  <div style={{ marginTop: '10px' }}>
-    <p>A wild {wild.name} appeared!</p>
-    <img src={wild.sprite} alt={wild.name} width="96" />
-    <button onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
-    <button onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
-    <button onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
-    <button onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
-  </div>
-)}
+        <div style={{ marginTop: '10px' }}>
+          <p>A wild {wild.name} appeared!</p>
+          <img src={wild.sprite} alt={wild.name} width="96" />
+          <button onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
+          <button onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
+          <button onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
+          <button onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
+        </div>
+      )}
 
       <p>{message}</p>
 
       <hr />
-      <h2>📘 Pokédex</h2>
+      <h2>👥 Your Team</h2>
       <ul>
-        {game.pokedex
-          .sort((a, b) => a - b)
-          .map(id => {
-            const mon = data.find(p => p.id === id);
+        {game.team && game.team.length > 0 ? (
+          game.team.map((member, idx) => {
+            const mon = data.find(p => p.id === member.id);
             return (
-              <li key={id}>
-                <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name} ×{game.inventory[id]}
+              <li key={idx}>
+                <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name} — HP: {member.hp}
               </li>
             );
-          })}
+          })
+        ) : (
+          <li>No team selected yet.</li>
+        )}
       </ul>
 
       <hr />
@@ -127,7 +129,7 @@ export default function Home() {
       <Link href="/arena">🏟️ Battle Arena</Link><br />
       <Link href="/center">🏥 Pokémon Center</Link><br />
       <Link href="/team">👥 Choose Team</Link><br />
-      <Link href="/pokedex"> 📖 Pokédex</Link>
+      <Link href="/pokedex">📖 Pokédex</Link>
     </main>
   );
 }
