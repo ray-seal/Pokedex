@@ -5,15 +5,18 @@ import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Arena() {
   const [game, setGame] = useState(null);
-  const [player, setPlayer] = useState(null);
+  const [team, setTeam] = useState([]);
+  const [activeIdx, setActiveIdx] = useState(0);
   const [opponent, setOpponent] = useState(null);
   const [message, setMessage] = useState('');
   const [battleOver, setBattleOver] = useState(false);
   const [rewardOptions, setRewardOptions] = useState(false);
   const [canCatch, setCanCatch] = useState(false);
+  const [balls, setBalls] = useState([]);
+  const [disabledSwitch, setDisabledSwitch] = useState(false);
   const router = useRouter();
 
-  // On mount: load save, upgrade team to full objects with correct HP, pick first as player
+  // On mount: load save, upgrade team, set active Pokémon, pick wild opponent
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved || !saved.team || saved.team.length === 0) {
@@ -21,14 +24,15 @@ export default function Arena() {
       router.push('/');
       return;
     }
-    // Upgrade team if needed
-    let team = saved.team.map(member => {
+    // Upgrade team to full objects with correct HP if needed
+    let upgradedTeam = saved.team.map(member => {
       const mon = pokedex.find(p => p.id === member.id);
       const stats = getPokemonStats(mon);
-      return { ...mon, hp: member.hp ?? stats.hp }; // keep current hp if present
+      return { ...mon, hp: member.hp ?? stats.hp };
     });
-    setGame({ ...saved, team });
-    setPlayer({ ...team[0] }); // Use first team member as player
+    setGame({ ...saved, team: upgradedTeam });
+    setTeam(upgradedTeam);
+    setActiveIdx(0);
 
     // Select random wild opponent
     const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
@@ -36,12 +40,10 @@ export default function Arena() {
     setOpponent({ ...wild, hp: wildStats.hp });
   }, []);
 
-  // Helper: get max HP for a mon
   function getMaxHP(mon) {
     return getPokemonStats(mon).hp;
   }
 
-  // Helper: which balls can catch this opponent
   function availableBallsForOpponent(opponent, inventory) {
     const { stage, legendary } = opponent;
     const balls = [];
@@ -54,51 +56,69 @@ export default function Arena() {
     return balls;
   }
 
-  // Battle logic: simple exchange of blows
-  function attack() {
-    if (!player || !opponent || battleOver) return;
+  function handleSwitch(idx) {
+    if (battleOver || idx === activeIdx || team[idx].hp <= 0) return;
+    setActiveIdx(idx);
+    setMessage(`You switched to ${team[idx].name}!`);
+    setDisabledSwitch(true);
+    setTimeout(() => setDisabledSwitch(false), 600); // Prevent spam
+  }
 
-    // Base damages (could be randomized)
+  function attack() {
+    if (!team.length || !opponent || battleOver) return;
+
+    const player = team[activeIdx];
+    if (player.hp <= 0) {
+      setMessage("That Pokémon has fainted! Switch to another.");
+      return;
+    }
+
+    // Damage logic
     const playerStats = getPokemonStats(player);
     const opponentStats = getPokemonStats(opponent);
     const playerDamage = Math.round(20 * playerStats.damageMultiplier);
     const opponentDamage = Math.round(15 * opponentStats.damageMultiplier);
 
     let newOpponentHP = opponent.hp - playerDamage;
-    let newPlayerHP = player.hp - opponentDamage;
-
-    let resultMsg = `You dealt ${playerDamage} damage. The wild ${opponent.name} dealt ${opponentDamage} damage.`;
-
-    // Clamp HP
     newOpponentHP = Math.max(newOpponentHP, 0);
+
+    let newPlayerHP = player.hp - opponentDamage;
     newPlayerHP = Math.max(newPlayerHP, 0);
 
-    // Set state
+    // Team update
+    const newTeam = [...team];
+    newTeam[activeIdx] = { ...player, hp: newPlayerHP };
+    setTeam(newTeam);
+
     setOpponent({ ...opponent, hp: newOpponentHP });
-    setPlayer({ ...player, hp: newPlayerHP });
 
     // End conditions
     if (newOpponentHP === 0 && newPlayerHP === 0) {
-      setMessage(resultMsg + " It's a tie!");
+      setMessage(`You dealt ${playerDamage} but both Pokémon fainted. It's a tie!`);
       setBattleOver(true);
       setRewardOptions(false);
     } else if (newOpponentHP === 0) {
-      setMessage(resultMsg + ` You defeated the wild ${opponent.name}!`);
+      setMessage(`You defeated the wild ${opponent.name}!`);
       setBattleOver(true);
       setRewardOptions(true);
-      // Check if player has a ball for this Pokémon
       const balls = availableBallsForOpponent(opponent, game);
+      setBalls(balls);
       setCanCatch(balls.length > 0);
     } else if (newPlayerHP === 0) {
-      setMessage(resultMsg + " Your Pokémon fainted! You lose the battle.");
-      setBattleOver(true);
-      setRewardOptions(false);
+      // Check if any Pokémon left
+      const anyAlive = newTeam.some(mon => mon.hp > 0);
+      if (anyAlive) {
+        setMessage(`Your Pokémon fainted! Switch to another.`);
+      } else {
+        setMessage("All your Pokémon fainted! You lose the battle.");
+        setBattleOver(true);
+        setRewardOptions(false);
+      }
     } else {
-      setMessage(resultMsg);
+      setMessage(`You dealt ${playerDamage}, opponent dealt ${opponentDamage}.`);
     }
   }
 
-  // Reward: 50 coins
   function claimCoins() {
     const updated = { ...game, coins: game.coins + 50 };
     setGame(updated);
@@ -107,13 +127,11 @@ export default function Arena() {
     setMessage("You received 50 coins!");
   }
 
-  // Reward: attempt catch
   function tryCatch(ballType) {
     if (!canCatch || !battleOver) return;
     const updated = { ...game };
     const { stage, legendary } = opponent;
 
-    // Ball usage logic
     if (ballType === 'pokeball') {
       if (updated.pokeballs < 1) return setMessage("No Pokéballs left!");
       if (stage > 1 || legendary) return setMessage("Too strong for a Pokéball.");
@@ -141,25 +159,20 @@ export default function Arena() {
     setMessage(`You caught ${opponent.name}!`);
   }
 
-  // Heal: restores all team to full HP
+  // Heal: go to center, restore all team HP and route to /center
   function goToCenter() {
-    if (!game || !game.team) return;
-    const healedTeam = game.team.map(mon => ({
+    if (!game || !team) return;
+    const healedTeam = team.map(mon => ({
       ...mon,
       hp: getMaxHP(mon)
     }));
     const updated = { ...game, team: healedTeam };
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
-    setMessage("All your Pokémon are healed!");
-    // Optionally: redirect to /center
-    // router.push('/center');
+    router.push('/center');
   }
 
-  if (!game || !player || !opponent) return <p>Loading battle...</p>;
-
-  // Choose the available balls for the current opponent
-  const balls = availableBallsForOpponent(opponent, game);
+  if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
 
   return (
     <main
@@ -174,19 +187,44 @@ export default function Arena() {
       }}
     >
       <h1>🏟️ Battle Arena</h1>
-      <div>
-        <h2>Your Pokémon</h2>
-        <p>
-          <img src={player.sprite} alt={player.name} width="64" /> {player.name} (HP: {player.hp} / {getMaxHP(player)})
-        </p>
+      <h2>Your Team</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+        {team.map((mon, idx) => (
+          <div key={mon.id}
+            style={{
+              border: idx === activeIdx ? '2px solid gold' : '1px solid #aaa',
+              borderRadius: '8px',
+              background: mon.hp > 0 ? 'rgba(255,255,255,0.11)' : 'rgba(200,50,50,0.2)',
+              padding: 8,
+              minWidth: 90,
+              textAlign: 'center'
+            }}>
+            <img src={mon.sprite} alt={mon.name} width="44" /><br />
+            <strong>{mon.name}</strong><br />
+            HP: {mon.hp} / {getMaxHP(mon)}
+            <br />
+            <button
+              disabled={battleOver || idx === activeIdx || mon.hp <= 0 || disabledSwitch}
+              className="poke-button"
+              style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || mon.hp <= 0) ? 0.5 : 1 }}
+              onClick={() => handleSwitch(idx)}
+            >{idx === activeIdx ? 'Active' : 'Switch'}
+            </button>
+          </div>
+        ))}
       </div>
-      <div>
-        <h2>Wild Opponent</h2>
-        <p>
-          <img src={opponent.sprite} alt={opponent.name} width="64" /> {opponent.name} (HP: {opponent.hp} / {getMaxHP(opponent)})
-        </p>
+
+      <h2>Wild Opponent</h2>
+      <div style={{ marginBottom: 20 }}>
+        <img src={opponent.sprite} alt={opponent.name} width="64" /> <br />
+        <b>{opponent.name}</b> (HP: {opponent.hp} / {getMaxHP(opponent)})
       </div>
-      {!battleOver && <button className="poke-button" onClick={attack}>Attack!</button>}
+
+      {!battleOver && (
+        <button className="poke-button" onClick={attack} disabled={team[activeIdx].hp <= 0}>
+          Attack!
+        </button>
+      )}
 
       <p>{message}</p>
 
@@ -213,8 +251,8 @@ export default function Arena() {
         </div>
       )}
 
-      <button className="poke-button" onClick={goToCenter} style={{ marginTop: '20px' }}>
-        🏥 Go to Pokémon Center (Heal)
+      <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
+        🏥 Go to Pokémon Center (Heal & Visit)
       </button>
 
       <button className="poke-button" onClick={() => router.push('/')}>
