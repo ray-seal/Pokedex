@@ -1,137 +1,179 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 import data from '../public/pokedex.json';
+import Link from 'next/link';
 
 export default function Arena() {
   const [game, setGame] = useState(null);
   const [wild, setWild] = useState(null);
-  const [message, setMessage] = useState("");
   const [playerHP, setPlayerHP] = useState(100);
   const [wildHP, setWildHP] = useState(100);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const router = useRouter();
+  const [message, setMessage] = useState('');
+  const [reward, setReward] = useState(null);
+  const [teamSelection, setTeamSelection] = useState([]);
+  const [team, setTeam] = useState([]);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("gameState"));
-    if (!saved || !saved.team || saved.team.length === 0) {
-      alert("No team selected. Please build a team first.");
-      router.push('/');
-      return;
+    const saved = JSON.parse(localStorage.getItem('gameState'));
+    if (saved) {
+      setGame(saved);
+      if (saved.team) setTeam(saved.team);
+      if (saved.playerHP !== undefined) setPlayerHP(saved.playerHP);
+      encounterWild();
     }
-
-    setGame(saved);
-    setPlayerHP(saved.team[0]?.hp ?? 100);
-
-    const random = data[Math.floor(Math.random() * data.length)];
-    setWild(random);
-    setWildHP(100);
   }, []);
 
+  const saveGame = (updated) => {
+    setGame(updated);
+    localStorage.setItem('gameState', JSON.stringify(updated));
+  };
+
+  const encounterWild = () => {
+    const wildMon = data[Math.floor(Math.random() * data.length)];
+    setWild(wildMon);
+    setWildHP(100);
+    setMessage(`A wild ${wildMon.name} appeared!`);
+  };
+
   const attack = () => {
-    if (!wild || !game) return;
-    const newWildHP = wildHP - 25;
+    if (playerHP <= 0) return setMessage("You have no HP left! Go heal at the Pokémon Center.");
+    const damage = Math.floor(Math.random() * 20) + 10;
+    const received = Math.floor(Math.random() * 15) + 5;
+    setWildHP((hp) => Math.max(hp - damage, 0));
+    setPlayerHP((hp) => {
+      const newHP = Math.max(hp - received, 0);
+      if (newHP === 0) setMessage("You fainted! Go to the Pokémon Center.");
+      return newHP;
+    });
 
-    if (newWildHP <= 0) {
-      setMessage(`You defeated ${wild.name}! Choose your reward.`);
-    } else {
-      setWildHP(newWildHP);
-      const newPlayerHP = playerHP - 20;
-
-      if (newPlayerHP <= 0) {
-        setPlayerHP(0);
-        setMessage("Your Pokémon fainted! Visit the Center.");
-      } else {
-        setPlayerHP(newPlayerHP);
-      }
+    if (wildHP - damage <= 0) {
+      setMessage(`You defeated ${wild.name}!`);
+      setReward(true);
     }
   };
 
   const run = () => {
-    const random = data[Math.floor(Math.random() * data.length)];
-    setWild(random);
-    setWildHP(100);
-    setMessage("You fled! A new wild Pokémon appears.");
+    encounterWild();
+    setReward(null);
   };
 
-  const healAndReturn = () => {
-    const healed = {
-      ...game,
-      team: game.team.map(p => ({ ...p, hp: 100 }))
-    };
-    localStorage.setItem("gameState", JSON.stringify(healed));
-    setGame(healed);
-    router.push('/');
+  const claimCoins = () => {
+    const updated = { ...game, coins: game.coins + 50 };
+    saveGame(updated);
+    setMessage('You earned 50 coins!');
+    setReward(null);
+    encounterWild();
   };
 
-  if (!game || !wild || !game.team || !game.team[activeIndex]) {
-    return <main><p>Loading battle...</p></main>;
-  }
+  const tryCatch = (ballType) => {
+    const stage = wild.stage;
+    const { legendary } = wild;
+    const updated = { ...game };
+    const inventory = { ...updated.inventory };
 
-  const activePokemon = game.team[activeIndex];
+    if (ballType === 'pokeball') {
+      if (updated.pokeballs < 1) return setMessage("No Pokéballs left!");
+      if (stage > 1 || legendary) return setMessage("Too strong for a Pokéball!");
+      updated.pokeballs -= 1;
+    } else if (ballType === 'greatball') {
+      if (updated.greatballs < 1) return setMessage("No Great Balls left!");
+      if (stage > 2) return setMessage("Too strong for a Great Ball!");
+      updated.greatballs -= 1;
+    } else if (ballType === 'ultraball') {
+      if (updated.ultraballs < 1) return setMessage("No Ultra Balls left!");
+      if (legendary) return setMessage("Use a Master Ball for Legendaries!");
+      updated.ultraballs -= 1;
+    } else if (ballType === 'masterball') {
+      if (updated.masterballs < 1) return setMessage("No Master Balls left!");
+      if (!legendary) return setMessage("Save this for Legendaries!");
+      updated.masterballs -= 1;
+    }
+
+    if (!updated.pokedex.includes(wild.id)) updated.pokedex.push(wild.id);
+    inventory[wild.id] = (inventory[wild.id] || 0) + 1;
+    updated.inventory = inventory;
+
+    saveGame(updated);
+    setMessage(`You caught ${wild.name}!`);
+    setReward(null);
+    encounterWild();
+  };
+
+  const handleTeamChange = (id) => {
+    const exists = teamSelection.includes(id);
+    if (!exists && teamSelection.length >= 6) return;
+    const updated = exists
+      ? teamSelection.filter((i) => i !== id)
+      : [...teamSelection, id];
+    setTeamSelection(updated);
+  };
+
+  const confirmTeam = () => {
+    if (teamSelection.length > 6) return setMessage("Choose up to 6 Pokémon.");
+    const updated = { ...game, team: teamSelection };
+    saveGame(updated);
+    setTeam(teamSelection);
+    setMessage("Team saved!");
+  };
+
+  if (!game || !wild) return <p>Loading...</p>;
+
+  const pokedexMon = data.find(p => p.id === wild.id);
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-      <h1>🏟️ Arena</h1>
+    <main style={{
+      fontFamily: 'monospace',
+      padding: '20px',
+      background: 'url("/arena-bg.jpg") no-repeat center center',
+      backgroundSize: 'cover',
+      color: 'white',
+      minHeight: '100vh'
+    }}>
+      <h1>🏟️ Battle Arena</h1>
+      <p>❤️ Your HP: {playerHP} / 100</p>
+      <p>⚔️ Wild {wild.name}'s HP: {wildHP} / 100</p>
+      <img src={wild.sprite} alt={wild.name} width="96" />
 
-      <p>🎮 Your Pokémon: {activePokemon.name} | HP: {playerHP}</p>
-      <p>👾 Wild Pokémon: {wild.name} | HP: {wildHP}</p>
+      <div style={{ marginTop: '20px' }}>
+        <button onClick={attack}>⚔️ Attack</button>
+        <button onClick={run}>🏃 Run</button>
+      </div>
 
-      <button onClick={attack} disabled={playerHP <= 0 || wildHP <= 0}>⚔️ Attack</button>
-      <button onClick={run}>🏃 Run</button>
-  {message.includes("defeated") && wildHP <= 0 && (
-  <div style={{ marginTop: '20px' }}>
-    <p>🎉 Choose your reward:</p>
-    <button onClick={() => {
-      const updated = { ...game, coins: game.coins + 50 };
-      setGame(updated);
-      localStorage.setItem("gameState", JSON.stringify(updated));
-      setMessage(`${wild.name} defeated. You earned 50 coins!`);
-    }}>💰 Claim 50 Coins</button>
-
-    <button onClick={() => {
-      const stage = wild.stage;
-      const inventory = { ...game.inventory };
-      const pokedex = [...game.pokedex];
-      let updated = { ...game };
-
-      let used = null;
-
-      if (stage === 1 && game.pokeballs > 0) {
-        updated.pokeballs -= 1;
-        used = "Pokéball";
-      } else if (stage === 2 && game.greatballs > 0) {
-        updated.greatballs -= 1;
-        used = "Great Ball";
-      } else if (stage === 3 && game.ultraballs > 0) {
-        updated.ultraballs -= 1;
-        used = "Ultra Ball";
-      } else if (wild.legendary && game.masterballs > 0 && pokedex.length === pokedex.length) {
-        updated.masterballs -= 1;
-        used = "Master Ball";
-      } else {
-        return alert("No suitable ball available.");
-      }
-
-      inventory[wild.id] = (inventory[wild.id] || 0) + 1;
-      if (!pokedex.includes(wild.id)) pokedex.push(wild.id);
-
-      updated.inventory = inventory;
-      updated.pokedex = pokedex;
-
-      setGame(updated);
-      localStorage.setItem("gameState", JSON.stringify(updated));
-      setMessage(`🎯 You used a ${used} and caught ${wild.name}!`);
-    }}>🎯 Catch Pokémon</button>
-  </div>
-)}
-
-      {message && <p style={{ marginTop: '10px' }}>{message}</p>}
-
-      {playerHP <= 0 && (
-        <button onClick={healAndReturn} style={{ marginTop: '20px' }}>
-          🏥 Go to Pokémon Center
-        </button>
+      {reward && (
+        <div style={{ marginTop: '20px' }}>
+          <p>🎉 Victory! Choose your reward:</p>
+          <button onClick={claimCoins}>💰 50 Coins</button>
+          <div>
+            <button onClick={() => tryCatch('pokeball')}>Pokéball</button>
+            <button onClick={() => tryCatch('greatball')}>Great Ball</button>
+            <button onClick={() => tryCatch('ultraball')}>Ultra Ball</button>
+            <button onClick={() => tryCatch('masterball')}>Master Ball</button>
+          </div>
+        </div>
       )}
+
+      {message && <p style={{ marginTop: '20px' }}>{message}</p>}
+
+      <hr />
+      <h3>🎯 Choose Your Team (Max 6)</h3>
+      <ul>
+        {game.pokedex.map(id => {
+          const mon = data.find(m => m.id === id);
+          return (
+            <li key={id}>
+              <input
+                type="checkbox"
+                checked={teamSelection.includes(id)}
+                onChange={() => handleTeamChange(id)}
+              />
+              <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name}
+            </li>
+          );
+        })}
+      </ul>
+      <button onClick={confirmTeam}>✅ Confirm Team</button>
+
+      <hr />
+      <Link href="/">🏠 Back to Home</Link> | <Link href="/center">❤️ Pokémon Center</Link>
     </main>
   );
 }
