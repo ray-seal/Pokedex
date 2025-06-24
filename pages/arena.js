@@ -17,12 +17,10 @@ export default function Arena() {
   const [turn, setTurn] = useState('player'); // 'player' or 'opponent'
   const router = useRouter();
 
-  // Helper: get max HP for a mon
   function getMaxHP(mon) {
     return getPokemonStats(mon).hp;
   }
 
-  // Helper: which balls can catch this opponent
   function availableBallsForOpponent(opponent, inventory) {
     const { stage, legendary } = opponent;
     const balls = [];
@@ -35,7 +33,6 @@ export default function Arena() {
     return balls;
   }
 
-  // Load game and team on mount
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved || !saved.team || saved.team.length === 0) {
@@ -54,7 +51,6 @@ export default function Arena() {
     spawnWild(upgradedTeam, { ...saved, team: upgradedTeam });
   }, []);
 
-  // Spawn a new wild Pokémon
   function spawnWild(currentTeam = team, currentGame = game) {
     const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
     const wildStats = getPokemonStats(wild);
@@ -200,6 +196,13 @@ export default function Arena() {
     setTurn('player');
   }
 
+  // RUN AWAY LOGIC
+  function runAway() {
+    setMessage("You ran away safely! A new wild Pokémon appears...");
+    spawnWild(team, game);
+    setTurn('player');
+  }
+
   if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
 
   return (
@@ -249,16 +252,21 @@ export default function Arena() {
       </div>
 
       {!battleOver && turn === 'player' && (
-        <button className="poke-button" onClick={playerAttack} disabled={team[activeIdx].hp <= 0}>
-          Attack!
-        </button>
+        <div>
+          <button className="poke-button" onClick={playerAttack} disabled={team[activeIdx].hp <= 0}>
+            Attack!
+          </button>
+          <button className="poke-button" onClick={runAway} style={{ marginLeft: 10 }}>
+            🏃‍♂️ Run Away
+          </button>
+        </div>
       )}
 
       <p>
         {battleOver
           ? null
           : turn === 'player'
-          ? "Your turn! Attack or Switch."
+          ? "Your turn! Attack, Switch, or Run Away."
           : "Wild Pokémon's turn..."}
       </p>
       <p>{message}</p>
@@ -268,58 +276,5 @@ export default function Arena() {
           <h3>🎉 You Won! Choose your reward:</h3>
           <button className="poke-button" onClick={claimCoins}>💰 50 Coins</button>
           {canCatch &&
-            <>
-              <span style={{ margin: "0 10px" }} />
-              <span>or try to catch:</span>
-              {balls.map(ball => (
-                <button
-                  key={ball}
-                  className="poke-button"
-                  onClick={() => tryCatch(ball)}
-                  style={{ marginLeft: '10px' }}
-                >
-                  🎯 {ball[0].toUpperCase() + ball.slice(1).replace('ball', ' Ball')}
-                </button>
-              ))}
-            </>
-          }
-          <div style={{ marginTop: 18 }}>
-            <button className="poke-button" onClick={battleAnother}>
-              ⚔️ Battle Another Wild Pokémon
-            </button>
-          </div>
-        </div>
-      )}
-
-      <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
-        🏥 Go to Pokémon Center (Heal & Visit)
-      </button>
-
-      <button className="poke-button" onClick={() => router.push('/')}>
-        🏠 Back to Home Page
-      </button>
-
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 10px 20px;
-          border-radius: 6px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-          margin: 6px 8px 6px 0;
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.2s, border 0.2s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
-    </main>
-  );
-}
+           *
+
