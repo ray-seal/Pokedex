@@ -52,30 +52,40 @@ export default function Store() {
   if (!game) return <p>Loading...</p>;
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-      <h1>🛒 PokéMart</h1>
-      <p>💰 Coins: {game.coins}</p>
+    <div
+  style={{
+    minHeight: '100vh',
+    backgroundImage: 'url("/store-bg.png")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    fontFamily: 'monospace',
+    padding: '20px'
+  }}
+>
+  <h1>🛒 PokéMart</h1>
+  <p>💰 Coins: {game.coins}</p>
 
-      <button onClick={() => handlePurchase("pokeball")}>
-        Buy Pokéball (25 coins)
-      </button><br /><br />
+  <button onClick={() => handlePurchase("pokeball")}>
+    Buy Pokéball (25 coins)
+  </button><br /><br />
 
-      <button onClick={() => handlePurchase("greatball")}>
-        Buy Great Ball (50 coins)
-      </button><br /><br />
+  <button onClick={() => handlePurchase("greatball")}>
+    Buy Great Ball (50 coins)
+  </button><br /><br />
 
-      <button onClick={() => handlePurchase("ultraball")}>
-        Buy Ultra Ball (75 coins)
-      </button><br /><br />
+  <button onClick={() => handlePurchase("ultraball")}>
+    Buy Ultra Ball (75 coins)
+  </button><br /><br />
 
-      <button onClick={() => handlePurchase("masterball")}>
-        Buy Master Ball (1000 coins)
-      </button>
+  <button onClick={() => handlePurchase("masterball")}>
+    Buy Master Ball (1000 coins)
+  </button>
 
-      <p style={{ marginTop: '20px' }}>{message}</p>
+  <p style={{ marginTop: '20px' }}>{message}</p>
 
-      <br />
-      <Link href="/">🏠 Back to Main Page</Link>
-    </main>
+  <br />
+  <Link href="/">🏠 Back to Main Page</Link>
+</div>
   );
 }
