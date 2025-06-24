@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import data from '../public/pokedex.json';
+import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Home() {
   const [game, setGame] = useState(null);
@@ -13,6 +14,7 @@ export default function Home() {
       const starter = prompt("Choose your starter: Bulbasaur, Charmander, or Squirtle");
       const starterData = data.find(p => p.name.toLowerCase() === starter?.toLowerCase());
       if (!starterData) return alert("Invalid starter. Reload to try again.");
+      const starterStats = getPokemonStats(starterData);
       const newGame = {
         coins: 500,
         pokeballs: 10,
@@ -21,7 +23,7 @@ export default function Home() {
         masterballs: 0,
         pokedex: [starterData.id],
         inventory: { [starterData.id]: 1 },
-        team: [{ id: starterData.id, hp: 100 }],
+        team: [{ id: starterData.id, hp: starterStats.hp }],
         activeIndex: 0
       };
       setGame(newGame);
@@ -38,7 +40,8 @@ export default function Home() {
 
   const search = () => {
     const rand = data[Math.floor(Math.random() * data.length)];
-    setWild(rand);
+    const wildStats = getPokemonStats(rand);
+    setWild({ ...rand, hp: wildStats.hp });
     setMessage(`A wild ${rand.name} appeared!`);
   };
 
@@ -95,67 +98,5 @@ export default function Home() {
       {wild && (
         <div style={{ marginTop: '10px' }}>
           <p>A wild {wild.name} appeared!</p>
-          <img src={wild.sprite} alt={wild.name} width="96" />
-          <button className="poke-button" onClick={() => tryCatch('pokeball')}>🎯 Use Pokéball</button>
-          <button className="poke-button" onClick={() => tryCatch('greatball')}>🎯 Use Great Ball</button>
-          <button className="poke-button" onClick={() => tryCatch('ultraball')}>🎯 Use Ultra Ball</button>
-          <button className="poke-button" onClick={() => tryCatch('masterball')}>🎯 Use Master Ball</button>
-        </div>
-      )}
-
-      <p>{message}</p>
-
-      <hr />
-      <h2>👥 Your Team</h2>
-      <ul>
-        {game.team && game.team.length > 0 ? (
-          game.team.map((member, idx) => {
-            const mon = data.find(p => p.id === member.id);
-            return (
-              <li key={idx}>
-                <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name} — HP: {member.hp}
-              </li>
-            );
-          })
-        ) : (
-          <li>No team selected yet.</li>
-        )}
-      </ul>
-
-      <hr />
-      <h3>🔗 Locations</h3>
-      <div className="locations">
-        <Link href="/store"><a className="poke-button">🛍️ PokéMart</a></Link>
-        <Link href="/lab"><a className="poke-button">🧪 Professor Oak's Lab</a></Link>
-        <Link href="/arena"><a className="poke-button">🏟️ Battle Arena</a></Link>
-        <Link href="/center"><a className="poke-button">🏥 Pokémon Center</a></Link>
-        <Link href="/team"><a className="poke-button">👥 Choose Team</a></Link>
-        <Link href="/pokedex"><a className="poke-button">📖 Pokédex</a></Link>
-      </div>
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 10px 20px;
-          border-radius: 6px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-          margin: 6px 8px 6px 0;
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.2s, border 0.2s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-        .locations {
-          margin-top: 10px;
-        }
-      `}</style>
-    </main>
-  );
-}
+          <img src={wild.sprite} alt={wild.name} width="96*
+
