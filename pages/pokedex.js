@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import data from '../public/pokedex.json';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function Pokedex() {
@@ -18,12 +17,16 @@ export default function Pokedex() {
   const caughtCount = game.pokedex.length;
   const totalCount = 151;
 
+  function padNum(n) {
+    return n.toString().padStart(3, '0');
+  }
+
   function toggleExpand(id) {
     setExpanded(exp => ({ ...exp, [id]: !exp[id] }));
   }
 
   return (
-    <div style={{ fontFamily: 'monospace', padding: '20px' }}>
+    <div style={{ fontFamily: 'monospace', padding: '20px', background: '#ffe5e5', minHeight: '100vh' }}>
       {/* Home Button */}
       <button
         className="poke-button"
@@ -51,6 +54,7 @@ export default function Pokedex() {
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {data.map(p => {
           const caught = game.pokedex.includes(p.id);
+          const dexNum = padNum(p.id);
           if (!caught) {
             return (
               <li key={p.id} style={{
@@ -64,6 +68,17 @@ export default function Pokedex() {
                 gap: 14,
                 fontSize: '1.1em'
               }}>
+                <span style={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  border: '1px solid #ccc',
+                  fontWeight: 700,
+                  color: '#888',
+                  width: 44,
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  marginRight: 6,
+                }}>#{dexNum}</span>
                 <img src="/unknown.png" alt="Unknown" width="32" />
                 ???
               </li>
@@ -89,6 +104,17 @@ export default function Pokedex() {
               title="Click to expand/collapse details"
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span style={{
+                  background: '#fff',
+                  borderRadius: 4,
+                  border: '1px solid #99c',
+                  fontWeight: 700,
+                  color: '#345',
+                  width: 44,
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  marginRight: 6,
+                }}>#{dexNum}</span>
                 <img src={p.sprite} alt={p.name} width="32" />
                 <span style={{ fontWeight: 600, minWidth: 85 }}>{p.name}</span>
                 <span style={{ fontSize: 13, color: '#555', marginLeft: 8 }}>
@@ -115,11 +141,13 @@ export default function Pokedex() {
                   <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:7}}>
                     <img src={p.sprite} alt={p.name} width="60" />
                     <div>
+                      <div><b>Pokédex #:</b> {dexNum}</div>
+                      <div><b>Name:</b> {p.name}</div>
                       <div><b>Type:</b> {Array.isArray(p.type) ? p.type.join(' / ') : p.type}</div>
                       {p.stage && <div><b>Stage:</b> {p.stage}</div>}
-                      {typeof p.evolves_to === 'number' && <div><b>Evolves to:</b> #{p.evolves_to}</div>}
-                      {typeof p.evolves_to === 'object' && Array.isArray(p.evolves_to) && <div><b>Evolves to:</b> {p.evolves_to.map(n => `#${n}`).join(', ')}</div>}
-                      {typeof p.evolves_from === 'number' && <div><b>Evolves from:</b> #{p.evolves_from}</div>}
+                      {typeof p.evolves_to === 'number' && <div><b>Evolves to:</b> #{padNum(p.evolves_to)}</div>}
+                      {typeof p.evolves_to === 'object' && Array.isArray(p.evolves_to) && <div><b>Evolves to:</b> {p.evolves_to.map(n => `#${padNum(n)}`).join(', ')}</div>}
+                      {typeof p.evolves_from === 'number' && <div><b>Evolves from:</b> #{padNum(p.evolves_from)}</div>}
                       {p.legendary && <div><b>Legendary Pokémon</b></div>}
                     </div>
                   </div>
