@@ -7,23 +7,30 @@ import { getPokemonStats } from '../lib/pokemonStats';
 function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed }) {
   const [selected, setSelected] = useState([]);
 
-  if (!open || !gameState) return null;
+  // Defensive: Don't render unless open and all required arrays exist
+  if (
+    !open ||
+    !gameState ||
+    !Array.isArray(gameState.team) ||
+    !Array.isArray(gameState.pokedex) ||
+    typeof gameState.duplicates !== "object" ||
+    gameState.duplicates === null
+  ) return null;
 
-  // Build collection: team + additional owned Pokémon (including duplicates as unique slots)
+  // Build collection including duplicates
   let collection = [];
   // Add all current team Pokémon as separate slots (preserve their stats)
   (gameState.team || []).forEach(mon => {
     collection.push({ ...mon, _uniqueKey: Math.random().toString(36).slice(2) });
   });
 
-  // Add all pokedex Pokémon not already in team (base stats),
-  // for each count including duplicates
+  // Add all pokedex Pokémon not already in team (base stats), for each count including duplicates
   const teamCounts = {};
   (gameState.team || []).forEach(mon => {
     teamCounts[mon.id] = (teamCounts[mon.id] || 0) + 1;
   });
   (gameState.pokedex || []).forEach(id => {
-    const owned = 1 + ((gameState.duplicates && gameState.duplicates[id]) || 0);
+    const owned = 1 + (gameState.duplicates[id] || 0);
     const alreadyInTeam = teamCounts[id] || 0;
     const needToAdd = owned - alreadyInTeam;
     for (let i = 0; i < needToAdd; ++i) {
@@ -44,8 +51,12 @@ function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed })
 
   // On modal open, set selected to the current team (by index in collection)
   useEffect(() => {
-    if (open && gameState) {
-      // Find, in order, the collection indexes matching the current team
+    if (
+      open &&
+      gameState &&
+      Array.isArray(gameState.team) &&
+      collection.length
+    ) {
       let selectedIndexes = [];
       (gameState.team || []).forEach(teamMon => {
         for (let i = 0; i < collection.length; ++i) {
@@ -74,9 +85,7 @@ function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed })
   };
 
   const confirmTeam = () => {
-    // Map selected indexes to collection mons
     const newTeam = selected.map(i => {
-      // Remove _uniqueKey
       const { _uniqueKey, ...mon } = collection[i];
       return { ...mon };
     });
@@ -84,7 +93,7 @@ function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed })
     setGameState(updatedState);
     setTeam(newTeam);
     localStorage.setItem("gameState", JSON.stringify(updatedState));
-    setHealed(false); // If you changed team, re-heal to be explicit
+    setHealed(false);
     onClose();
   };
 
@@ -103,7 +112,6 @@ function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed })
         }}>
           {collection.length === 0 && <p>No Pokémon in your collection!</p>}
           {collection.map((mon, idx) => {
-            // Count how many of this mon.id are before this index for display
             const number = 1 + collection.slice(0, idx).filter(m => m.id === mon.id).length;
             const isDuplicate = collection.filter(m => m.id === mon.id).length > 1;
             return (
@@ -185,18 +193,42 @@ export default function Center() {
   const [team, setTeam] = useState([]);
   const router = useRouter();
 
-  // Load gameState and current team
+  // Defensive: Load gameState and current team only if valid
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("gameState"));
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem("gameState"));
+    } catch (e) {
+      saved = null;
+    }
+    if (
+      !saved ||
+      !Array.isArray(saved.team) ||
+      !Array.isArray(saved.pokedex) ||
+      typeof saved.duplicates !== "object" ||
+      saved.duplicates === null
+    ) {
+      setGameState(null);
+      setTeam([]);
+      return;
+    }
     setGameState(saved);
-    setTeam((saved && saved.team) || []);
+    setTeam(saved.team);
   }, []);
 
   const handleHeal = () => {
     setHealing(true);
     setTimeout(() => {
-      const saved = JSON.parse(localStorage.getItem("gameState"));
-      if (saved && saved.team) {
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem("gameState"));
+      } catch (e) {
+        saved = null;
+      }
+      if (
+        saved &&
+        Array.isArray(saved.team)
+      ) {
         saved.team = saved.team.map(p => {
           const pokedexEntry = pokedex.find(mon => mon.id === p.id);
           const stats = pokedexEntry ? getPokemonStats(pokedexEntry) : { hp: 100 };
@@ -220,7 +252,11 @@ export default function Center() {
       backgroundSize: 'cover',
       position: 'relative'
     }}>
-      {gameState && (
+      {gameState &&
+        Array.isArray(gameState.team) &&
+        Array.isArray(gameState.pokedex) &&
+        typeof gameState.duplicates === "object" &&
+        gameState.duplicates !== null && (
         <PCModal
           open={showPC}
           onClose={() => setShowPC(false)}
