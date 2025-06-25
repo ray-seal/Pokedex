@@ -504,9 +504,9 @@ export default function Arena() {
       <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
         🏥 Go to Pokémon Center (Heal & Visit)
       </button>
-      <button className="poke-button" onClick={() => router.push('/bag')} style={{ marginTop: '12px' }}>
-        🎒 View Bag
-      </button>
+      <button className="poke-button" onClick={() => router.push('/')} style={{ marginTop: '12px' }}>
+  ⬅️ Return Home
+</button>
     </main>
   );
 }
