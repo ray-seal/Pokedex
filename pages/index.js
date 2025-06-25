@@ -5,7 +5,7 @@ import { getPokemonStats } from '../lib/pokemonStats';
 
 function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
-  return Math.ceil(10 * Math.pow(1.01, level - 5));
+  return Math.ceil(10 * Math.pow(1.2, level - 5));
 }
 function getStartingLevel(mon) {
   if (mon.legendary) return 50;
