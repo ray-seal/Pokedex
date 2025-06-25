@@ -7,12 +7,13 @@ export default function Home() {
   const [game, setGame] = useState(null);
   const [wildPokemon, setWildPokemon] = useState(null);
   const [message, setMessage] = useState('');
+  const [catching, setCatching] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved || !saved.team || saved.team.length === 0) {
-      router.push('/team'); // force team selection if not set
+      router.push('/team');
       return;
     }
     setGame(saved);
@@ -26,6 +27,54 @@ export default function Home() {
     const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
     setWildPokemon(wild);
     setMessage(`A wild ${wild.name} appeared in the long grass!`);
+  }
+
+  function availableBallsForWild(wild, inventory) {
+    if (!wild || !inventory) return [];
+    const balls = [];
+    if (inventory.pokeballs > 0 && !wild.legendary && (wild.stage || 1) <= 1) balls.push('pokeball');
+    if (inventory.greatballs > 0 && !wild.legendary && (wild.stage || 1) <= 2) balls.push('greatball');
+    if (inventory.ultraballs > 0 && !wild.legendary) balls.push('ultraball');
+    if (inventory.masterballs > 0 && wild.legendary) balls.push('masterball');
+    return balls;
+  }
+
+  function catchWild(ball) {
+    if (!game || !wildPokemon) return;
+    if (game.pokedex && game.pokedex.includes(wildPokemon.id)) {
+      setMessage("You already caught this Pokémon!");
+      return;
+    }
+    setCatching(true);
+    setTimeout(() => {
+      // Deduct ball
+      const updated = { ...game };
+      updated[ball + 's'] = Math.max((updated[ball + 's'] || 0) - 1, 0);
+
+      // 5% fail chance
+      const fail = Math.random() < 0.05;
+
+      if (fail) {
+        setGame(updated);
+        localStorage.setItem('gameState', JSON.stringify(updated));
+        setMessage(
+          `Oh no! The ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')} missed!`
+        );
+        setCatching(false);
+        return;
+      }
+
+      // Add to pokedex on success
+      if (!updated.pokedex.includes(wildPokemon.id)) {
+        updated.pokedex = [...updated.pokedex, wildPokemon.id];
+      }
+      setGame(updated);
+      localStorage.setItem('gameState', JSON.stringify(updated));
+      setMessage(
+        `You caught ${wildPokemon.name} with a ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')}!`
+      );
+      setCatching(false);
+    }, 750);
   }
 
   if (!game) return <p>Loading...</p>;
@@ -70,9 +119,8 @@ export default function Home() {
         🌾 Search Long Grass
       </button>
       {wildPokemon && (
-        <div style={{ position: 'relative', display: 'inline-block', marginBottom: 18 }}>
+        <div style={{ position: 'relative', display: 'inline-block', marginBottom: 18, textAlign: 'center' }}>
           <img src={wildPokemon.sprite} alt={wildPokemon.name} width="96" />
-          {/* Pokéball overlay if already in pokedex */}
           {game.pokedex && game.pokedex.includes(wildPokemon.id) && (
             <img
               src="/pokeball.png"
@@ -80,7 +128,7 @@ export default function Home() {
               width="28"
               style={{
                 position: 'absolute',
-                left: 60, // adjust if needed for your sprites
+                left: 60,
                 bottom: 10,
                 pointerEvents: 'none'
               }}
@@ -88,6 +136,28 @@ export default function Home() {
           )}
           <br />
           <b>{wildPokemon.name}</b>
+          <div style={{marginTop: 8}}>
+            {availableBallsForWild(wildPokemon, game).length > 0 && !game.pokedex.includes(wildPokemon.id) && (
+              <div>
+                <span>Try to catch: </span>
+                {availableBallsForWild(wildPokemon, game).map((ball) => (
+                  <button
+                    key={ball}
+                    className="poke-button"
+                    style={{margin: '0 6px'}}
+                    disabled={catching}
+                    onClick={() => catchWild(ball)}
+                  >
+                    {ball === 'pokeball' && 'Poké Ball'}
+                    {ball === 'greatball' && 'Great Ball'}
+                    {ball === 'ultraball' && 'Ultra Ball'}
+                    {ball === 'masterball' && 'Master Ball'}
+                    {` (${game[ball + 's'] || 0})`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
       <p style={{minHeight: 32}}>{message}</p>
