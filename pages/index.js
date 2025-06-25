@@ -3,6 +3,45 @@ import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
+function xpForNextLevel(level) {
+  if (level >= 100) return Infinity;
+  return Math.ceil(10 * Math.pow(1.01, level - 5));
+}
+
+function getStartingLevel(mon) {
+  if (mon.legendary) return 50;
+  if (mon.stage === 3) return 30;
+  if (mon.stage === 2) return 15;
+  return 5;
+}
+
+function tryEvolve(mon) {
+  // Only evolve if not already at max stage and meets level requirement
+  if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
+    const next = pokedex.find(p => p.id === mon.evolves_to);
+    if (next) {
+      return {
+        ...next,
+        level: mon.level,
+        xp: mon.xp,
+        hp: getPokemonStats(next).hp
+      };
+    }
+  }
+  if (mon.stage === 2 && mon.level >= 30 && mon.evolves_to) {
+    const next = pokedex.find(p => p.id === mon.evolves_to);
+    if (next) {
+      return {
+        ...next,
+        level: mon.level,
+        xp: mon.xp,
+        hp: getPokemonStats(next).hp
+      };
+    }
+  }
+  return mon;
+}
+
 export default function Home() {
   const [game, setGame] = useState(null);
   const [wildPokemon, setWildPokemon] = useState(null);
@@ -16,6 +55,12 @@ export default function Home() {
       router.push('/team');
       return;
     }
+    // Migrate and ensure all team Pokémon have level/xp
+    saved.team = saved.team.map(mon => ({
+      ...mon,
+      level: mon.level || getStartingLevel(mon),
+      xp: mon.xp || 0,
+    }));
     setGame(saved);
   }, []);
 
@@ -37,6 +82,29 @@ export default function Home() {
     if (inventory.ultraballs > 0 && !wild.legendary) balls.push('ultraball');
     if (inventory.masterballs > 0 && wild.legendary) balls.push('masterball');
     return balls;
+  }
+
+  function grantBattleXP(winnerIdx, xpAmount) {
+    const updatedTeam = [...game.team];
+    let mon = updatedTeam[winnerIdx];
+    if (!mon.level) mon.level = getStartingLevel(mon);
+    if (!mon.xp) mon.xp = 0;
+    let newXP = mon.xp + xpAmount;
+    let newLevel = mon.level;
+    let evolved = false;
+    while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
+      newXP -= xpForNextLevel(newLevel);
+      newLevel++;
+      evolved = true;
+    }
+    mon.xp = newXP;
+    mon.level = newLevel;
+    // Try evolution
+    let evolvedMon = tryEvolve(mon);
+    // If evolved, preserve HP if current was higher
+    evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
+    updatedTeam[winnerIdx] = evolvedMon;
+    return updatedTeam;
   }
 
   function catchWild(ball) {
@@ -75,10 +143,28 @@ export default function Home() {
         );
       }
 
+      // Add level/xp for caught Pokémon/duplicate
+      if (!updated.inventory) updated.inventory = {};
+      updated.inventory[wildPokemon.id] = (updated.inventory[wildPokemon.id] || 0) + 1;
+      // If you want to add to team, add here:
+      // updated.team.push({ ...wildPokemon, level: getStartingLevel(wildPokemon), xp: 0, hp: getPokemonStats(wildPokemon).hp });
+
       setGame(updated);
       localStorage.setItem('gameState', JSON.stringify(updated));
       setCatching(false);
     }, 750);
+  }
+
+  // Winning a wild battle (simulate: first Pokémon wins, you can adjust this logic)
+  function winWildBattle() {
+    if (!game || !wildPokemon) return;
+    const winnerIdx = 0; // Example: first team Pokémon always battles
+    const newTeam = grantBattleXP(winnerIdx, 10); // 10 XP per win
+    const updated = { ...game, team: newTeam };
+    setGame(updated);
+    localStorage.setItem('gameState', JSON.stringify(updated));
+    setMessage(`Your ${newTeam[winnerIdx].name} won and gained 10 XP!`);
+    setWildPokemon(null);
   }
 
   if (!game) return <p>Loading...</p>;
@@ -114,6 +200,8 @@ export default function Home() {
             }}>
             <img src={mon.sprite} alt={mon.name} width="48" /><br />
             <strong>{mon.name}</strong><br />
+            Level: {mon.level || getStartingLevel(mon)}<br />
+            XP: {mon.xp || 0} / {xpForNextLevel(mon.level || getStartingLevel(mon))}<br />
             HP: {mon.hp} / {getMaxHP(mon)}
           </div>
         ))}
@@ -161,6 +249,13 @@ export default function Home() {
                 ))}
               </div>
             )}
+            <button 
+              className="poke-button" 
+              style={{marginLeft: 12}} 
+              onClick={winWildBattle}
+            >
+              🏆 Defeat Wild Pokémon (Gain XP)
+            </button>
           </div>
         </div>
       )}
