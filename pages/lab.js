@@ -17,58 +17,66 @@ export default function Lab() {
   };
 
   const handleSell = (id) => {
-    if (!game || game.inventory[id] <= 1) return;
+    if (!game || !game.duplicates || !game.duplicates[id] || game.duplicates[id] < 1) return;
 
     const updatedGame = { ...game };
     updatedGame.coins += 25;
-    updatedGame.inventory[id] -= 1;
+    updatedGame.duplicates = { ...updatedGame.duplicates };
+    updatedGame.duplicates[id] -= 1;
+
+    // Remove entry if sold all duplicates
+    if (updatedGame.duplicates[id] <= 0) {
+      delete updatedGame.duplicates[id];
+    }
 
     saveGame(updatedGame);
-    const pokemon = data.find(p => p.id === id);
+    const pokemon = data.find(p => p.id === parseInt(id));
     setMessage(`🧪 You sold a duplicate ${pokemon.name} for 25 coins.`);
   };
 
   if (!game) return <p>Loading...</p>;
 
-  const duplicates = Object.entries(game.inventory).filter(([id, count]) => count > 1);
+  const duplicatesArr = game.duplicates
+    ? Object.entries(game.duplicates).filter(([id, count]) => count > 0)
+    : [];
 
   return (
     <div
-  style={{
-    minHeight: '100vh',
-    backgroundImage: 'url("/lab-bg.jpg")',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    fontFamily: 'monospace',
-    padding: '20px'
-  }}
->
-  <h1>🧪 Professor Oak's Lab</h1>
-  <p>💰 Coins: {game.coins}</p>
+      style={{
+        minHeight: '100vh',
+        backgroundImage: 'url("/lab-bg.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        fontFamily: 'monospace',
+        padding: '20px'
+      }}
+    >
+      <h1>🧪 Professor Oak's Lab</h1>
+      <p>💰 Coins: {game.coins}</p>
 
-  {duplicates.length === 0 ? (
-    <p>You have no duplicates to sell.</p>
-  ) : (
-    <ul>
-      {duplicates.map(([id, count]) => {
-        const p = data.find(mon => mon.id === parseInt(id));
-        return (
-          <li key={id}>
-            <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{count}
-            <button onClick={() => handleSell(p.id)} style={{ marginLeft: '10px' }}>
-              Sell for 25 coins
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  )}
+      {duplicatesArr.length === 0 ? (
+        <p>You have no duplicates to sell.</p>
+      ) : (
+        <ul>
+          {duplicatesArr.map(([id, count]) => {
+            const p = data.find(mon => mon.id === parseInt(id));
+            return (
+              <li key={id}>
+                <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{count}
+                <button onClick={() => handleSell(p.id)} style={{ marginLeft: '10px' }}>
+                  Sell for 25 coins
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-  <p style={{ marginTop: '20px' }}>{message}</p>
+      <p style={{ marginTop: '20px' }}>{message}</p>
 
-  <br />
-  <Link href="/">🏠 Back to Main Page</Link>
-</div>
+      <br />
+      <Link href="/">🏠 Back to Main Page</Link>
+    </div>
   );
 }
