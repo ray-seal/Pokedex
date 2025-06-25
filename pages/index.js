@@ -413,8 +413,35 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        position: 'relative', // Required for absolute dropdown
       }}
     >
+      {/* Dropdown Navigation Menu - Top Right */}
+      <div style={{
+        position: 'absolute',
+        top: 24,
+        right: 32,
+        zIndex: 100
+      }}>
+        <select
+          className="poke-button"
+          style={{ fontSize: '1rem', padding: '10px 18px', borderRadius: 7 }}
+          defaultValue=""
+          onChange={e => {
+            if (e.target.value) router.push(e.target.value);
+          }}
+        >
+          <option value="" disabled>Navigate to…</option>
+          <option value="/store">🛒 Pokemart</option>
+          <option value="/lab">🧑‍🔬 Professor Oak's Lab</option>
+          <option value="/center">🏥 Pokémon Center</option>
+          <option value="/arena">🏟️ Pokémon Arena</option>
+          <option value="/pokedex">📖 Pokédex</option>
+          <option value="/team">🧑‍🤝‍🧑 Choose Team</option>
+          <option value="/bag">🎒 Bag</option>
+        </select>
+      </div>
+
       <BagModal
         open={showBag}
         onClose={() => setShowBag(false)}
@@ -510,35 +537,6 @@ export default function Home() {
       )}
 
       <p style={{minHeight: 32}}>{message}</p>
-
-      {/* Dropdown Navigation Menu */}
-      <div style={{
-        position: 'fixed',
-        bottom: 24,
-        left: 0,
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        zIndex: 100
-      }}>
-        <select
-          className="poke-button"
-          style={{ fontSize: '1rem', padding: '10px 18px', borderRadius: 7 }}
-          defaultValue=""
-          onChange={e => {
-            if (e.target.value) router.push(e.target.value);
-          }}
-        >
-          <option value="" disabled>Navigate to…</option>
-          <option value="/store">🛒 Pokemart</option>
-          <option value="/lab">🧑‍🔬 Professor Oak's Lab</option>
-          <option value="/center">🏥 Pokémon Center</option>
-          <option value="/arena">🏟️ Pokémon Arena</option>
-          <option value="/pokedex">📖 Pokédex</option>
-          <option value="/team">🧑‍🤝‍🧑 Choose Team</option>
-          <option value="/bag">🎒 Bag</option>
-        </select>
-      </div>
 
       <style jsx>{`
         .poke-button {
