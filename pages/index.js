@@ -452,8 +452,28 @@ export default function Home() {
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
       />
-      <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
-      <h2>Your Team</h2>
+     <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
+<div style={{
+  textAlign: 'center',
+  width: '100%',
+  fontSize: '1.35rem',
+  fontWeight: 'bold',
+  margin: '8px 0 16px 0',
+  background: 'rgba(255,255,255,0.13)',
+  color: '#ffd700',
+  textShadow: '1px 2px 10px #222, 1px 1px 5px #222',
+  borderRadius: '10px',
+  padding: '6px 0',
+  letterSpacing: '1px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '10px'
+}}>
+  <span role="img" aria-label="coin" style={{fontSize:'1.7em', verticalAlign:'middle'}}>🪙</span>
+  {game?.coins ?? 0} coins
+</div>
+<h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {team.map((mon, idx) => (
           <div key={mon.id}
