@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import pokedex from '../public/pokedex.json';
+import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Center() {
   const [healed, setHealed] = useState(false);
@@ -8,7 +10,12 @@ export default function Center() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (saved && saved.team) {
-      saved.team = saved.team.map(p => ({ ...p, hp: 100 }));
+      // Heal each Pokémon to their real maximum HP
+      saved.team = saved.team.map(p => {
+        const pokedexEntry = pokedex.find(mon => mon.id === p.id);
+        const stats = pokedexEntry ? getPokemonStats(pokedexEntry) : { hp: 100 };
+        return { ...p, hp: stats.hp };
+      });
       localStorage.setItem("gameState", JSON.stringify(saved));
       setHealed(true);
     }
