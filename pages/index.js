@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
-import { counties } from '../data/regions'; // after pokedex import
-import SatNav from '../components/SatNav';  // after your utils/components
+import { counties } from '../data/regions';
+import SatNav from '../components/SatNav';
 
 // --- BagModal Component ---
 function BagModal({ open, onClose, game, turn, wildPokemon, team, activeIdx, onUseItem }) {
@@ -173,19 +173,24 @@ export default function Home() {
   const [showBag, setShowBag] = useState(false);
   const router = useRouter();
 
+  // --- SatNav handler ---
+  const handleCountyChange = (countyId) => {
+    setGame(g => ({ ...g, location: countyId }));
+    router.push({ pathname: "/", query: { county: countyId } });
+    setWildPokemon(null);
+    setMessage(`Arrived in ${countyId}!`);
+  };
+
+  // Get county from game state, fallback to first county
+  const currentCounty = game?.location || counties[0].id;
+
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
+    let location = router.query.county || saved?.location || counties[0].id;
     if (!saved || !saved.team || saved.team.length === 0) {
       router.push('/team');
       return;
     }
-    // Add after useState/useEffect declarations, inside Home
-const handleCountyChange = (countyId) => {
-  setGame(g => ({ ...g, location: countyId }));
-  router.push({ pathname: "/", query: { county: countyId } });
-  setWildPokemon(null);
-  setMessage(`Arrived in ${countyId}!`);
-};
     const newTeam = saved.team.map(mon => {
       const stats = getPokemonStats(mon);
       return {
@@ -197,9 +202,9 @@ const handleCountyChange = (countyId) => {
       };
     });
     setTeam(newTeam);
-    setGame({ ...saved, team: newTeam });
+    setGame({ ...saved, team: newTeam, location });
     setActiveIdx(0);
-  }, []);
+  }, [router.query.county]);
 
   function availableBallsForWild(wild, inventory) {
     if (!wild || !inventory) return [];
@@ -441,8 +446,11 @@ const handleCountyChange = (countyId) => {
       }, 1200);
     }, 750);
   }
-const currentCounty = game?.location || counties[0].id;
+
   if (!game) return <p>Loading...</p>;
+
+  // Get county info for display
+  const countyInfo = counties.find(c => c.id === currentCounty);
 
   return (
     <main
@@ -461,10 +469,9 @@ const currentCounty = game?.location || counties[0].id;
         position: 'relative', // Required for absolute dropdown
       }}
     >
-<SatNav
-  currentCounty={currentCounty}
-  onChange={handleCountyChange}
-/>
+      {/* SatNav Dropdown (left) */}
+      <SatNav currentCounty={currentCounty} onChange={handleCountyChange} />
+
       {/* Dropdown Navigation Menu - Top Right */}
       <div style={{
         position: 'absolute',
@@ -501,6 +508,7 @@ const currentCounty = game?.location || counties[0].id;
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
       />
+
       <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
       <div style={{
         textAlign: 'center',
@@ -522,6 +530,32 @@ const currentCounty = game?.location || counties[0].id;
         <span role="img" aria-label="coin" style={{fontSize:'1.7em', verticalAlign:'middle'}}>🪙</span>
         {game?.coins ?? 0} coins
       </div>
+
+      {/* Show current county info and arena */}
+      <div
+        style={{
+          background: "rgba(0,0,0,0.35)",
+          padding: 16,
+          borderRadius: 12,
+          marginBottom: 24,
+          maxWidth: 350,
+        }}
+      >
+        <h2 style={{ margin: "0 0 8px 0" }}>
+          {countyInfo?.name || currentCounty}
+        </h2>
+        <div style={{ fontSize: 16, marginBottom: 6 }}>
+          {countyInfo?.description}
+        </div>
+        {countyInfo?.arena && (
+          <div style={{ fontSize: 15, marginTop: 5 }}>
+            <b>Arena:</b> {countyInfo.arena.name}
+            <br />
+            <b>Reward:</b> {countyInfo.arena.reward}
+          </div>
+        )}
+      </div>
+
       <h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {team.map((mon, idx) => (
