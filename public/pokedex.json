@@ -1,1064 +1,153 @@
 [
-  {
-    "id": 1,
-    "name": "Bulbasaur",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/bulbasaur.png",
-    "stage": 1
-  },
-  {
-    "id": 2,
-    "name": "Ivysaur",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/ivysaur.png",
-    "stage": 2
-  },
-  {
-    "id": 3,
-    "name": "Venusaur",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/venusaur.png",
-    "stage": 3
-  },
-  {
-    "id": 4,
-    "name": "Charmander",
-    "type": ["Fire"],
-    "sprite": "/images/charmander.png",
-    "stage": 1
-  },
-  {
-    "id": 5,
-    "name": "Charmeleon",
-    "type": ["Fire"],
-    "sprite": "/images/charmeleon.png",
-    "stage": 2
-  },
-  {
-    "id": 6,
-    "name": "Charizard",
-    "type": ["Fire", "Flying"],
-    "sprite": "/images/charizard.png",
-    "stage": 3
-  },
-  {
-    "id": 7,
-    "name": "Squirtle",
-    "type": ["Water"],
-    "sprite": "/images/squirtle.png",
-    "stage": 1
-  },
-  {
-    "id": 8,
-    "name": "Wartortle",
-    "type": ["Water"],
-    "sprite": "/images/wartortle.png",
-    "stage": 2
-  },
-  {
-    "id": 9,
-    "name": "Blastoise",
-    "type": ["Water"],
-    "sprite": "/images/blastoise.png",
-    "stage": 3
-  },
-  {
-    "id": 10,
-    "name": "Caterpie",
-    "type": ["Bug"],
-    "sprite": "/images/caterpie.png",
-    "stage": 1
-  },
-  {
-    "id": 11,
-    "name": "Metapod",
-    "type": ["Bug"],
-    "sprite": "/images/metapod.png",
-    "stage": 2
-  },
-  {
-    "id": 12,
-    "name": "Butterfree",
-    "type": ["Bug", "Flying"],
-    "sprite": "/images/butterfree.png",
-    "stage": 3
-  },
-  {
-    "id": 13,
-    "name": "Weedle",
-    "type": ["Bug", "Poison"],
-    "sprite": "/images/weedle.png",
-    "stage": 1
-  },
-  {
-    "id": 14,
-    "name": "Kakuna",
-    "type": ["Bug", "Poison"],
-    "sprite": "/images/kakuna.png",
-    "stage": 2
-  },
-  {
-    "id": 15,
-    "name": "Beedrill",
-    "type": ["Bug", "Poison"],
-    "sprite": "/images/beedrill.png",
-    "stage": 3
-  },
-  {
-    "id": 16,
-    "name": "Pidgey",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/pidgey.png",
-    "stage": 1
-  },
-  {
-    "id": 17,
-    "name": "Pidgeotto",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/pidgeotto.png",
-    "stage": 2
-  },
-  {
-    "id": 18,
-    "name": "Pidgeot",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/pidgeot.png",
-    "stage": 3
-  },
-  {
-    "id": 19,
-    "name": "Rattata",
-    "type": ["Normal"],
-    "sprite": "/images/rattata.png",
-    "stage": 1
-  },
-  {
-    "id": 20,
-    "name": "Raticate",
-    "type": ["Normal"],
-    "sprite": "/images/raticate.png",
-    "stage": 2
-  },
-  {
-    "id": 21,
-    "name": "Spearow",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/spearow.png",
-    "stage": 1
-  },
-  {
-    "id": 22,
-    "name": "Fearow",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/fearow.png",
-    "stage": 2
-  },
-  {
-    "id": 23,
-    "name": "Ekans",
-    "type": ["Poison"],
-    "sprite": "/images/ekans.png",
-    "stage": 1
-  },
-  {
-    "id": 24,
-    "name": "Arbok",
-    "type": ["Poison"],
-    "sprite": "/images/arbok.png",
-    "stage": 2
-  },
-  {
-    "id": 25,
-    "name": "Pikachu",
-    "type": ["Electric"],
-    "sprite": "/images/pikachu.png",
-    "stage": 1
-  },
-  {
-    "id": 26,
-    "name": "Raichu",
-    "type": ["Electric"],
-    "sprite": "/images/raichu.png",
-    "stage": 2
-  },
-  {
-    "id": 27,
-    "name": "Sandshrew",
-    "type": ["Ground"],
-    "sprite": "/images/sandshrew.png",
-    "stage": 1
-  },
-  {
-    "id": 28,
-    "name": "Sandslash",
-    "type": ["Ground"],
-    "sprite": "/images/sandslash.png",
-    "stage": 2
-  },
-  {
-    "id": 29,
-    "name": "Nidoran♀",
-    "type": ["Poison"],
-    "sprite": "/images/nidoranf.png",
-    "stage": 1
-  },
-  {
-    "id": 30,
-    "name": "Nidorina",
-    "type": ["Poison"],
-    "sprite": "/images/nidorina.png",
-    "stage": 2
-  },
-  {
-    "id": 31,
-    "name": "Nidoqueen",
-    "type": ["Ground", "Poison"],
-    "sprite": "/images/nidoqueen.png",
-    "stage": 3
-  },
-  {
-    "id": 32,
-    "name": "Nidoran♂",
-    "type": ["Poison"],
-    "sprite": "/images/nidoranm.png",
-    "stage": 1
-  },
-  {
-    "id": 33,
-    "name": "Nidorino",
-    "type": ["Poison"],
-    "sprite": "/images/nidorino.png",
-    "stage": 2
-  },
-  {
-    "id": 34,
-    "name": "Nidoking",
-    "type": ["Ground", "Poison"],
-    "sprite": "/images/nidoking.png",
-    "stage": 3
-  },
-  {
-    "id": 35,
-    "name": "Clefairy",
-    "type": ["Fairy"],
-    "sprite": "/images/clefairy.png",
-    "stage": 1
-  },
-  {
-    "id": 36,
-    "name": "Clefable",
-    "type": ["Fairy"],
-    "sprite": "/images/clefable.png",
-    "stage": 2
-  },
-  {
-    "id": 37,
-    "name": "Vulpix",
-    "type": ["Fire"],
-    "sprite": "/images/vulpix.png",
-    "stage": 1
-  },
-  {
-    "id": 38,
-    "name": "Ninetales",
-    "type": ["Fire"],
-    "sprite": "/images/ninetales.png",
-    "stage": 2
-  },
-  {
-    "id": 39,
-    "name": "Jigglypuff",
-    "type": ["Normal", "Fairy"],
-    "sprite": "/images/jigglypuff.png",
-    "stage": 1
-  },
-  {
-    "id": 40,
-    "name": "Wigglytuff",
-    "type": ["Normal", "Fairy"],
-    "sprite": "/images/wigglytuff.png",
-    "stage": 2
-  },
-  {
-    "id": 41,
-    "name": "Zubat",
-    "type": ["Flying", "Poison"],
-    "sprite": "/images/zubat.png",
-    "stage": 1
-  },
-  {
-    "id": 42,
-    "name": "Golbat",
-    "type": ["Flying", "Poison"],
-    "sprite": "/images/golbat.png",
-    "stage": 2
-  },
-  {
-    "id": 43,
-    "name": "Oddish",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/oddish.png",
-    "stage": 1
-  },
-  {
-    "id": 44,
-    "name": "Gloom",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/gloom.png",
-    "stage": 2
-  },
-  {
-    "id": 45,
-    "name": "Vileplume",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/vileplume.png",
-    "stage": 3
-  },
-  {
-    "id": 46,
-    "name": "Paras",
-    "type": ["Grass", "Bug"],
-    "sprite": "/images/paras.png",
-    "stage": 1
-  },
-  {
-    "id": 47,
-    "name": "Parasect",
-    "type": ["Grass", "Bug"],
-    "sprite": "/images/parasect.png",
-    "stage": 2
-  },
-  {
-    "id": 48,
-    "name": "Venonat",
-    "type": ["Bug", "Poison"],
-    "sprite": "/images/venonat.png",
-    "stage": 1
-  },
-  {
-    "id": 49,
-    "name": "Venomoth",
-    "type": ["Bug", "Poison"],
-    "sprite": "/images/venomoth.png",
-    "stage": 2
-  },
-  {
-    "id": 50,
-    "name": "Diglett",
-    "type": ["Ground"],
-    "sprite": "/images/diglett.png",
-    "stage": 1
-  },
-  {
-    "id": 51,
-    "name": "Dugtrio",
-    "type": ["Ground"],
-    "sprite": "/images/dugtrio.png",
-    "stage": 2
-  },
-  {
-    "id": 52,
-    "name": "Meowth",
-    "type": ["Normal"],
-    "sprite": "/images/meowth.png",
-    "stage": 1
-  },
-  {
-    "id": 53,
-    "name": "Persian",
-    "type": ["Normal"],
-    "sprite": "/images/persian.png",
-    "stage": 2
-  },
-  {
-    "id": 54,
-    "name": "Psyduck",
-    "type": ["Water"],
-    "sprite": "/images/psyduck.png",
-    "stage": 1
-  },
-  {
-    "id": 55,
-    "name": "Golduck",
-    "type": ["Water"],
-    "sprite": "/images/golduck.png",
-    "stage": 2
-  },
-  {
-    "id": 56,
-    "name": "Mankey",
-    "type": ["Fighting"],
-    "sprite": "/images/mankey.png",
-    "stage": 1
-  },
-  {
-    "id": 57,
-    "name": "Primeape",
-    "type": ["Fighting"],
-    "sprite": "/images/primeape.png",
-    "stage": 2  
-  },
-  {
-    "id": 58,
-    "name": "Growlithe",
-    "type": ["Fire"],
-    "sprite": "/images/growlithe.png",
-    "stage": 1
-  },
-  {
-    "id": 59,
-    "name": "Arcanine",
-    "type": ["Fire"],
-    "sprite": "/images/arcanine.png",
-    "stage": 2
-  },
-  {
-    "id": 60,
-    "name": "poliwag",
-    "type": ["Water"],
-    "sprite": "/images/poliwag.png",
-    "stage": 1
-  },
-  {
-    "id": 61,
-    "name": "Poliwhirl",
-    "type": ["Water"],
-    "sprite": "/images/poliwhirl.png",
-    "stage": 2
-  },
-  {
-    "id": 62,
-    "name": "Poliwrath",
-    "type": ["Water", "Fighting"],
-    "sprite": "/images/poliwhirl.png",
-    "stage": 3
-  },
-  {
-    "id": 63,
-    "name": "Abra",
-    "type": ["Psychic"],
-    "sprite": "/images/abra.png",
-    "stage": 1
-  },
-  {
-    "id": 64,
-    "name": "Kadabra",
-    "type": ["Psychic"],
-    "sprite": "/images/kadabra.png",
-    "stage": 2
-  },
-  {
-    "id": 65,
-    "name": "Alakazam",
-    "type": ["Psychic"],
-    "sprite": "/images/alakazam.png",
-    "stage": 3
-  },
-  {
-    "id": 66,
-    "name": "Machop",
-    "type": ["Fighting"],
-    "sprite": "/images/machop.png",
-    "stage": 1
-  },
-  {
-    "id": 67,
-    "name": "Machoke",
-    "type": ["Fighting"],
-    "sprite": "/images/machoke.png",
-    "stage": 2
-  },
-  {
-    "id": 68,
-    "name": "Machamp",
-    "type": ["Fighting"],
-    "sprite": "/images/machamp.png",
-    "stage": 3
-  },
-  {
-    "id": 69,
-    "name": "Bellsprout",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/bellsprout.png",
-    "stage": 1
-  },
-  {
-    "id": 70,
-    "name": "Weepinbell",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/weepinbell.png",
-    "stage": 2
-  },
-  {
-    "id": 71,
-    "name": "Victreebell",
-    "type": ["Grass", "Poison"],
-    "sprite": "/images/victreebell.png",
-    "stage": 3
-  },
-  {
-    "id": 72,
-    "name": "Tentacool",
-    "type": ["Water", "Poison"],
-    "sprite": "/images/tentacool.png",
-    "stage": 1
-  },
-  {
-    "id": 73,
-    "name": "Tentacruel",
-    "type": ["Water", "Poison"],
-    "sprite": "/images/tentacruel.png",
-    "stage": 2
-  },
-  {
-    "id": 74,
-    "name": "Geodude",
-    "type": ["Rock", "Ground"],
-    "sprite": "/images/geodude.png",
-    "stage": 1
-  },
-  {
-    "id": 75,
-    "name": "Graveler",
-    "type": ["Rock", "Ground"],
-    "sprite": "/images/graveler.png",
-    "stage": 2
-  },
-  {
-    "id": 76,
-    "name": "Golem",
-    "type": ["Rock", "Ground"],
-    "sprite": "/images/golem.png",
-    "stage": 3
-  },
-  {
-    "id": 77,
-    "name": "Ponyta",
-    "type": ["Fire"],
-    "sprite": "/images/ponyta.png",
-    "stage": 1
-  },
-  {
-    "id": 78,
-    "name": "Rapidash",
-    "type": ["Fire"],
-    "sprite": "/images/rapidash.png",
-    "stage": 2
-  },
-  {
-    "id": 79,
-    "name": "Slowpoke",
-    "type": ["Water", "Psychic"],
-    "sprite": "/images/slowpoke.png",
-    "stage": 1
-  },
-  {
-    "id": 80,
-    "name": "Slowbro",
-    "type": ["Water", "Psychic"],
-    "sprite": "/images/slowbro.png",
-    "stage": 2
-  },
-  {
-    "id": 81,
-    "name": "Magnemite",
-    "type": ["Electric", "Steel"],
-    "sprite": "/images/magnemite.png",
-    "stage": 1
-  },
-  {
-    "id": 82,
-    "name": "Magneton",
-    "type": ["Electric", "Steel"],
-    "sprite": "/images/magneton.png",
-    "stage": 2
-  },
-  {
-    "id": 83,
-    "name": "Farfetch'd",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/farfetchd.png",
-    "stage": 1
-  },
-  {
-    "id": 84,
-    "name": "Doduo",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/doduo.png",
-    "stage": 1
-  },
-  {
-    "id": 85,
-    "name": "Dodrio",
-    "type": ["Normal", "Flying"],
-    "sprite": "/images/dodrio.png",
-    "stage": 2
-  },
-  {
-    "id": 86,
-    "name": "Seel",
-    "type": ["Water"],
-    "sprite": "/images/seel.png",
-    "stage": 1
-  },
-  {
-    "id": 87,
-    "name": "Dewgong",
-    "type": ["Water", "Ice"],
-    "sprite": "/images/dewgong.png",
-    "stage": 2
-  },
-  {
-    "id": 88,
-    "name": "Grimer",
-    "type": ["Poison"],
-    "sprite": "/images/grimer.png",
-    "stage": 1
-  },
-  {
-    "id": 89,
-    "name": "Muk",
-    "type": ["Poison"],
-    "sprite": "/images/muk.png",
-    "stage": 2
-  },
-  {
-    "id": 90,
-    "name": "Shellder",
-    "type": ["Water"],
-    "sprite": "/images/shellder.png",
-    "stage": 1
-  },
-  {
-    "id": 91,
-    "name": "Cloyster",
-    "type": ["Water", "Ice"],
-    "sprite": "/images/cloyster.png",
-    "stage": 2
-  },
-  {
-    "id": 92,
-    "name": "Gastly",
-    "type": ["Ghost", "Poison"],
-    "sprite": "/images/gastly.png",
-    "stage": 1
-  },
-  {
-    "id": 93,
-    "name": "Haunter",
-    "type": ["Ghost", "Poison"],
-    "sprite": "/images/haunter.png",
-    "stage": 2
-  },
-  {
-    "id": 94,
-    "name": "Gengar",
-    "type": ["Ghost", "Poison"],
-    "sprite": "/images/gengar.png",
-    "stage": 3
-  },
-  {
-    "id": 95,
-    "name": "Onix",
-    "type": ["Rock", "Ground"],
-    "sprite": "/images/onix.png",
-    "stage": 1
-  },
-  {
-    "id": 96,
-    "name": "Drowzee",
-    "type": ["Psychic"],
-    "sprite": "/images/drowzee.png",
-    "stage": 1
-  },
-  {
-    "id": 97,
-    "name": "Hypno",
-    "type": ["Psychic"],
-    "sprite": "/images/hypno.png",
-    "stage": 2
-  },
-  {
-    "id": 98,
-    "name": "Krabby",
-    "type": ["Water"],
-    "sprite": "/images/krabby.png",
-    "stage": 1
-  },
-  {
-    "id": 99,
-    "name": "Kingler",
-    "type": ["Water"],
-    "sprite": "/images/kingler.png",
-    "stage": 2
-  },
-  {
-    "id": 100,
-    "name": "Voltorb",
-    "type": ["Electric"],
-    "sprite": "/images/voltorb.png",
-    "stage": 1
-  },
-  {
-    "id": 101,
-    "name": "Electrode",
-    "type": ["Electric"],
-    "sprite": "/images/electrode.png",
-    "stage": 2
-  },
-  {
-    "id": 102,
-    "name": "Exeggcute",
-    "type": ["Grass", "Psychic"],
-    "sprite": "/images/exeggcute.png",
-    "stage": 1
-  },
-  {
-    "id": 103,
-    "name": "Exeggutor",
-    "type": ["Grass", "Psychic"],
-    "sprite": "/images/exeggutor.png",
-    "stage": 2
-  },
-  {
-    "id": 104,
-    "name": "Cubone",
-    "type": ["Ground"],
-    "sprite": "/images/cubone.png",
-    "stage": 1
-  },
-  {
-    "id": 105,
-    "name": "Marowak",
-    "type": ["Ground"],
-    "sprite": "/images/marowak.png",
-    "stage": 2
-  },
-  {
-    "id": 106,
-    "name": "Hitmonlee",
-    "type": ["Fighting"],
-    "sprite": "/images/hitmonlee.png",
-    "stage": 1
-  },
-  {
-    "id": 107,
-    "name": "Hitmonchan",
-    "type": ["Fighting"],
-    "sprite": "/images/hitmonchan.png",
-    "stage": 1
-  },
-  {
-    "id": 108,
-    "name": "Lickitung",
-    "type": ["Normal"],
-    "sprite": "/images/lickitung.png",
-    "stage": 1
-  },
-  {
-    "id": 109,
-    "name": "Koffing",
-    "type": ["Poison"],
-    "sprite": "/images/koffing.png",
-    "stage": 1
-  },
-  {
-    "id": 110,
-    "name": "Weezing",
-    "type": ["Poison"],
-    "sprite": "/images/weezing.png",
-    "stage": 2
-  },
-  {
-    "id": 111,
-    "name": "Rhyhorn",
-    "type": ["Ground", "Rock"],
-    "sprite": "/images/rhyhorn.png",
-    "stage": 1
-  },
-  {
-    "id": 112,
-    "name": "Rhydon",
-    "type": ["Ground", "Rock"],
-    "sprite": "/images/rhydon.png",
-    "stage": 2
-  },
-  {
-    "id": 113,
-    "name": "Chansey",
-    "type": ["Normal"],
-    "sprite": "/images/chansey.png",
-    "stage": 1
-  },
-  {
-    "id": 114,
-    "name": "Tangela",
-    "type": ["Grass"],
-    "sprite": "/images/tangela.png",
-    "stage": 1
-  },
-  {
-    "id": 115,
-    "name": "Kangaskhan",
-    "type": ["Normal"],
-    "sprite": "/images/kangaskhan.png",
-    "stage": 1
-  },
-  {
-    "id": 116,
-    "name": "Horsea",
-    "type": ["Water"],
-    "sprite": "/images/horsea.png",
-    "stage": 1
-  },
-  {
-    "id": 117,
-    "name": "Seadra",
-    "type": ["Water"],
-    "sprite": "/images/seadra.png",
-    "stage": 2
-  },
-  {
-    "id": 118,
-    "name": "Goldeen",
-    "type": ["Water"],
-    "sprite": "/images/goldeen.png",
-    "stage": 1
-  },
-  {
-    "id": 119,
-    "name": "Seaking",
-    "type": ["Water"],
-    "sprite": "/images/seaking.png",
-    "stage": 2
-  },
-  {
-    "id": 120,
-    "name": "Staryu",
-    "type": ["Water"],
-    "sprite": "/images/staryu.png",
-    "stage": 1
-  },
-  {
-    "id": 121,
-    "name": "Starmie",
-    "type": ["Water", "Psychic"],
-    "sprite": "/images/starmie.png",
-    "stage": 2
-  },
-  {
-    "id": 122,
-    "name": "Mr. Mime",
-    "type": ["Psychic", "Fairy"],
-    "sprite": "/images/mrmime.png",
-    "stage": 1
-  },
-  {
-    "id": 123,
-    "name": "Scyther",
-    "type": ["Bug", "Flying"],
-    "sprite": "/images/scyther.png",
-    "stage": 1
-  },
-  {
-    "id": 124,
-    "name": "Jynx",
-    "type": ["Ice", "Psychic"],
-    "sprite": "/images/jynx.png",
-    "stage": 1
-  },
-  {
-    "id": 125,
-    "name": "Electabuzz",
-    "type": ["Electric"],
-    "sprite": "/images/electabuzz.png",
-    "stage": 1
-  },
-  {
-    "id": 126,
-    "name": "Magmar",
-    "type": ["Fire"],
-    "sprite": "/images/magmar.png",
-    "stage": 1
-  },
-  {
-    "id": 127,
-    "name": "Pinsir",
-    "type": ["Bug"],
-    "sprite": "/images/pinsir.png",
-    "stage": 1
-  },
-  {
-    "id": 128,
-    "name": "Tauros",
-    "type": ["Normal"],
-    "sprite": "/images/tauros.png",
-    "stage": 1
-  },
-  {
-    "id": 129,
-    "name": "Magikarp",
-    "type": ["Water"],
-    "sprite": "/images/magikarp.png",
-    "stage": 1
-  },
-  {
-    "id": 130,
-    "name": "Gyarados",
-    "type": ["Water", "Flying"],
-    "sprite": "/images/gyarados.png",
-    "stage": 2
-  },
-  {
-    "id": 131,
-    "name": "Lapras",
-    "type": ["Water", "Ice"],
-    "sprite": "/images/lapras.png",
-    "stage": 1
-  },
-  {
-    "id": 132,
-    "name": "Ditto",
-    "type": ["Normal"],
-    "sprite": "/images/ditto.png",
-    "stage": 1
-  },
-  {
-    "id": 133,
-    "name": "Eevee",
-    "type": ["Normal"],
-    "sprite": "/images/eevee.png",
-    "stage": 1
-  },
-  {
-    "id": 134,
-    "name": "Vaporeon",
-    "type": ["Water"],
-    "sprite": "/images/vaporeon.png",
-    "stage": 2
-  },
-  {
-    "id": 135,
-    "name": "Jolteon",
-    "type": ["Electric"],
-    "sprite": "/images/jolteon.png",
-    "stage": 2
-  },
-  {
-    "id": 136,
-    "name": "Flareon",
-    "type": ["Fire"],
-    "sprite": "/images/flareon.png",
-    "stage": 2
-  },
-  {
-    "id": 137,
-    "name": "Porygon",
-    "type": ["Normal"],
-    "sprite": "/images/porygon.png",
-    "stage": 1
-  },
-  {
-    "id": 138,
-    "name": "Omanyte",
-    "type": ["Rock", "Water"],
-    "sprite": "/images/omanyte.png",
-    "stage": 1
-  },
-  {
-    "id": 139,
-    "name": "Omastar",
-    "type": ["Rock", "Water"],
-    "sprite": "/images/omastar.png",
-    "stage": 2
-  },
-  {
-    "id": 140,
-    "name": "Kabuto",
-    "type": ["Rock", "Water"],
-    "sprite": "/images/kabuto.png",
-    "stage": 1
-  },
-  {
-    "id": 141,
-    "name": "Kabutops",
-    "type": ["Rock", "Water"],
-    "sprite": "/images/kabutops.png",
-    "stage": 2
-  },
-  {
-    "id": 142,
-    "name": "Aerodactyl",
-    "type": ["Rock", "Flying"],
-    "sprite": "/images/aerodactyl.png",
-    "stage": 1
-  },
-  {
-    "id": 143,
-    "name": "Snorlax",
-    "type": ["Normal"],
-    "sprite": "/images/snorlax.png",
-    "stage": 1
-  },
-  {
-    "id": 144,
-    "name": "Articuno",
-    "type": ["Ice", "Flying"],
-    "sprite": "/images/articuno.png",
-    "stage": 3,
-    "legendary": true
-  },
-  {
-    "id": 145,
-    "name": "Zapdos",
-    "type": ["Electric", "Flying"],
-    "sprite": "/images/zapdos.png",
-    "stage": 3,
-    "legendary": true
-  },
-  {
-    "id": 146,
-    "name": "Moltres",
-    "type": ["Fire", "Flying"],
-    "sprite": "/images/moltres.png",
-    "stage": 3,
-    "legendary": true
-  },
-  {
-    "id": 147,
-    "name": "Dratini",
-    "type": ["Dragon"],
-    "sprite": "/images/dratini.png",
-    "stage": 1
-  },
-  {
-    "id": 148,
-    "name": "Dragonair",
-    "type": ["Dragon"],
-    "sprite": "/images/dragonair.png",
-    "stage": 2
-  },
-  {
-    "id": 149,
-    "name": "Dragonite",
-    "type": ["Dragon", "Flying"],
-    "sprite": "/images/dragonite.png",
-    "stage": 3
-  },
-  {
-    "id": 150,
-    "name": "Mewtwo",
-    "type": ["Psychic"],
-    "sprite": "/images/mewtwo.png",
-    "stage": 3,
-    "legendary": true
-  },
-  {
-    "id": 151,
-    "name": "Mew",
-    "type": ["Psychic"],
-    "sprite": "/images/mew.png",
-    "stage": 3,
-    "legendary": true
-  }
+  {"id":1,"name":"Bulbasaur","type":["Grass","Poison"],"sprite":"/images/bulbasaur.png","stage":1,"evolves_to":2,"evolves_from":null},
+  {"id":2,"name":"Ivysaur","type":["Grass","Poison"],"sprite":"/images/ivysaur.png","stage":2,"evolves_to":3,"evolves_from":1},
+  {"id":3,"name":"Venusaur","type":["Grass","Poison"],"sprite":"/images/venusaur.png","stage":3,"evolves_to":null,"evolves_from":2},
+  {"id":4,"name":"Charmander","type":["Fire"],"sprite":"/images/charmander.png","stage":1,"evolves_to":5,"evolves_from":null},
+  {"id":5,"name":"Charmeleon","type":["Fire"],"sprite":"/images/charmeleon.png","stage":2,"evolves_to":6,"evolves_from":4},
+  {"id":6,"name":"Charizard","type":["Fire","Flying"],"sprite":"/images/charizard.png","stage":3,"evolves_to":null,"evolves_from":5},
+  {"id":7,"name":"Squirtle","type":["Water"],"sprite":"/images/squirtle.png","stage":1,"evolves_to":8,"evolves_from":null},
+  {"id":8,"name":"Wartortle","type":["Water"],"sprite":"/images/wartortle.png","stage":2,"evolves_to":9,"evolves_from":7},
+  {"id":9,"name":"Blastoise","type":["Water"],"sprite":"/images/blastoise.png","stage":3,"evolves_to":null,"evolves_from":8},
+  {"id":10,"name":"Caterpie","type":["Bug"],"sprite":"/images/caterpie.png","stage":1,"evolves_to":11,"evolves_from":null},
+  {"id":11,"name":"Metapod","type":["Bug"],"sprite":"/images/metapod.png","stage":2,"evolves_to":12,"evolves_from":10},
+  {"id":12,"name":"Butterfree","type":["Bug","Flying"],"sprite":"/images/butterfree.png","stage":3,"evolves_to":null,"evolves_from":11},
+  {"id":13,"name":"Weedle","type":["Bug","Poison"],"sprite":"/images/weedle.png","stage":1,"evolves_to":14,"evolves_from":null},
+  {"id":14,"name":"Kakuna","type":["Bug","Poison"],"sprite":"/images/kakuna.png","stage":2,"evolves_to":15,"evolves_from":13},
+  {"id":15,"name":"Beedrill","type":["Bug","Poison"],"sprite":"/images/beedrill.png","stage":3,"evolves_to":null,"evolves_from":14},
+  {"id":16,"name":"Pidgey","type":["Normal","Flying"],"sprite":"/images/pidgey.png","stage":1,"evolves_to":17,"evolves_from":null},
+  {"id":17,"name":"Pidgeotto","type":["Normal","Flying"],"sprite":"/images/pidgeotto.png","stage":2,"evolves_to":18,"evolves_from":16},
+  {"id":18,"name":"Pidgeot","type":["Normal","Flying"],"sprite":"/images/pidgeot.png","stage":3,"evolves_to":null,"evolves_from":17},
+  {"id":19,"name":"Rattata","type":["Normal"],"sprite":"/images/rattata.png","stage":1,"evolves_to":20,"evolves_from":null},
+  {"id":20,"name":"Raticate","type":["Normal"],"sprite":"/images/raticate.png","stage":2,"evolves_to":null,"evolves_from":19},
+  {"id":21,"name":"Spearow","type":["Normal","Flying"],"sprite":"/images/spearow.png","stage":1,"evolves_to":22,"evolves_from":null},
+  {"id":22,"name":"Fearow","type":["Normal","Flying"],"sprite":"/images/fearow.png","stage":2,"evolves_to":null,"evolves_from":21},
+  {"id":23,"name":"Ekans","type":["Poison"],"sprite":"/images/ekans.png","stage":1,"evolves_to":24,"evolves_from":null},
+  {"id":24,"name":"Arbok","type":["Poison"],"sprite":"/images/arbok.png","stage":2,"evolves_to":null,"evolves_from":23},
+  {"id":25,"name":"Pikachu","type":["Electric"],"sprite":"/images/pikachu.png","stage":1,"evolves_to":26,"evolves_from":null},
+  {"id":26,"name":"Raichu","type":["Electric"],"sprite":"/images/raichu.png","stage":2,"evolves_to":null,"evolves_from":25},
+  {"id":27,"name":"Sandshrew","type":["Ground"],"sprite":"/images/sandshrew.png","stage":1,"evolves_to":28,"evolves_from":null},
+  {"id":28,"name":"Sandslash","type":["Ground"],"sprite":"/images/sandslash.png","stage":2,"evolves_to":null,"evolves_from":27},
+  {"id":29,"name":"Nidoran♀","type":["Poison"],"sprite":"/images/nidoranf.png","stage":1,"evolves_to":30,"evolves_from":null},
+  {"id":30,"name":"Nidorina","type":["Poison"],"sprite":"/images/nidorina.png","stage":2,"evolves_to":31,"evolves_from":29},
+  {"id":31,"name":"Nidoqueen","type":["Ground","Poison"],"sprite":"/images/nidoqueen.png","stage":3,"evolves_to":null,"evolves_from":30},
+  {"id":32,"name":"Nidoran♂","type":["Poison"],"sprite":"/images/nidoranm.png","stage":1,"evolves_to":33,"evolves_from":null},
+  {"id":33,"name":"Nidorino","type":["Poison"],"sprite":"/images/nidorino.png","stage":2,"evolves_to":34,"evolves_from":32},
+  {"id":34,"name":"Nidoking","type":["Ground","Poison"],"sprite":"/images/nidoking.png","stage":3,"evolves_to":null,"evolves_from":33},
+  {"id":35,"name":"Clefairy","type":["Fairy"],"sprite":"/images/clefairy.png","stage":1,"evolves_to":36,"evolves_from":null},
+  {"id":36,"name":"Clefable","type":["Fairy"],"sprite":"/images/clefable.png","stage":2,"evolves_to":null,"evolves_from":35},
+  {"id":37,"name":"Vulpix","type":["Fire"],"sprite":"/images/vulpix.png","stage":1,"evolves_to":38,"evolves_from":null},
+  {"id":38,"name":"Ninetales","type":["Fire"],"sprite":"/images/ninetales.png","stage":2,"evolves_to":null,"evolves_from":37},
+  {"id":39,"name":"Jigglypuff","type":["Normal","Fairy"],"sprite":"/images/jigglypuff.png","stage":1,"evolves_to":40,"evolves_from":null},
+  {"id":40,"name":"Wigglytuff","type":["Normal","Fairy"],"sprite":"/images/wigglytuff.png","stage":2,"evolves_to":null,"evolves_from":39},
+  {"id":41,"name":"Zubat","type":["Flying","Poison"],"sprite":"/images/zubat.png","stage":1,"evolves_to":42,"evolves_from":null},
+  {"id":42,"name":"Golbat","type":["Flying","Poison"],"sprite":"/images/golbat.png","stage":2,"evolves_to":null,"evolves_from":41},
+  {"id":43,"name":"Oddish","type":["Grass","Poison"],"sprite":"/images/oddish.png","stage":1,"evolves_to":44,"evolves_from":null},
+  {"id":44,"name":"Gloom","type":["Grass","Poison"],"sprite":"/images/gloom.png","stage":2,"evolves_to":45,"evolves_from":43},
+  {"id":45,"name":"Vileplume","type":["Grass","Poison"],"sprite":"/images/vileplume.png","stage":3,"evolves_to":null,"evolves_from":44},
+  {"id":46,"name":"Paras","type":["Grass","Bug"],"sprite":"/images/paras.png","stage":1,"evolves_to":47,"evolves_from":null},
+  {"id":47,"name":"Parasect","type":["Grass","Bug"],"sprite":"/images/parasect.png","stage":2,"evolves_to":null,"evolves_from":46},
+  {"id":48,"name":"Venonat","type":["Bug","Poison"],"sprite":"/images/venonat.png","stage":1,"evolves_to":49,"evolves_from":null},
+  {"id":49,"name":"Venomoth","type":["Bug","Poison"],"sprite":"/images/venomoth.png","stage":2,"evolves_to":null,"evolves_from":48},
+  {"id":50,"name":"Diglett","type":["Ground"],"sprite":"/images/diglett.png","stage":1,"evolves_to":51,"evolves_from":null},
+  {"id":51,"name":"Dugtrio","type":["Ground"],"sprite":"/images/dugtrio.png","stage":2,"evolves_to":null,"evolves_from":50},
+  {"id":52,"name":"Meowth","type":["Normal"],"sprite":"/images/meowth.png","stage":1,"evolves_to":53,"evolves_from":null},
+  {"id":53,"name":"Persian","type":["Normal"],"sprite":"/images/persian.png","stage":2,"evolves_to":null,"evolves_from":52},
+  {"id":54,"name":"Psyduck","type":["Water"],"sprite":"/images/psyduck.png","stage":1,"evolves_to":55,"evolves_from":null},
+  {"id":55,"name":"Golduck","type":["Water"],"sprite":"/images/golduck.png","stage":2,"evolves_to":null,"evolves_from":54},
+  {"id":56,"name":"Mankey","type":["Fighting"],"sprite":"/images/mankey.png","stage":1,"evolves_to":57,"evolves_from":null},
+  {"id":57,"name":"Primeape","type":["Fighting"],"sprite":"/images/primeape.png","stage":2,"evolves_to":null,"evolves_from":56},
+  {"id":58,"name":"Growlithe","type":["Fire"],"sprite":"/images/growlithe.png","stage":1,"evolves_to":59,"evolves_from":null},
+  {"id":59,"name":"Arcanine","type":["Fire"],"sprite":"/images/arcanine.png","stage":2,"evolves_to":null,"evolves_from":58},
+  {"id":60,"name":"Poliwag","type":["Water"],"sprite":"/images/poliwag.png","stage":1,"evolves_to":61,"evolves_from":null},
+  {"id":61,"name":"Poliwhirl","type":["Water"],"sprite":"/images/poliwhirl.png","stage":2,"evolves_to":62,"evolves_from":60},
+  {"id":62,"name":"Poliwrath","type":["Water","Fighting"],"sprite":"/images/poliwhirl.png","stage":3,"evolves_to":null,"evolves_from":61},
+  {"id":63,"name":"Abra","type":["Psychic"],"sprite":"/images/abra.png","stage":1,"evolves_to":64,"evolves_from":null},
+  {"id":64,"name":"Kadabra","type":["Psychic"],"sprite":"/images/kadabra.png","stage":2,"evolves_to":65,"evolves_from":63},
+  {"id":65,"name":"Alakazam","type":["Psychic"],"sprite":"/images/alakazam.png","stage":3,"evolves_to":null,"evolves_from":64},
+  {"id":66,"name":"Machop","type":["Fighting"],"sprite":"/images/machop.png","stage":1,"evolves_to":67,"evolves_from":null},
+  {"id":67,"name":"Machoke","type":["Fighting"],"sprite":"/images/machoke.png","stage":2,"evolves_to":68,"evolves_from":66},
+  {"id":68,"name":"Machamp","type":["Fighting"],"sprite":"/images/machamp.png","stage":3,"evolves_to":null,"evolves_from":67},
+  {"id":69,"name":"Bellsprout","type":["Grass","Poison"],"sprite":"/images/bellsprout.png","stage":1,"evolves_to":70,"evolves_from":null},
+  {"id":70,"name":"Weepinbell","type":["Grass","Poison"],"sprite":"/images/weepinbell.png","stage":2,"evolves_to":71,"evolves_from":69},
+  {"id":71,"name":"Victreebel","type":["Grass","Poison"],"sprite":"/images/victreebell.png","stage":3,"evolves_to":null,"evolves_from":70},
+  {"id":72,"name":"Tentacool","type":["Water","Poison"],"sprite":"/images/tentacool.png","stage":1,"evolves_to":73,"evolves_from":null},
+  {"id":73,"name":"Tentacruel","type":["Water","Poison"],"sprite":"/images/tentacruel.png","stage":2,"evolves_to":null,"evolves_from":72},
+  {"id":74,"name":"Geodude","type":["Rock","Ground"],"sprite":"/images/geodude.png","stage":1,"evolves_to":75,"evolves_from":null},
+  {"id":75,"name":"Graveler","type":["Rock","Ground"],"sprite":"/images/graveler.png","stage":2,"evolves_to":76,"evolves_from":74},
+  {"id":76,"name":"Golem","type":["Rock","Ground"],"sprite":"/images/golem.png","stage":3,"evolves_to":null,"evolves_from":75},
+  {"id":77,"name":"Ponyta","type":["Fire"],"sprite":"/images/ponyta.png","stage":1,"evolves_to":78,"evolves_from":null},
+  {"id":78,"name":"Rapidash","type":["Fire"],"sprite":"/images/rapidash.png","stage":2,"evolves_to":null,"evolves_from":77},
+  {"id":79,"name":"Slowpoke","type":["Water","Psychic"],"sprite":"/images/slowpoke.png","stage":1,"evolves_to":80,"evolves_from":null},
+  {"id":80,"name":"Slowbro","type":["Water","Psychic"],"sprite":"/images/slowbro.png","stage":2,"evolves_to":null,"evolves_from":79},
+  {"id":81,"name":"Magnemite","type":["Electric","Steel"],"sprite":"/images/magnemite.png","stage":1,"evolves_to":82,"evolves_from":null},
+  {"id":82,"name":"Magneton","type":["Electric","Steel"],"sprite":"/images/magneton.png","stage":2,"evolves_to":null,"evolves_from":81},
+  {"id":83,"name":"Farfetch'd","type":["Normal","Flying"],"sprite":"/images/farfetchd.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":84,"name":"Doduo","type":["Normal","Flying"],"sprite":"/images/doduo.png","stage":1,"evolves_to":85,"evolves_from":null},
+  {"id":85,"name":"Dodrio","type":["Normal","Flying"],"sprite":"/images/dodrio.png","stage":2,"evolves_to":null,"evolves_from":84},
+  {"id":86,"name":"Seel","type":["Water"],"sprite":"/images/seel.png","stage":1,"evolves_to":87,"evolves_from":null},
+  {"id":87,"name":"Dewgong","type":["Water","Ice"],"sprite":"/images/dewgong.png","stage":2,"evolves_to":null,"evolves_from":86},
+  {"id":88,"name":"Grimer","type":["Poison"],"sprite":"/images/grimer.png","stage":1,"evolves_to":89,"evolves_from":null},
+  {"id":89,"name":"Muk","type":["Poison"],"sprite":"/images/muk.png","stage":2,"evolves_to":null,"evolves_from":88},
+  {"id":90,"name":"Shellder","type":["Water"],"sprite":"/images/shellder.png","stage":1,"evolves_to":91,"evolves_from":null},
+  {"id":91,"name":"Cloyster","type":["Water","Ice"],"sprite":"/images/cloyster.png","stage":2,"evolves_to":null,"evolves_from":90},
+  {"id":92,"name":"Gastly","type":["Ghost","Poison"],"sprite":"/images/gastly.png","stage":1,"evolves_to":93,"evolves_from":null},
+  {"id":93,"name":"Haunter","type":["Ghost","Poison"],"sprite":"/images/haunter.png","stage":2,"evolves_to":94,"evolves_from":92},
+  {"id":94,"name":"Gengar","type":["Ghost","Poison"],"sprite":"/images/gengar.png","stage":3,"evolves_to":null,"evolves_from":93},
+  {"id":95,"name":"Onix","type":["Rock","Ground"],"sprite":"/images/onix.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":96,"name":"Drowzee","type":["Psychic"],"sprite":"/images/drowzee.png","stage":1,"evolves_to":97,"evolves_from":null},
+  {"id":97,"name":"Hypno","type":["Psychic"],"sprite":"/images/hypno.png","stage":2,"evolves_to":null,"evolves_from":96},
+  {"id":98,"name":"Krabby","type":["Water"],"sprite":"/images/krabby.png","stage":1,"evolves_to":99,"evolves_from":null},
+  {"id":99,"name":"Kingler","type":["Water"],"sprite":"/images/kingler.png","stage":2,"evolves_to":null,"evolves_from":98},
+  {"id":100,"name":"Voltorb","type":["Electric"],"sprite":"/images/voltorb.png","stage":1,"evolves_to":101,"evolves_from":null},
+  {"id":101,"name":"Electrode","type":["Electric"],"sprite":"/images/electrode.png","stage":2,"evolves_to":null,"evolves_from":100},
+  {"id":102,"name":"Exeggcute","type":["Grass","Psychic"],"sprite":"/images/exeggcute.png","stage":1,"evolves_to":103,"evolves_from":null},
+  {"id":103,"name":"Exeggutor","type":["Grass","Psychic"],"sprite":"/images/exeggutor.png","stage":2,"evolves_to":null,"evolves_from":102},
+  {"id":104,"name":"Cubone","type":["Ground"],"sprite":"/images/cubone.png","stage":1,"evolves_to":105,"evolves_from":null},
+  {"id":105,"name":"Marowak","type":["Ground"],"sprite":"/images/marowak.png","stage":2,"evolves_to":null,"evolves_from":104},
+  {"id":106,"name":"Hitmonlee","type":["Fighting"],"sprite":"/images/hitmonlee.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":107,"name":"Hitmonchan","type":["Fighting"],"sprite":"/images/hitmonchan.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":108,"name":"Lickitung","type":["Normal"],"sprite":"/images/lickitung.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":109,"name":"Koffing","type":["Poison"],"sprite":"/images/koffing.png","stage":1,"evolves_to":110,"evolves_from":null},
+  {"id":110,"name":"Weezing","type":["Poison"],"sprite":"/images/weezing.png","stage":2,"evolves_to":null,"evolves_from":109},
+  {"id":111,"name":"Rhyhorn","type":["Ground","Rock"],"sprite":"/images/rhyhorn.png","stage":1,"evolves_to":112,"evolves_from":null},
+  {"id":112,"name":"Rhydon","type":["Ground","Rock"],"sprite":"/images/rhydon.png","stage":2,"evolves_to":null,"evolves_from":111},
+  {"id":113,"name":"Chansey","type":["Normal"],"sprite":"/images/chansey.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":114,"name":"Tangela","type":["Grass"],"sprite":"/images/tangela.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":115,"name":"Kangaskhan","type":["Normal"],"sprite":"/images/kangaskhan.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":116,"name":"Horsea","type":["Water"],"sprite":"/images/horsea.png","stage":1,"evolves_to":117,"evolves_from":null},
+  {"id":117,"name":"Seadra","type":["Water"],"sprite":"/images/seadra.png","stage":2,"evolves_to":null,"evolves_from":116},
+  {"id":118,"name":"Goldeen","type":["Water"],"sprite":"/images/goldeen.png","stage":1,"evolves_to":119,"evolves_from":null},
+  {"id":119,"name":"Seaking","type":["Water"],"sprite":"/images/seaking.png","stage":2,"evolves_to":null,"evolves_from":118},
+  {"id":120,"name":"Staryu","type":["Water"],"sprite":"/images/staryu.png","stage":1,"evolves_to":121,"evolves_from":null},
+  {"id":121,"name":"Starmie","type":["Water","Psychic"],"sprite":"/images/starmie.png","stage":2,"evolves_to":null,"evolves_from":120},
+  {"id":122,"name":"Mr. Mime","type":["Psychic","Fairy"],"sprite":"/images/mrmime.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":123,"name":"Scyther","type":["Bug","Flying"],"sprite":"/images/scyther.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":124,"name":"Jynx","type":["Ice","Psychic"],"sprite":"/images/jynx.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":125,"name":"Electabuzz","type":["Electric"],"sprite":"/images/electabuzz.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":126,"name":"Magmar","type":["Fire"],"sprite":"/images/magmar.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":127,"name":"Pinsir","type":["Bug"],"sprite":"/images/pinsir.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":128,"name":"Tauros","type":["Normal"],"sprite":"/images/tauros.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":129,"name":"Magikarp","type":["Water"],"sprite":"/images/magikarp.png","stage":1,"evolves_to":130,"evolves_from":null},
+  {"id":130,"name":"Gyarados","type":["Water","Flying"],"sprite":"/images/gyarados.png","stage":2,"evolves_to":null,"evolves_from":129},
+  {"id":131,"name":"Lapras","type":["Water","Ice"],"sprite":"/images/lapras.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":132,"name":"Ditto","type":["Normal"],"sprite":"/images/ditto.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":133,"name":"Eevee","type":["Normal"],"sprite":"/images/eevee.png","stage":1,"evolves_to":[134,135,136],"evolves_from":null},
+  {"id":134,"name":"Vaporeon","type":["Water"],"sprite":"/images/vaporeon.png","stage":2,"evolves_to":null,"evolves_from":133},
+  {"id":135,"name":"Jolteon","type":["Electric"],"sprite":"/images/jolteon.png","stage":2,"evolves_to":null,"evolves_from":133},
+  {"id":136,"name":"Flareon","type":["Fire"],"sprite":"/images/flareon.png","stage":2,"evolves_to":null,"evolves_from":133},
+  {"id":137,"name":"Porygon","type":["Normal"],"sprite":"/images/porygon.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":138,"name":"Omanyte","type":["Rock","Water"],"sprite":"/images/omanyte.png","stage":1,"evolves_to":139,"evolves_from":null},
+  {"id":139,"name":"Omastar","type":["Rock","Water"],"sprite":"/images/omastar.png","stage":2,"evolves_to":null,"evolves_from":138},
+  {"id":140,"name":"Kabuto","type":["Rock","Water"],"sprite":"/images/kabuto.png","stage":1,"evolves_to":141,"evolves_from":null},
+  {"id":141,"name":"Kabutops","type":["Rock","Water"],"sprite":"/images/kabutops.png","stage":2,"evolves_to":null,"evolves_from":140},
+  {"id":142,"name":"Aerodactyl","type":["Rock","Flying"],"sprite":"/images/aerodactyl.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":143,"name":"Snorlax","type":["Normal"],"sprite":"/images/snorlax.png","stage":1,"evolves_to":null,"evolves_from":null},
+  {"id":144,"name":"Articuno","type":["Ice","Flying"],"sprite":"/images/articuno.png","stage":1,"evolves_to":null,"evolves_from":null,"legendary":true},
+  {"id":145,"name":"Zapdos","type":["Electric","Flying"],"sprite":"/images/zapdos.png","stage":1,"evolves_to":null,"evolves_from":null,"legendary":true},
+  {"id":146,"name":"Moltres","type":["Fire","Flying"],"sprite":"/images/moltres.png","stage":1,"evolves_to":null,"evolves_from":null,"legendary":true},
+  {"id":147,"name":"Dratini","type":["Dragon"],"sprite":"/images/dratini.png","stage":1,"evolves_to":148,"evolves_from":null},
+  {"id":148,"name":"Dragonair","type":["Dragon"],"sprite":"/images/dragonair.png","stage":2,"evolves_to":149,"evolves_from":147},
+  {"id":149,"name":"Dragonite","type":["Dragon","Flying"],"sprite":"/images/dragonite.png","stage":3,"evolves_to":null,"evolves_from":148},
+  {"id":150,"name":"Mewtwo","type":["Psychic"],"sprite":"/images/mewtwo.png","stage":1,"evolves_to":null,"evolves_from":null,"legendary":true},
+  {"id":151,"name":"Mew","type":["Psychic"],"sprite":"/images/mew.png","stage":1,"evolves_to":null,"evolves_from":null,"legendary":true}
 ]
