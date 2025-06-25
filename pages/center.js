@@ -6,6 +6,7 @@ import { getPokemonStats } from '../lib/pokemonStats';
 // --- PCModal Component ---
 function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed }) {
   const [selected, setSelected] = useState([]);
+
   if (!open) return null;
 
   // Build full collection: team + pokedex + duplicates (all as unique slots)
@@ -211,7 +212,14 @@ export default function Center() {
   };
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '20px', minHeight: '100vh', backgroundColor: '#f0fff0', position: 'relative' }}>
+    <main style={{
+      fontFamily: 'monospace',
+      padding: '20px',
+      minHeight: '100vh',
+      background: 'url("/center-bg.jpg") no-repeat center center',
+      backgroundSize: 'cover',
+      position: 'relative'
+    }}>
       <PCModal
         open={showPC}
         onClose={() => setShowPC(false)}
