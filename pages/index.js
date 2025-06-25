@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
+import { counties } from '../data/regions'; // after pokedex import
+import SatNav from '../components/SatNav';  // after your utils/components
 
 // --- BagModal Component ---
 function BagModal({ open, onClose, game, turn, wildPokemon, team, activeIdx, onUseItem }) {
@@ -177,6 +179,13 @@ export default function Home() {
       router.push('/team');
       return;
     }
+    // Add after useState/useEffect declarations, inside Home
+const handleCountyChange = (countyId) => {
+  setGame(g => ({ ...g, location: countyId }));
+  router.push({ pathname: "/", query: { county: countyId } });
+  setWildPokemon(null);
+  setMessage(`Arrived in ${countyId}!`);
+};
     const newTeam = saved.team.map(mon => {
       const stats = getPokemonStats(mon);
       return {
@@ -432,7 +441,7 @@ export default function Home() {
       }, 1200);
     }, 750);
   }
-
+const currentCounty = game?.location || counties[0].id;
   if (!game) return <p>Loading...</p>;
 
   return (
@@ -452,6 +461,10 @@ export default function Home() {
         position: 'relative', // Required for absolute dropdown
       }}
     >
+<SatNav
+  currentCounty={currentCounty}
+  onChange={handleCountyChange}
+/>
       {/* Dropdown Navigation Menu - Top Right */}
       <div style={{
         position: 'absolute',
