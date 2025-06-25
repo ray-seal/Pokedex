@@ -9,7 +9,18 @@ export default function TeamBuilder() {
   const [team, setTeam] = useState([]);
   const router = useRouter();
 
-  // Upgrade team members to full objects with correct HP on load, preserving XP/level
+  // Utility: get stats from progressBank or initialize defaults
+  function getProgress(mon, progressBank = {}) {
+    const prog = progressBank[mon.id] || {};
+    return {
+      ...mon,
+      xp: prog.xp !== undefined ? prog.xp : 0,
+      level: prog.level !== undefined ? prog.level : 1,
+      hp: prog.hp !== undefined ? prog.hp : getPokemonStats(mon).hp,
+    };
+  }
+
+  // INIT: load game, team, and progress for all Pokémon
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (!saved) {
@@ -17,63 +28,55 @@ export default function TeamBuilder() {
       router.push('/');
       return;
     }
+    if (!saved.pokemonProgress) saved.pokemonProgress = {};
     let upgradedTeam = [];
     if (saved.team) {
       upgradedTeam = saved.team.map(member => {
-        // Support both id-only and full-object storage
         const mon = pokedex.find(p => p.id === (member.id || member));
-        const stats = getPokemonStats(mon);
-
-        // For id-only, set defaults; for object, preserve xp/level/hp if present
-        if (typeof member === "object") {
-          return {
-            ...mon,
-            ...member,
-            hp: member.hp !== undefined ? member.hp : stats.hp,
-            xp: member.xp !== undefined ? member.xp : 0,
-            level: member.level !== undefined ? member.level : 1,
-          };
-        } else {
-          // id-only legacy team save
-          return { ...mon, hp: stats.hp, xp: 0, level: 1 };
-        }
+        return getProgress(mon, saved.pokemonProgress);
       });
     }
     setGame(saved);
     setTeam(upgradedTeam.slice(0, 6));
   }, []);
 
-  // Preserve XP/level/hp on select/deselect
+  // Add/remove Pokémon from team, always preserving progress
   const handleSelect = (id) => {
+    if (!game) return;
+    let progressBank = { ...game.pokemonProgress };
     const selectedIdx = team.findIndex(p => p.id === id);
+
     if (selectedIdx !== -1) {
+      // Removing from team: save current stats to progressBank
+      const mon = team[selectedIdx];
+      progressBank[mon.id] = {
+        xp: mon.xp,
+        level: mon.level,
+        hp: mon.hp,
+      };
       setTeam(prev => prev.filter(p => p.id !== id));
+      setGame(g => ({ ...g, pokemonProgress: progressBank }));
     } else if (team.length < 6) {
-      // Check if this mon was ever in saved.team before for xp/level
-      let mon = pokedex.find(p => p.id === id);
-      let stats = getPokemonStats(mon);
-
-      // Try to recover previous xp/level/hp from game.team or game.allMons if you store that
-      let prevMember = null;
-      if (game.team) prevMember = game.team.find(m => (m.id || m) === id);
-      if (!prevMember && game.allMons) prevMember = game.allMons.find(m => (m.id || m) === id);
-
-      setTeam(prev => [
-        ...prev,
-        {
-          ...mon,
-          xp: prevMember && prevMember.xp !== undefined ? prevMember.xp : 0,
-          level: prevMember && prevMember.level !== undefined ? prevMember.level : 1,
-          hp: prevMember && prevMember.hp !== undefined ? prevMember.hp : stats.hp,
-        },
-      ]);
+      // Adding: restore stats from progressBank if available
+      const mon = pokedex.find(p => p.id === id);
+      const progress = getProgress(mon, game.pokemonProgress);
+      setTeam(prev => [...prev, progress]);
     } else {
       alert("You can only choose up to 6 Pokémon.");
     }
   };
 
+  // Save team and all Pokémon progress when user confirms
   const saveTeam = () => {
-    const updated = { ...game, team };
+    let progressBank = { ...(game.pokemonProgress || {}) };
+    team.forEach(mon => {
+      progressBank[mon.id] = {
+        xp: mon.xp,
+        level: mon.level,
+        hp: mon.hp,
+      };
+    });
+    const updated = { ...game, team, pokemonProgress: progressBank };
     localStorage.setItem("gameState", JSON.stringify(updated));
     router.push('/arena');
   };
@@ -100,6 +103,8 @@ export default function TeamBuilder() {
       <ul>
         {caughtMons.map(mon => {
           const selected = !!team.find(t => t.id === mon.id);
+          // Show XP/Level if on team
+          const teamMon = team.find(t => t.id === mon.id);
           return (
             <li key={mon.id}>
               <label>
@@ -109,6 +114,11 @@ export default function TeamBuilder() {
                   onChange={() => handleSelect(mon.id)}
                 />
                 <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name}
+                {teamMon && (
+                  <span style={{marginLeft:8, color:'#888', fontSize:13}}>
+                    Lv.{teamMon.level} | XP: {teamMon.xp}
+                  </span>
+                )}
               </label>
             </li>
           );
