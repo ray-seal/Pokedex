@@ -25,8 +25,12 @@ export default function SatNav({ currentCounty, onChange }) {
       >
         <option value="">Choose county…</option>
         {counties.map(county => (
-          <option key={county.id} value={county.id}>
-            {county.name}
+          <option
+            key={county.id}
+            value={county.id}
+            disabled={county.id !== "Kent"}
+          >
+            {county.name} {county.id !== "Kent" ? "🔒" : ""}
           </option>
         ))}
       </select>
