@@ -457,8 +457,6 @@ export default function Home() {
       style={{
         fontFamily: 'monospace',
         minHeight: '100vh',
-        background: 'url("/main-bg.jpg") no-repeat center center',
-        backgroundSize: 'cover',
         color: 'white',
         padding: 0,
         margin: 0,
