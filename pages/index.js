@@ -202,12 +202,19 @@ export default function Home() {
     return balls;
   }
 
+  // --- UPDATED: RANDOMIZED LEVELS BY STAGE ---
   function searchLongGrass() {
     const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
-    let level = 5;
-    if (wild.legendary) level = 50;
-    else if (wild.stage === 3) level = 30;
-    else if (wild.stage === 2) level = 15;
+    let level;
+    if (wild.legendary) {
+      level = 50 + Math.floor(Math.random() * 51); // 50-100
+    } else if (wild.stage === 3) {
+      level = 30 + Math.floor(Math.random() * 71); // 30-100
+    } else if (wild.stage === 2) {
+      level = 15 + Math.floor(Math.random() * 15); // 15-29
+    } else {
+      level = 1 + Math.floor(Math.random() * 14); // 1-14
+    }
     const baseStats = getPokemonStats(wild);
     setWildPokemon(wild);
     setWildHP(baseStats.hp);
@@ -215,7 +222,7 @@ export default function Home() {
     setWildLevel(level);
     setTurn('player');
     setBattleOver(false);
-    setMessage(`A wild ${wild.name} appeared in the long grass!`);
+    setMessage(`A wild ${wild.name} (Lv.${level}) appeared in the long grass!`);
   }
 
   function playerAttack() {
@@ -328,11 +335,13 @@ export default function Home() {
     }
   }
 
+  // --- UPDATED: DYNAMIC FAIL RATE ---
   function catchWild(ballType) {
     if (!game || !wildPokemon || battleOver || catching) return;
     setCatching(true);
     setTimeout(() => {
       const updated = { ...game };
+      // Ball checks (same as before)...
       if (ballType === 'pokeballs') {
         updated.pokeballs--;
         if (wildPokemon.legendary || (wildPokemon.stage || 1) > 1) {
@@ -363,8 +372,25 @@ export default function Home() {
         }
       }
 
-      // 5% fail chance
-      if (Math.random() < 0.05) {
+      // ---- Dynamic fail rate calculation ----
+      let wildLvl = wildLevel || 1;
+      let failRate;
+      if (wildPokemon.legendary) {
+        failRate = 0.3 + 0.005 * (wildLvl - 50); // 30% at 50, up to 55% at 100
+      } else if (wildPokemon.stage === 3) {
+        failRate = 0.15 + 0.003 * (wildLvl - 30); // 15% at 30, up to ~36% at 100
+      } else if (wildPokemon.stage === 2) {
+        failRate = 0.08 + 0.005 * (wildLvl - 15); // 8% at 15, up to ~15% at 29
+      } else {
+        failRate = 0.03 + 0.005 * (wildLvl - 1); // 3% at 1, up to 10% at 14
+      }
+      // Reduce with HP
+      let hpPercent = wildHP / wildMaxHP;
+      failRate *= (0.4 + 0.6 * hpPercent);
+      // Clamp
+      failRate = Math.max(0.01, Math.min(failRate, 0.7));
+
+      if (Math.random() < failRate) {
         setGame(updated);
         localStorage.setItem('gameState', JSON.stringify(updated));
         setMessage("Oh no! The ball missed!");
@@ -374,6 +400,9 @@ export default function Home() {
         return;
       }
 
+      // ---- END fail rate ----
+
+      // Usual catch logic
       if (!updated.pokedex.includes(wildPokemon.id)) {
         updated.pokedex = [...updated.pokedex, wildPokemon.id];
         setMessage(`You caught ${wildPokemon.name}!`);
@@ -452,28 +481,28 @@ export default function Home() {
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
       />
-     <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
-<div style={{
-  textAlign: 'center',
-  width: '100%',
-  fontSize: '1.35rem',
-  fontWeight: 'bold',
-  margin: '8px 0 16px 0',
-  background: 'rgba(255,255,255,0.13)',
-  color: '#ffd700',
-  textShadow: '1px 2px 10px #222, 1px 1px 5px #222',
-  borderRadius: '10px',
-  padding: '6px 0',
-  letterSpacing: '1px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px'
-}}>
-  <span role="img" aria-label="coin" style={{fontSize:'1.7em', verticalAlign:'middle'}}>🪙</span>
-  {game?.coins ?? 0} coins
-</div>
-<h2>Your Team</h2>
+      <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
+      <div style={{
+        textAlign: 'center',
+        width: '100%',
+        fontSize: '1.35rem',
+        fontWeight: 'bold',
+        margin: '8px 0 16px 0',
+        background: 'rgba(255,255,255,0.13)',
+        color: '#ffd700',
+        textShadow: '1px 2px 10px #222, 1px 1px 5px #222',
+        borderRadius: '10px',
+        padding: '6px 0',
+        letterSpacing: '1px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px'
+      }}>
+        <span role="img" aria-label="coin" style={{fontSize:'1.7em', verticalAlign:'middle'}}>🪙</span>
+        {game?.coins ?? 0} coins
+      </div>
+      <h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {team.map((mon, idx) => (
           <div key={mon.id}
