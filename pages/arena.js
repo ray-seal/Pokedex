@@ -11,14 +11,13 @@ export default function Arena() {
   const [message, setMessage] = useState('');
   const [battleOver, setBattleOver] = useState(false);
   const [rewardOptions, setRewardOptions] = useState(false);
-  const [rewardClaimed, setRewardClaimed] = useState(false); // NEW STATE
+  const [rewardClaimed, setRewardClaimed] = useState(false);
   const [canCatch, setCanCatch] = useState(false);
   const [balls, setBalls] = useState([]);
   const [disabledSwitch, setDisabledSwitch] = useState(false);
-  const [turn, setTurn] = useState('player'); // 'player' or 'opponent'
+  const [turn, setTurn] = useState('player');
   const router = useRouter();
 
-  // ---- Damage logic helpers ----
   function getStageMultiplier(mon) {
     if (mon.legendary) return 1.7;
     if (mon.stage === 3) return 1.4;
@@ -70,7 +69,7 @@ export default function Arena() {
     setMessage('');
     setBattleOver(false);
     setRewardOptions(false);
-    setRewardClaimed(false); // RESET when new wild appears
+    setRewardClaimed(false);
     setCanCatch(false);
     setBalls([]);
     setTurn('player');
@@ -84,7 +83,7 @@ export default function Arena() {
     setMessage(`You switched to ${team[idx].name}!`);
     setDisabledSwitch(true);
     setTimeout(() => setDisabledSwitch(false), 600);
-    setTurn('opponent'); // Switching ends your turn, opponent attacks next
+    setTurn('opponent');
     setTimeout(() => wildAttack(idx), 900);
   }
 
@@ -161,6 +160,7 @@ export default function Arena() {
     setMessage("You received 50 coins!");
   }
 
+  // 2.5% fail rate for Arena catching
   function tryCatch(ballType) {
     if (!canCatch || !battleOver) return;
     const updated = { ...game };
@@ -182,6 +182,18 @@ export default function Arena() {
       if (updated.masterballs < 1) return setMessage("No Master Balls left!");
       if (!legendary) return setMessage("Master Balls are for legendary Pokémon only.");
       updated.masterballs--;
+    }
+
+    // 2.5% fail chance
+    if (Math.random() < 0.025) {
+      setGame(updated);
+      localStorage.setItem('gameState', JSON.stringify(updated));
+      setRewardOptions(false);
+      setRewardClaimed(true);
+      setMessage(
+        `Oh no! The ${ballType.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')} missed!`
+      );
+      return;
     }
 
     updated.inventory = updated.inventory || {};
@@ -220,7 +232,8 @@ export default function Arena() {
     setRewardClaimed(false);
   }
 
-  if (!game || !team.length || !opponent) return <p>Loading battle...</p>;
+  if (!game || !team.length || !opponent)
+    return <p>Loading battle...</p>;
 
   return (
     <main
@@ -273,7 +286,7 @@ export default function Arena() {
             width="24"
             style={{
               position: 'absolute',
-              left: 44, // adjust for placement
+              left: 44,
               bottom: 8,
               pointerEvents: 'none'
             }}
