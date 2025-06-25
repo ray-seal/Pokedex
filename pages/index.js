@@ -3,6 +3,79 @@ import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
+// --- BagModal Component ---
+function BagModal({ open, onClose, game, turn, wildPokemon, team, activeIdx, onUseItem }) {
+  if (!open) return null;
+  const ITEMS = [
+    { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', type: 'ball' },
+    { key: 'greatballs', name: 'Great Ball', emoji: '🔵', type: 'ball' },
+    { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡', type: 'ball' },
+    { key: 'masterballs', name: 'Master Ball', emoji: '🟣', type: 'ball' },
+    { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', type: 'heal' },
+    { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', type: 'heal' },
+    { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', type: 'heal' },
+  ];
+  return (
+    <div style={{
+      position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
+      background: 'rgba(0,0,0,0.70)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <div style={{
+        background: '#262626', color: 'white', padding: 32, borderRadius: 18, minWidth: 300,
+        boxShadow: '0 4px 32px #000a'
+      }}>
+        <h2 style={{marginTop:0}}>🎒 Bag</h2>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {ITEMS.map(item =>
+            game[item.key] > 0 && (
+              <li key={item.key} style={{ fontSize: 18, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 22 }}>{item.emoji}</span>
+                <span>{item.name}</span>
+                <b style={{marginLeft:2}}>{game[item.key]}</b>
+                {item.type === "ball" && wildPokemon && turn === "player" &&
+                  <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
+                    Use
+                  </button>
+                }
+                {item.type === "heal" && team && team[activeIdx] && turn === "player" && team[activeIdx].hp < team[activeIdx].maxhp &&
+                  <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
+                    Use
+                  </button>
+                }
+                {item.type === "heal" && team && team[activeIdx] && team[activeIdx].hp >= team[activeIdx].maxhp &&
+                  <span style={{color:'#aaa',marginLeft:10,fontSize:13}}>(Full HP)</span>
+                }
+              </li>
+            )
+          )}
+        </ul>
+        <button className="poke-button" style={{marginTop:18}} onClick={onClose}>Close</button>
+      </div>
+      <style jsx>{`
+        .poke-button {
+          border: 1px solid #ccc;
+          background: #f9f9f9;
+          padding: 8px 14px;
+          border-radius: 7px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+          cursor: pointer;
+          color: #222;
+          text-decoration: none;
+          font-family: inherit;
+          font-size: 1rem;
+          display: inline-block;
+          transition: background 0.18s, border 0.18s;
+        }
+        .poke-button:hover {
+          background: #e0e0e0;
+          border-color: #888;
+        }
+      `}</style>
+    </div>
+  );
+}
+// --- End BagModal ---
+
 function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
   return Math.ceil(10 * Math.pow(1.2, level - 5));
@@ -50,18 +123,37 @@ function getWildXP(wild) {
   if (wild.stage === 2) return 3;
   return 2;
 }
+function getMaxHP(mon) {
+  return getPokemonStats(mon).hp;
+}
 function usePotion(team, idx, type) {
   const healedTeam = [...team];
   const mon = healedTeam[idx];
-  const maxHP = getPokemonStats(mon).hp;
-  if (type === 'potion') {
-    mon.hp = Math.min(mon.hp + 10, maxHP);
-  } else if (type === 'superpotion') {
-    mon.hp = Math.min(mon.hp + 50, maxHP);
-  } else if (type === 'fullheal') {
-    mon.hp = maxHP;
-  }
+  const maxHP = getMaxHP(mon);
+  mon.maxhp = maxHP;
+  if (type === 'potions') mon.hp = Math.min(mon.hp + 10, maxHP);
+  else if (type === 'superpotions') mon.hp = Math.min(mon.hp + 50, maxHP);
+  else if (type === 'fullheals') mon.hp = maxHP;
   return healedTeam;
+}
+function grantBattleXP(team, idx, xpAmount) {
+  const updatedTeam = [...team];
+  let mon = updatedTeam[idx];
+  if (!mon.level) mon.level = getStartingLevel(mon);
+  if (!mon.xp) mon.xp = 0;
+  let newXP = mon.xp + xpAmount;
+  let newLevel = mon.level;
+  while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
+    newXP -= xpForNextLevel(newLevel);
+    newLevel++;
+  }
+  mon.xp = newXP;
+  mon.level = newLevel;
+  let evolvedMon = tryEvolve(mon);
+  evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
+  evolvedMon.maxhp = getMaxHP(evolvedMon);
+  updatedTeam[idx] = evolvedMon;
+  return updatedTeam;
 }
 
 export default function Home() {
@@ -76,6 +168,7 @@ export default function Home() {
   const [catching, setCatching] = useState(false);
   const [turn, setTurn] = useState('player'); // 'player' or 'wild'
   const [battleOver, setBattleOver] = useState(false);
+  const [showBag, setShowBag] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -84,20 +177,20 @@ export default function Home() {
       router.push('/team');
       return;
     }
-    const newTeam = saved.team.map(mon => ({
-      ...mon,
-      level: mon.level || getStartingLevel(mon),
-      xp: mon.xp || 0,
-      hp: typeof mon.hp === "number" ? mon.hp : getPokemonStats(mon).hp
-    }));
+    const newTeam = saved.team.map(mon => {
+      const stats = getPokemonStats(mon);
+      return {
+        ...mon,
+        level: mon.level || getStartingLevel(mon),
+        xp: mon.xp || 0,
+        hp: typeof mon.hp === "number" ? mon.hp : stats.hp,
+        maxhp: stats.hp
+      };
+    });
     setTeam(newTeam);
     setGame({ ...saved, team: newTeam });
     setActiveIdx(0);
   }, []);
-
-  function getMaxHP(mon) {
-    return getPokemonStats(mon).hp;
-  }
 
   function availableBallsForWild(wild, inventory) {
     if (!wild || !inventory) return [];
@@ -107,27 +200,6 @@ export default function Home() {
     if (inventory.ultraballs > 0 && !wild.legendary) balls.push('ultraball');
     if (inventory.masterballs > 0 && wild.legendary) balls.push('masterball');
     return balls;
-  }
-
-  function grantBattleXP(idx, xpAmount) {
-    const updatedTeam = [...team];
-    let mon = updatedTeam[idx];
-    if (!mon.level) mon.level = getStartingLevel(mon);
-    if (!mon.xp) mon.xp = 0;
-    let newXP = mon.xp + xpAmount;
-    let newLevel = mon.level;
-    while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
-      newXP -= xpForNextLevel(newLevel);
-      newLevel++;
-    }
-    mon.xp = newXP;
-    mon.level = newLevel;
-    let evolvedMon = tryEvolve(mon);
-    evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
-    updatedTeam[idx] = evolvedMon;
-    setTeam(updatedTeam);
-    setGame(prev => ({ ...prev, team: updatedTeam }));
-    localStorage.setItem('gameState', JSON.stringify({ ...game, team: updatedTeam }));
   }
 
   function searchLongGrass() {
@@ -147,7 +219,7 @@ export default function Home() {
   }
 
   function playerAttack() {
-    if (!wildPokemon || wildHP === null || battleOver) return;
+    if (!wildPokemon || wildHP === null || battleOver || turn !== 'player') return;
     const attacker = team[activeIdx];
     if (attacker.hp <= 0) {
       setMessage("This Pokémon has fainted! Switch to another.");
@@ -162,7 +234,10 @@ export default function Home() {
     if (newWildHP === 0) {
       const xpGained = getWildXP(wildPokemon);
       setMessage(`Your ${attacker.name} attacked and defeated ${wildPokemon.name}!`);
-      grantBattleXP(activeIdx, xpGained);
+      const newTeam = grantBattleXP(team, activeIdx, xpGained);
+      setTeam(newTeam);
+      setGame(prev => ({ ...prev, team: newTeam }));
+      localStorage.setItem('gameState', JSON.stringify({ ...game, team: newTeam }));
       setBattleOver(true);
       setTurn('player');
       setTimeout(() => {
@@ -190,7 +265,7 @@ export default function Home() {
     const damage = Math.max(1, Math.round(base * multiplier));
     const newHP = Math.max(defender.hp - damage, 0);
     const newTeam = [...team];
-    newTeam[activeIdx] = { ...defender, hp: newHP };
+    newTeam[activeIdx] = { ...defender, hp: newHP, maxhp: getMaxHP(defender) };
     setTeam(newTeam);
     setGame(prev => ({ ...prev, team: newTeam }));
 
@@ -222,43 +297,77 @@ export default function Home() {
     setTimeout(() => wildAttack(), 1200);
   }
 
-  function handleUsePotion(type) {
-    if (!game || !team[activeIdx]) return;
-    if (team[activeIdx].hp === getMaxHP(team[activeIdx])) {
-      setMessage("HP is already full!");
+  function handleUseBagItem(type) {
+    // Balls:
+    if (['pokeballs','greatballs','ultraballs','masterballs'].includes(type)) {
+      catchWild(type);
+      setShowBag(false);
       return;
     }
-    let updatedTeam = usePotion(team, activeIdx, type);
-    let updatedGame = { ...game, team: updatedTeam };
-    if (type === 'potion') updatedGame.potions = (updatedGame.potions || 0) - 1;
-    else if (type === 'superpotion') updatedGame.superpotions = (updatedGame.superpotions || 0) - 1;
-    else if (type === 'fullheal') updatedGame.fullheals = (updatedGame.fullheals || 0) - 1;
-    setTeam(updatedTeam);
-    setGame(updatedGame);
-    localStorage.setItem('gameState', JSON.stringify(updatedGame));
-    setMessage(
-      type === 'potion' ? "Potion used! Healed 10 HP." :
-      type === 'superpotion' ? "Super Potion used! Healed 50 HP." :
-      "Full Heal used! Restored to full HP."
-    );
-    setTurn('wild');
-    setTimeout(() => wildAttack(), 1200);
+    // Healing:
+    if (['potions','superpotions','fullheals'].includes(type)) {
+      if (team[activeIdx].hp >= team[activeIdx].maxhp) {
+        setMessage('HP already full!');
+        setShowBag(false);
+        return;
+      }
+      let updatedTeam = usePotion(team, activeIdx, type);
+      let updatedGame = { ...game, team: updatedTeam };
+      updatedGame[type] = (updatedGame[type] || 1) - 1;
+      setTeam(updatedTeam);
+      setGame(updatedGame);
+      localStorage.setItem('gameState', JSON.stringify(updatedGame));
+      setMessage(
+        type === 'potions' ? "Potion used! Healed 10 HP." :
+        type === 'superpotions' ? "Super Potion used! Healed 50 HP." :
+        "Full Heal used! Restored to full HP."
+      );
+      setTurn('wild');
+      setShowBag(false);
+      setTimeout(() => wildAttack(), 900);
+    }
   }
 
-  function catchWild(ball) {
+  function catchWild(ballType) {
     if (!game || !wildPokemon || battleOver || catching) return;
     setCatching(true);
     setTimeout(() => {
       const updated = { ...game };
-      updated[ball + 's'] = Math.max((updated[ball + 's'] || 0) - 1, 0);
+      if (ballType === 'pokeballs') {
+        updated.pokeballs--;
+        if (wildPokemon.legendary || (wildPokemon.stage || 1) > 1) {
+          setMessage("Too strong for a Poké Ball.");
+          setCatching(false);
+          return;
+        }
+      } else if (ballType === 'greatballs') {
+        updated.greatballs--;
+        if (wildPokemon.legendary || (wildPokemon.stage || 1) > 2) {
+          setMessage("Too strong for a Great Ball.");
+          setCatching(false);
+          return;
+        }
+      } else if (ballType === 'ultraballs') {
+        updated.ultraballs--;
+        if (wildPokemon.legendary) {
+          setMessage("Use a Master Ball for legendary Pokémon.");
+          setCatching(false);
+          return;
+        }
+      } else if (ballType === 'masterballs') {
+        updated.masterballs--;
+        if (!wildPokemon.legendary) {
+          setMessage("Master Balls are for legendary Pokémon only.");
+          setCatching(false);
+          return;
+        }
+      }
 
-      const fail = Math.random() < 0.05;
-      if (fail) {
+      // 5% fail chance
+      if (Math.random() < 0.05) {
         setGame(updated);
         localStorage.setItem('gameState', JSON.stringify(updated));
-        setMessage(
-          `Oh no! The ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')} missed!`
-        );
+        setMessage("Oh no! The ball missed!");
         setCatching(false);
         setTurn('wild');
         setTimeout(() => wildAttack(), 1200);
@@ -267,9 +376,7 @@ export default function Home() {
 
       if (!updated.pokedex.includes(wildPokemon.id)) {
         updated.pokedex = [...updated.pokedex, wildPokemon.id];
-        setMessage(
-          `You caught ${wildPokemon.name} with a ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')}!`
-        );
+        setMessage(`You caught ${wildPokemon.name}!`);
       } else {
         if (!updated.duplicates) updated.duplicates = {};
         updated.duplicates[wildPokemon.id] = (updated.duplicates[wildPokemon.id] || 0) + 1;
@@ -277,9 +384,6 @@ export default function Home() {
           `You caught another ${wildPokemon.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
         );
       }
-      if (!updated.inventory) updated.inventory = {};
-      updated.inventory[wildPokemon.id] = (updated.inventory[wildPokemon.id] || 0) + 1;
-
       setGame(updated);
       localStorage.setItem('gameState', JSON.stringify(updated));
       setCatching(false);
@@ -311,6 +415,16 @@ export default function Home() {
         alignItems: 'center',
       }}
     >
+      <BagModal
+        open={showBag}
+        onClose={() => setShowBag(false)}
+        game={game}
+        turn={turn}
+        wildPokemon={wildPokemon}
+        team={team}
+        activeIdx={activeIdx}
+        onUseItem={handleUseBagItem}
+      />
       <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
       <h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -330,7 +444,7 @@ export default function Home() {
             <strong>{mon.name}</strong><br />
             Level: {mon.level}<br />
             XP: {mon.xp} / {xpForNextLevel(mon.level)}<br />
-            HP: {mon.hp} / {getMaxHP(mon)}
+            HP: {mon.hp} / {mon.maxhp}
             <br />
             <button
               disabled={battleOver || idx === activeIdx || mon.hp <= 0 || turn !== 'player'}
@@ -382,53 +496,14 @@ export default function Home() {
                 >
                   Attack
                 </button>
-                {game.potions > 0 && (
-                  <button
-                    className="poke-button"
-                    onClick={() => handleUsePotion('potion')}
-                    style={{margin: '8px 12px 0 0'}}
-                  >
-                    Use Potion (+10HP) ({game.potions})
-                  </button>
-                )}
-                {game.superpotions > 0 && (
-                  <button
-                    className="poke-button"
-                    onClick={() => handleUsePotion('superpotion')}
-                    style={{margin: '8px 12px 0 0'}}
-                  >
-                    Use Super Potion (+50HP) ({game.superpotions})
-                  </button>
-                )}
-                {game.fullheals > 0 && (
-                  <button
-                    className="poke-button"
-                    onClick={() => handleUsePotion('fullheal')}
-                    style={{margin: '8px 12px 0 0'}}
-                  >
-                    Use Full Heal (Full HP) ({game.fullheals})
-                  </button>
-                )}
+                <button
+                  className="poke-button"
+                  style={{margin: '8px 12px 0 0'}}
+                  onClick={() => setShowBag(true)}
+                >
+                  🎒 Bag
+                </button>
               </>
-            )}
-            {turn === "player" && !battleOver && availableBallsForWild(wildPokemon, game).length > 0 && (
-              <span>
-                {availableBallsForWild(wildPokemon, game).map((ball) => (
-                  <button
-                    key={ball}
-                    className="poke-button"
-                    style={{margin: '8px 12px 0 0'}}
-                    disabled={catching}
-                    onClick={() => catchWild(ball)}
-                  >
-                    {ball === 'pokeball' && 'Poké Ball'}
-                    {ball === 'greatball' && 'Great Ball'}
-                    {ball === 'ultraball' && 'Ultra Ball'}
-                    {ball === 'masterball' && 'Master Ball'}
-                    {` (${game[ball + 's'] || 0})`}
-                  </button>
-                ))}
-              </span>
             )}
           </div>
         </div>
