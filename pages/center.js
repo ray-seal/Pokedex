@@ -3,217 +3,25 @@ import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
-// --- PCModal Component ---
-function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed }) {
-  const [selected, setSelected] = useState([]);
-
-  // Defensive: Don't render unless open and all required arrays exist
-  if (
-    !open ||
-    !gameState ||
-    !Array.isArray(gameState.team) ||
-    !Array.isArray(gameState.pokedex) ||
-    typeof gameState.duplicates !== "object" ||
-    gameState.duplicates === null
-  ) return null;
-
-  // Build collection including duplicates
-  let collection = [];
-  // Add all current team Pokémon as separate slots (preserve their stats)
-  (gameState.team || []).forEach(mon => {
-    collection.push({ ...mon, _uniqueKey: Math.random().toString(36).slice(2) });
-  });
-
-  // Add all pokedex Pokémon not already in team (base stats), for each count including duplicates
-  const teamCounts = {};
-  (gameState.team || []).forEach(mon => {
-    teamCounts[mon.id] = (teamCounts[mon.id] || 0) + 1;
-  });
-  (gameState.pokedex || []).forEach(id => {
-    const owned = 1 + (gameState.duplicates[id] || 0);
-    const alreadyInTeam = teamCounts[id] || 0;
-    const needToAdd = owned - alreadyInTeam;
-    for (let i = 0; i < needToAdd; ++i) {
-      const dexEntry = pokedex.find(p => p.id === id);
-      if (dexEntry) {
-        const stats = getPokemonStats(dexEntry);
-        collection.push({
-          ...dexEntry,
-          level: dexEntry.level || 5,
-          xp: dexEntry.xp || 0,
-          hp: stats.hp,
-          maxhp: stats.hp,
-          _uniqueKey: Math.random().toString(36).slice(2)
-        });
-      }
-    }
-  });
-
-  // On modal open, set selected to the current team (by index in collection)
-  useEffect(() => {
-    if (
-      open &&
-      gameState &&
-      Array.isArray(gameState.team) &&
-      collection.length
-    ) {
-      let selectedIndexes = [];
-      (gameState.team || []).forEach(teamMon => {
-        for (let i = 0; i < collection.length; ++i) {
-          const colMon = collection[i];
-          if (
-            !selectedIndexes.includes(i) &&
-            colMon.id === teamMon.id &&
-            (colMon.level === teamMon.level || !colMon.level)
-          ) {
-            selectedIndexes.push(i);
-            break;
-          }
-        }
-      });
-      setSelected(selectedIndexes);
-    }
-    // eslint-disable-next-line
-  }, [open]);
-
-  const toggleSelection = idx => {
-    if (selected.includes(idx)) {
-      setSelected(selected.filter(i => i !== idx));
-    } else if (selected.length < 6) {
-      setSelected([...selected, idx]);
-    }
-  };
-
-  const confirmTeam = () => {
-    const newTeam = selected.map(i => {
-      const { _uniqueKey, ...mon } = collection[i];
-      return { ...mon };
-    });
-    const updatedState = { ...gameState, team: newTeam };
-    setGameState(updatedState);
-    setTeam(newTeam);
-    localStorage.setItem("gameState", JSON.stringify(updatedState));
-    setHealed(false);
-    onClose();
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
-      background: 'rgba(0,0,0,0.72)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
-    }}>
-      <div style={{
-        background: '#fff', color: '#222', padding: 32, borderRadius: 18, minWidth: 350, maxWidth: 520,
-        boxShadow: '0 4px 32px #000b'
-      }}>
-        <h2 style={{marginTop:0}}>💾 PC — Choose Your Team (max 6)</h2>
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 20, maxHeight: 350, overflowY: 'auto'
-        }}>
-          {collection.length === 0 && <p>No Pokémon in your collection!</p>}
-          {collection.map((mon, idx) => {
-            const number = 1 + collection.slice(0, idx).filter(m => m.id === mon.id).length;
-            const isDuplicate = collection.filter(m => m.id === mon.id).length > 1;
-            return (
-              <div
-                key={mon._uniqueKey}
-                onClick={() => toggleSelection(idx)}
-                style={{
-                  border: selected.includes(idx) ? '2px solid #0a0' : '2px solid #aaa',
-                  borderRadius: 10,
-                  background: selected.includes(idx) ? 'rgba(180,255,180,0.19)' : 'rgba(210,210,210,0.16)',
-                  cursor: 'pointer',
-                  padding: 9,
-                  minWidth: 72,
-                  textAlign: 'center',
-                  opacity: mon.hp > 0 ? 1 : 0.6,
-                  position: 'relative'
-                }}
-              >
-                <img src={mon.sprite} alt={mon.name} width="40" /><br />
-                <strong>{mon.name}</strong>
-                {isDuplicate && <span style={{ fontSize: 12, color: "#444" }}> #{number}</span>}
-                <br />
-                Lv.{mon.level} HP:{mon.hp}/{mon.maxhp}
-                <div style={{
-                  position: 'absolute', top: 5, right: 6, fontWeight: 'bold', color: '#090'
-                }}>
-                  {selected.includes(idx) ? '✔️' : ''}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{marginTop: 6, marginBottom: 6, color:'#b00', fontSize:15}}>
-          {selected.length > 6 && "You can only select up to 6 Pokémon."}
-        </div>
-        <button
-          className="poke-button"
-          style={{marginRight: 14}}
-          disabled={selected.length === 0 || selected.length > 6}
-          onClick={confirmTeam}
-        >
-          Confirm Team
-        </button>
-        <button
-          className="poke-button"
-          onClick={onClose}
-        >
-          Close
-        </button>
-      </div>
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #bbb;
-          background: #f9f9f9;
-          padding: 9px 17px;
-          border-radius: 7px;
-          cursor: pointer;
-          color: #222;
-          font-family: inherit;
-          font-size: 1rem;
-          margin: 6px 0;
-          transition: background 0.18s, border 0.18s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
-    </div>
-  );
-}
-// --- End PCModal ---
-
 export default function Center() {
   const [healed, setHealed] = useState(false);
   const [healing, setHealing] = useState(false);
-  const [showPC, setShowPC] = useState(false);
-  const [gameState, setGameState] = useState(null);
-  const [team, setTeam] = useState([]);
+  const [hasTeam, setHasTeam] = useState(false);
   const router = useRouter();
 
-  // Defensive: Load gameState and current team only if valid
   useEffect(() => {
+    // Defensive check for valid team in localStorage
     let saved = null;
     try {
       saved = JSON.parse(localStorage.getItem("gameState"));
     } catch (e) {
       saved = null;
     }
-    if (
-      !saved ||
-      !Array.isArray(saved.team) ||
-      !Array.isArray(saved.pokedex) ||
-      typeof saved.duplicates !== "object" ||
-      saved.duplicates === null
-    ) {
-      setGameState(null);
-      setTeam([]);
-      return;
+    if (saved && Array.isArray(saved.team) && saved.team.length > 0) {
+      setHasTeam(true);
+    } else {
+      setHasTeam(false);
     }
-    setGameState(saved);
-    setTeam(saved.team);
   }, []);
 
   const handleHeal = () => {
@@ -225,18 +33,13 @@ export default function Center() {
       } catch (e) {
         saved = null;
       }
-      if (
-        saved &&
-        Array.isArray(saved.team)
-      ) {
+      if (saved && Array.isArray(saved.team) && saved.team.length > 0) {
         saved.team = saved.team.map(p => {
           const pokedexEntry = pokedex.find(mon => mon.id === p.id);
           const stats = pokedexEntry ? getPokemonStats(pokedexEntry) : { hp: 100 };
           return { ...p, hp: stats.hp, maxhp: stats.hp };
         });
         localStorage.setItem("gameState", JSON.stringify(saved));
-        setTeam(saved.team);
-        setGameState(saved);
         setHealed(true);
       }
       setHealing(false);
@@ -252,56 +55,30 @@ export default function Center() {
       backgroundSize: 'cover',
       position: 'relative'
     }}>
-      {gameState &&
-        Array.isArray(gameState.team) &&
-        Array.isArray(gameState.pokedex) &&
-        typeof gameState.duplicates === "object" &&
-        gameState.duplicates !== null && (
-        <PCModal
-          open={showPC}
-          onClose={() => setShowPC(false)}
-          gameState={gameState}
-          setGameState={setGameState}
-          setTeam={setTeam}
-          setHealed={setHealed}
-        />
-      )}
       <h1>🏥 Pokémon Center</h1>
-      {healed ? (
-        <p>Your team is fully healed!</p>
-      ) : healing ? (
-        <p>Healing your Pokémon...</p>
-      ) : (
-        <>
-          <button
-            onClick={handleHeal}
-            style={{
-              background: "#fff",
-              border: "1px solid #bbb",
-              borderRadius: 7,
-              padding: "10px 20px",
-              marginRight: 14,
-              cursor: "pointer",
-              fontFamily: "inherit"
-            }}
-          >
-            ✨ Heal your Pokémon
-          </button>
-          <button
-            onClick={() => setShowPC(true)}
-            style={{
-              background: "#fff",
-              border: "1px solid #bbb",
-              borderRadius: 7,
-              padding: "10px 20px",
-              cursor: "pointer",
-              fontFamily: "inherit"
-            }}
-          >
-            💾 Use PC (Choose Team)
-          </button>
-        </>
+      {!hasTeam && (
+        <p style={{ color: '#b00', fontWeight: 'bold' }}>No Pokémon team found. Please add Pokémon to your team first.</p>
       )}
+      {hasTeam && healed ? (
+        <p>Your team is fully healed!</p>
+      ) : hasTeam && healing ? (
+        <p>Healing your Pokémon...</p>
+      ) : hasTeam ? (
+        <button
+          onClick={handleHeal}
+          style={{
+            background: "#fff",
+            border: "1px solid #bbb",
+            borderRadius: 7,
+            padding: "10px 20px",
+            marginRight: 14,
+            cursor: "pointer",
+            fontFamily: "inherit"
+          }}
+        >
+          ✨ Heal your Pokémon
+        </button>
+      ) : null}
       <br /><br />
       <button
         onClick={() => router.push("/")}
