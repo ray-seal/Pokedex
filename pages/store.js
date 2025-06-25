@@ -104,6 +104,7 @@ export default function Store() {
               <thead>
                 <tr>
                   <th align="left">Item</th>
+                  <th>Owned</th>
                   <th>Price</th>
                   <th></th>
                 </tr>
@@ -114,6 +115,7 @@ export default function Store() {
                     <td>
                       <span style={{ fontSize: 20 }}>{item.emoji}</span> {item.name}
                     </td>
+                    <td style={{ textAlign: 'center' }}>{game[item.key] || 0}</td>
                     <td style={{ color: '#ffde59', fontWeight: 'bold' }}>{item.price}🪙</td>
                     <td>
                       <button className="poke-button" style={{ fontSize: 14, padding: '2px 12px' }} onClick={() => handleBuy(item)}>
