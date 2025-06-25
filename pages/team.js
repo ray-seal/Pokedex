@@ -9,7 +9,7 @@ export default function TeamBuilder() {
   const [team, setTeam] = useState([]);
   const router = useRouter();
 
-  // Upgrade team members to full objects with correct HP on load
+  // Upgrade team members to full objects with correct HP on load, preserving XP/level
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (!saved) {
@@ -17,28 +17,56 @@ export default function TeamBuilder() {
       router.push('/');
       return;
     }
-    // Upgrade team to full objects with correct HP if needed
     let upgradedTeam = [];
     if (saved.team) {
       upgradedTeam = saved.team.map(member => {
-        // If already a full object, keep all fields; else, upgrade
+        // Support both id-only and full-object storage
         const mon = pokedex.find(p => p.id === (member.id || member));
         const stats = getPokemonStats(mon);
-        return { ...mon, hp: stats.hp };
+
+        // For id-only, set defaults; for object, preserve xp/level/hp if present
+        if (typeof member === "object") {
+          return {
+            ...mon,
+            ...member,
+            hp: member.hp !== undefined ? member.hp : stats.hp,
+            xp: member.xp !== undefined ? member.xp : 0,
+            level: member.level !== undefined ? member.level : 1,
+          };
+        } else {
+          // id-only legacy team save
+          return { ...mon, hp: stats.hp, xp: 0, level: 1 };
+        }
       });
     }
     setGame(saved);
     setTeam(upgradedTeam.slice(0, 6));
   }, []);
 
+  // Preserve XP/level/hp on select/deselect
   const handleSelect = (id) => {
     const selectedIdx = team.findIndex(p => p.id === id);
     if (selectedIdx !== -1) {
       setTeam(prev => prev.filter(p => p.id !== id));
     } else if (team.length < 6) {
-      const poke = pokedex.find(p => p.id === id);
-      const stats = getPokemonStats(poke);
-      setTeam(prev => [...prev, { ...poke, hp: stats.hp }]);
+      // Check if this mon was ever in saved.team before for xp/level
+      let mon = pokedex.find(p => p.id === id);
+      let stats = getPokemonStats(mon);
+
+      // Try to recover previous xp/level/hp from game.team or game.allMons if you store that
+      let prevMember = null;
+      if (game.team) prevMember = game.team.find(m => (m.id || m) === id);
+      if (!prevMember && game.allMons) prevMember = game.allMons.find(m => (m.id || m) === id);
+
+      setTeam(prev => [
+        ...prev,
+        {
+          ...mon,
+          xp: prevMember && prevMember.xp !== undefined ? prevMember.xp : 0,
+          level: prevMember && prevMember.level !== undefined ? prevMember.level : 1,
+          hp: prevMember && prevMember.hp !== undefined ? prevMember.hp : stats.hp,
+        },
+      ]);
     } else {
       alert("You can only choose up to 6 Pokémon.");
     }
