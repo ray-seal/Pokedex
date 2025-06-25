@@ -7,14 +7,12 @@ function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
   return Math.ceil(10 * Math.pow(1.01, level - 5));
 }
-
 function getStartingLevel(mon) {
   if (mon.legendary) return 50;
   if (mon.stage === 3) return 30;
   if (mon.stage === 2) return 15;
   return 5;
 }
-
 function tryEvolve(mon) {
   if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
     const next = pokedex.find(p => p.id === mon.evolves_to);
@@ -36,6 +34,53 @@ function tryEvolve(mon) {
   }
   return mon;
 }
+function getStageMultiplier(mon) {
+  if (mon.legendary) return 1.7;
+  if (mon.stage === 3) return 1.4;
+  if (mon.stage === 2) return 1.2;
+  return 1;
+}
+function randomDamage(base, multiplier) {
+  return Math.round((base + Math.floor(Math.random() * 11)) * multiplier);
+}
+function getWildXP(wild) {
+  if (wild.legendary) return 5;
+  if (wild.stage === 3) return 4;
+  if (wild.stage === 2) return 3;
+  return 2;
+}
+function getMaxHP(mon) {
+  return getPokemonStats(mon).hp;
+}
+function availableBallsForOpponent(opponent, inventory) {
+  const { stage, legendary } = opponent;
+  const balls = [];
+  if (!legendary) {
+    if (stage <= 1 && inventory.pokeballs > 0) balls.push('pokeball');
+    if (stage <= 2 && inventory.greatballs > 0) balls.push('greatball');
+    if (inventory.ultraballs > 0) balls.push('ultraball');
+  }
+  if (legendary && inventory.masterballs > 0) balls.push('masterball');
+  return balls;
+}
+function grantBattleXP(team, winnerIdx, xpAmount) {
+  const updatedTeam = [...team];
+  let mon = updatedTeam[winnerIdx];
+  if (!mon.level) mon.level = getStartingLevel(mon);
+  if (!mon.xp) mon.xp = 0;
+  let newXP = mon.xp + xpAmount;
+  let newLevel = mon.level;
+  while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
+    newXP -= xpForNextLevel(newLevel);
+    newLevel++;
+  }
+  mon.xp = newXP;
+  mon.level = newLevel;
+  let evolvedMon = tryEvolve(mon);
+  evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
+  updatedTeam[winnerIdx] = evolvedMon;
+  return updatedTeam;
+}
 
 export default function Arena() {
   const [game, setGame] = useState(null);
@@ -51,53 +96,6 @@ export default function Arena() {
   const [disabledSwitch, setDisabledSwitch] = useState(false);
   const [turn, setTurn] = useState('player');
   const router = useRouter();
-
-  function getStageMultiplier(mon) {
-    if (mon.legendary) return 1.7;
-    if (mon.stage === 3) return 1.4;
-    if (mon.stage === 2) return 1.2;
-    return 1;
-  }
-  function randomDamage(base, multiplier) {
-    return Math.round((base + Math.floor(Math.random() * 11)) * multiplier); // 15–25 * multiplier
-  }
-
-  function getMaxHP(mon) {
-    return getPokemonStats(mon).hp;
-  }
-
-  function availableBallsForOpponent(opponent, inventory) {
-    const { stage, legendary } = opponent;
-    const balls = [];
-    if (!legendary) {
-      if (stage <= 1 && inventory.pokeballs > 0) balls.push('pokeball');
-      if (stage <= 2 && inventory.greatballs > 0) balls.push('greatball');
-      if (inventory.ultraballs > 0) balls.push('ultraball');
-    }
-    if (legendary && inventory.masterballs > 0) balls.push('masterball');
-    return balls;
-  }
-
-  // XP/LEVEL: Grant XP, handle level-up and evolution
-  function grantBattleXP(team, winnerIdx, xpAmount) {
-    const updatedTeam = [...team];
-    let mon = updatedTeam[winnerIdx];
-    if (!mon.level) mon.level = getStartingLevel(mon);
-    if (!mon.xp) mon.xp = 0;
-    let newXP = mon.xp + xpAmount;
-    let newLevel = mon.level;
-    while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
-      newXP -= xpForNextLevel(newLevel);
-      newLevel++;
-    }
-    mon.xp = newXP;
-    mon.level = newLevel;
-    // Try evolution
-    let evolvedMon = tryEvolve(mon);
-    evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
-    updatedTeam[winnerIdx] = evolvedMon;
-    return updatedTeam;
-  }
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
@@ -166,12 +164,13 @@ export default function Arena() {
 
     if (newOpponentHP === 0) {
       // Grant XP to winner
-      const newTeam = grantBattleXP(team, activeIdx, 10); // 10 XP per win
+      const xpGained = getWildXP(opponent);
+      const newTeam = grantBattleXP(team, activeIdx, xpGained);
       setTeam(newTeam);
       setGame((prev) => ({ ...prev, team: newTeam }));
       localStorage.setItem('gameState', JSON.stringify({ ...game, team: newTeam }));
 
-      setMessage(`You attacked and defeated the wild ${opponent.name}! Your ${newTeam[activeIdx].name} gained 10 XP!`);
+      setMessage(`You attacked and defeated the wild ${opponent.name}! Your ${newTeam[activeIdx].name} gained ${xpGained} XP!`);
       setBattleOver(true);
       setRewardOptions(true);
       setRewardClaimed(false);
@@ -277,10 +276,6 @@ export default function Arena() {
         `You caught another ${opponent.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
       );
     }
-
-    // Add level/xp for new/duplicate Pokémon if you store in inventory/team
-    // (Optional: Adjust to add to team if you want)
-    // If you want, you could also add to inventory here.
 
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
