@@ -12,10 +12,15 @@ export default function TeamBuilder() {
   // Utility: get stats from progressBank or initialize defaults
   function getProgress(mon, progressBank = {}) {
     const prog = progressBank[mon.id] || {};
+    let autoLevel = 1;
+    if (mon.legendary) autoLevel = 50;
+    else if (mon.stage === 3) autoLevel = 30;
+    else if (mon.stage === 2) autoLevel = 15;
+
     return {
       ...mon,
       xp: prog.xp !== undefined ? prog.xp : 0,
-      level: prog.level !== undefined ? prog.level : 1,
+      level: prog.level !== undefined ? prog.level : autoLevel,
       hp: prog.hp !== undefined ? prog.hp : getPokemonStats(mon).hp,
     };
   }
