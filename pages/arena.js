@@ -3,8 +3,21 @@ import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
-// --- BagModal Component ---
-function BagModal({ open, onClose, game, turn, opponent, team, activeIdx, onUseItem }) {
+// Utility to generate random NPC names
+const NPC_NAMES = [
+  "Trainer Alex", "Trainer Pat", "Rival Max", "Ace Jamie", "Bird Keeper Sam",
+  "Lass Chloe", "Youngster Tim", "Bug Catcher Eli", "Hiker Bob", "Cooltrainer Zoe",
+  "Sage Lin", "Swimmer Kim", "Biker Vick", "Psychic Ray", "Rich Kid Leo"
+];
+function getRandomNPCName() {
+  return NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
+}
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// --- BagModal Component (unchanged except passing npcTeam and npcActiveIdx) ---
+function BagModal({ open, onClose, game, turn, npcTeam, npcActiveIdx, team, activeIdx, onUseItem }) {
   if (!open) return null;
   const ITEMS = [
     { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', type: 'ball' },
@@ -32,11 +45,6 @@ function BagModal({ open, onClose, game, turn, opponent, team, activeIdx, onUseI
                 <span style={{ fontSize: 22 }}>{item.emoji}</span>
                 <span>{item.name}</span>
                 <b style={{marginLeft:2}}>{game[item.key]}</b>
-                {item.type === "ball" && opponent && turn === "player" &&
-                  <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
-                    Use
-                  </button>
-                }
                 {item.type === "heal" && team && team[activeIdx] && turn === "player" && team[activeIdx].hp < team[activeIdx].maxhp &&
                   <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
                     Use
@@ -116,12 +124,6 @@ function getStageMultiplier(mon) {
 function randomDamage(base, multiplier) {
   return Math.round((base + Math.floor(Math.random() * 11)) * multiplier);
 }
-function getWildXP(wild) {
-  if (wild.legendary) return 5;
-  if (wild.stage === 3) return 4;
-  if (wild.stage === 2) return 3;
-  return 2;
-}
 function getMaxHP(mon) {
   return getPokemonStats(mon).hp;
 }
@@ -155,22 +157,35 @@ function grantBattleXP(team, winnerIdx, xpAmount) {
   return updatedTeam;
 }
 
+function getRewardForNPCTeamSize(n) {
+  if (n === 1) return getRandomInt(100, 110);
+  if (n === 2) return getRandomInt(120, 130);
+  if (n === 3) return getRandomInt(140, 160);
+  if (n === 4) return getRandomInt(170, 190);
+  if (n === 5) return getRandomInt(200, 220);
+  return getRandomInt(230, 250);
+}
+
 export default function Arena() {
   const [game, setGame] = useState(null);
   const [team, setTeam] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [opponent, setOpponent] = useState(null);
+
+  // NPC state
+  const [npcName, setNpcName] = useState('');
+  const [npcTeam, setNpcTeam] = useState([]);
+  const [npcActiveIdx, setNpcActiveIdx] = useState(0);
+
   const [message, setMessage] = useState('');
   const [battleOver, setBattleOver] = useState(false);
-  const [rewardOptions, setRewardOptions] = useState(false);
+  const [reward, setReward] = useState(0);
   const [rewardClaimed, setRewardClaimed] = useState(false);
-  const [canCatch, setCanCatch] = useState(false);
-  const [balls, setBalls] = useState([]);
-  const [disabledSwitch, setDisabledSwitch] = useState(false);
   const [turn, setTurn] = useState('player');
   const [showBag, setShowBag] = useState(false);
+  const [disabledSwitch, setDisabledSwitch] = useState(false);
   const router = useRouter();
 
+  // On mount, load player and generate NPC
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved || !saved.team || saved.team.length === 0) {
@@ -193,23 +208,46 @@ export default function Arena() {
     setGame({ ...saved, team: upgradedTeam });
     setTeam(upgradedTeam);
     setActiveIdx(0);
-    spawnWild(upgradedTeam, { ...saved, team: upgradedTeam });
+    startNpcBattle(upgradedTeam, { ...saved, team: upgradedTeam });
     // eslint-disable-next-line
   }, []);
 
-  function spawnWild(currentTeam = team, currentGame = game) {
-    const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
-    const wildStats = getPokemonStats(wild);
-    setOpponent({ ...wild, hp: wildStats.hp });
-    setMessage('');
-    setBattleOver(false);
-    setRewardOptions(false);
-    setRewardClaimed(false);
-    setCanCatch(false);
-    setBalls([]);
+  // Helper: generate random NPC team
+  function randomNpcTeam() {
+    const size = getRandomInt(1, 6);
+    const ids = [];
+    while (ids.length < size) {
+      const candidate = pokedex[getRandomInt(0, pokedex.length - 1)];
+      if (!ids.includes(candidate.id)) ids.push(candidate.id);
+    }
+    return ids.map(id => {
+      const mon = pokedex.find(p => p.id === id);
+      const stats = getPokemonStats(mon);
+      // NPC levels: 5–(10+teamSize*5), scale up with team size
+      const level = getRandomInt(5 + size * 2, 10 + size * 5);
+      return {
+        ...mon,
+        level,
+        xp: 0,
+        hp: stats.hp,
+        maxhp: stats.hp
+      };
+    });
+  }
+
+  function startNpcBattle(currentTeam, currentGame) {
+    const npcName = getRandomNPCName();
+    const team = randomNpcTeam();
+    setNpcName(npcName);
+    setNpcTeam(team);
+    setNpcActiveIdx(0);
     setTurn('player');
-    setTeam(currentTeam);
-    setGame(currentGame);
+    setBattleOver(false);
+    setReward(getRewardForNPCTeamSize(team.length));
+    setRewardClaimed(false);
+    setMessage(`${npcName} wants to battle! They have ${team.length} Pokémon.`);
+    setShowBag(false);
+    setDisabledSwitch(false);
   }
 
   function handleSwitch(idx) {
@@ -218,18 +256,12 @@ export default function Arena() {
     setMessage(`You switched to ${team[idx].name}!`);
     setDisabledSwitch(true);
     setTimeout(() => setDisabledSwitch(false), 600);
-    setTurn('opponent');
-    setTimeout(() => wildAttack(idx), 900);
+    setTurn('npc');
+    setTimeout(() => npcAttack(idx), 900);
   }
 
   function handleUseBagItem(type) {
-    // Balls:
-    if (['pokeballs','greatballs','ultraballs','masterballs'].includes(type)) {
-      tryCatch(type);
-      setShowBag(false);
-      return;
-    }
-    // Healing:
+    // Only healing items in NPC battles
     if (['potions','superpotions','fullheals'].includes(type)) {
       if (team[activeIdx].hp >= team[activeIdx].maxhp) {
         setMessage('HP already full!');
@@ -247,64 +279,72 @@ export default function Arena() {
         type === 'superpotions' ? "Super Potion used! Healed 50 HP." :
         "Full Heal used! Restored to full HP."
       );
-      setTurn('opponent');
+      setTurn('npc');
       setShowBag(false);
-      setTimeout(() => wildAttack(activeIdx), 900);
+      setTimeout(() => npcAttack(activeIdx), 900);
     }
   }
 
+  // Player attacks NPC's current Pokémon
   function playerAttack() {
-    if (!team.length || !opponent || battleOver || turn !== 'player') return;
+    if (!team.length || !npcTeam.length || battleOver || turn !== 'player') return;
     const player = team[activeIdx];
     if (player.hp <= 0) {
       setMessage("That Pokémon has fainted! Switch to another.");
       return;
     }
+    const npcMon = npcTeam[npcActiveIdx];
     const playerMultiplier = getStageMultiplier(player);
     const playerDamage = randomDamage(15, playerMultiplier);
 
-    let newOpponentHP = opponent.hp - playerDamage;
-    newOpponentHP = Math.max(newOpponentHP, 0);
+    let newNpcHP = npcMon.hp - playerDamage;
+    newNpcHP = Math.max(newNpcHP, 0);
 
-    setOpponent({ ...opponent, hp: newOpponentHP });
+    const updatedNpcTeam = [...npcTeam];
+    updatedNpcTeam[npcActiveIdx] = { ...npcMon, hp: newNpcHP };
+    setNpcTeam(updatedNpcTeam);
 
-    if (newOpponentHP === 0) {
-      const xpGained = getWildXP(opponent);
-      const newTeam = grantBattleXP(team, activeIdx, xpGained);
-      setTeam(newTeam);
-      setGame((prev) => ({ ...prev, team: newTeam }));
-      localStorage.setItem('gameState', JSON.stringify({ ...game, team: newTeam }));
-
-      setMessage(`You attacked and defeated the wild ${opponent.name}! Your ${newTeam[activeIdx].name} gained ${xpGained} XP!`);
-      setBattleOver(true);
-      setRewardOptions(true);
-      setRewardClaimed(false);
-      const balls = [];
-      if (game.pokeballs > 0 && !opponent.legendary && opponent.stage <= 1) balls.push('pokeball');
-      if (game.greatballs > 0 && !opponent.legendary && opponent.stage <= 2) balls.push('greatball');
-      if (game.ultraballs > 0 && !opponent.legendary) balls.push('ultraball');
-      if (game.masterballs > 0 && opponent.legendary) balls.push('masterball');
-      setBalls(balls);
-      setCanCatch(balls.length > 0);
+    if (newNpcHP === 0) {
+      // Defeated NPC Pokémon
+      if (npcActiveIdx + 1 < npcTeam.length) {
+        setMessage(`You defeated ${npcMon.name}! ${npcName} sends out ${npcTeam[npcActiveIdx+1].name}!`);
+        setTimeout(() => {
+          setNpcActiveIdx(npcActiveIdx + 1);
+          setTurn('npc');
+          setTimeout(() => npcAttack(activeIdx), 900);
+        }, 1200);
+      } else {
+        // All NPC Pokémon defeated
+        const xpGained = 5 * npcTeam.length;
+        const newTeam = grantBattleXP(team, activeIdx, xpGained);
+        setTeam(newTeam);
+        setGame((prev) => ({ ...prev, team: newTeam }));
+        localStorage.setItem('gameState', JSON.stringify({ ...game, team: newTeam }));
+        setMessage(`You defeated ${npcName}! Your ${newTeam[activeIdx].name} gained ${xpGained} XP!`);
+        setBattleOver(true);
+        setRewardClaimed(false);
+      }
     } else {
-      setMessage(`You dealt ${playerDamage}!`);
-      setTurn('opponent');
-      setTimeout(() => wildAttack(activeIdx), 900);
+      setMessage(`You dealt ${playerDamage} damage!`);
+      setTurn('npc');
+      setTimeout(() => npcAttack(activeIdx), 900);
     }
   }
 
-  function wildAttack(idxForAttack) {
-    if (!team.length || !opponent || battleOver) return;
+  // NPC's turn
+  function npcAttack(idxForAttack) {
+    if (!team.length || !npcTeam.length || battleOver) return;
     const idx = idxForAttack ?? activeIdx;
     const player = team[idx];
-    if (player.hp <= 0 || opponent.hp <= 0) {
+    const npcMon = npcTeam[npcActiveIdx];
+    if (player.hp <= 0 || npcMon.hp <= 0) {
       setTurn('player');
       return;
     }
-    const opponentMultiplier = getStageMultiplier(opponent);
-    const opponentDamage = randomDamage(15, opponentMultiplier);
+    const npcMultiplier = getStageMultiplier(npcMon);
+    const npcDamage = randomDamage(15, npcMultiplier);
 
-    let newPlayerHP = player.hp - opponentDamage;
+    let newPlayerHP = player.hp - npcDamage;
     newPlayerHP = Math.max(newPlayerHP, 0);
     const newTeam = [...team];
     newTeam[idx] = { ...player, hp: newPlayerHP };
@@ -313,82 +353,24 @@ export default function Arena() {
     if (newPlayerHP === 0) {
       const anyAlive = newTeam.some(mon => mon.hp > 0);
       if (anyAlive) {
-        setMessage(`Wild ${opponent.name} dealt ${opponentDamage}! Your Pokémon fainted, switch to another.`);
+        setMessage(`${npcName}'s ${npcMon.name} dealt ${npcDamage}! Your Pokémon fainted, switch to another.`);
         setTurn('player');
       } else {
-        setMessage(`Wild ${opponent.name} dealt ${opponentDamage}! All your Pokémon fainted! You lose the battle.`);
+        setMessage(`${npcName}'s ${npcMon.name} dealt ${npcDamage}! All your Pokémon fainted! You lose the battle.`);
         setBattleOver(true);
-        setRewardOptions(false);
-        setRewardClaimed(false);
       }
     } else {
-      setMessage(`Wild ${opponent.name} dealt ${opponentDamage} damage!`);
+      setMessage(`${npcName}'s ${npcMon.name} dealt ${npcDamage} damage!`);
       setTurn('player');
     }
   }
 
-  function claimCoins() {
-    const updated = { ...game, coins: game.coins + 50 };
+  function claimReward() {
+    const updated = { ...game, coins: game.coins + reward };
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
-    setRewardOptions(false);
     setRewardClaimed(true);
-    setMessage("You received 50 coins!");
-  }
-
-  function tryCatch(ballType) {
-    const updated = { ...game };
-    const { stage, legendary } = opponent;
-
-    if (ballType === 'pokeballs') {
-      if (updated.pokeballs < 1) return setMessage("No Pokéballs left!");
-      if (stage > 1 || legendary) return setMessage("Too strong for a Pokéball.");
-      updated.pokeballs--;
-    } else if (ballType === 'greatballs') {
-      if (updated.greatballs < 1) return setMessage("No Great Balls left!");
-      if (stage > 2 || legendary) return setMessage("Too strong for a Great Ball.");
-      updated.greatballs--;
-    } else if (ballType === 'ultraballs') {
-      if (updated.ultraballs < 1) return setMessage("No Ultra Balls left!");
-      if (legendary) return setMessage("Use a Master Ball for legendary Pokémon.");
-      updated.ultraballs--;
-    } else if (ballType === 'masterballs') {
-      if (updated.masterballs < 1) return setMessage("No Master Balls left!");
-      if (!legendary) return setMessage("Master Balls are for legendary Pokémon only.");
-      updated.masterballs--;
-    } else {
-      // fallback
-      return;
-    }
-
-    if (Math.random() < 0.025) {
-      setGame(updated);
-      localStorage.setItem('gameState', JSON.stringify(updated));
-      setRewardOptions(false);
-      setRewardClaimed(true);
-      setMessage(
-        `Oh no! The ${ballType.replace('pokeballs', 'Poké Ball').replace('greatballs','Great Ball').replace('ultraballs','Ultra Ball').replace('masterballs','Master Ball')} missed!`
-      );
-      return;
-    }
-
-    if (!updated.pokedex.includes(opponent.id)) {
-      updated.pokedex = [...updated.pokedex, opponent.id];
-      setMessage(
-        `You caught ${opponent.name}!`
-      );
-    } else {
-      if (!updated.duplicates) updated.duplicates = {};
-      updated.duplicates[opponent.id] = (updated.duplicates[opponent.id] || 0) + 1;
-      setMessage(
-        `You caught another ${opponent.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
-      );
-    }
-
-    setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
-    setRewardOptions(false);
-    setRewardClaimed(true);
+    setMessage(`You received ${reward} coins!`);
   }
 
   function goToCenter() {
@@ -404,20 +386,10 @@ export default function Arena() {
   }
 
   function battleAnother() {
-    spawnWild(team, game);
-    setMessage("A new wild Pokémon appears!");
-    setTurn('player');
-    setRewardClaimed(false);
+    startNpcBattle(team, game);
   }
 
-  function runAway() {
-    setMessage("You ran away safely! A new wild Pokémon appears...");
-    spawnWild(team, game);
-    setTurn('player');
-    setRewardClaimed(false);
-  }
-
-  if (!game || !team.length || !opponent)
+  if (!game || !team.length || !npcTeam.length)
     return <p>Loading battle...</p>;
 
   return (
@@ -437,7 +409,8 @@ export default function Arena() {
         onClose={() => setShowBag(false)}
         game={game}
         turn={turn}
-        opponent={opponent}
+        npcTeam={npcTeam}
+        npcActiveIdx={npcActiveIdx}
         team={team}
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
@@ -450,7 +423,7 @@ export default function Arena() {
             style={{
               border: idx === activeIdx ? '2px solid gold' : '1px solid #aaa',
               borderRadius: '8px',
-              background: mon.hp > 0 ? 'rgba(255,255,255,0.11)' : 'rgba(200,50,50,0.2)',
+              background: mon.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
               padding: 8,
               minWidth: 90,
               textAlign: 'center'
@@ -471,24 +444,27 @@ export default function Arena() {
           </div>
         ))}
       </div>
-      <h2>Wild Opponent</h2>
-      <div style={{ marginBottom: 20, position: 'relative', display: 'inline-block' }}>
-        <img src={opponent.sprite} alt={opponent.name} width="64" />
-        {game?.pokedex?.includes(opponent.id) && (
-          <img
-            src="/pokeball.png"
-            alt="Caught"
-            width="24"
+      <h2>{npcName}'s Team</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+        {npcTeam.map((mon, idx) => (
+          <div key={mon.id}
             style={{
-              position: 'absolute',
-              left: 44,
-              bottom: 8,
-              pointerEvents: 'none'
-            }}
-          />
-        )}
-        <br />
-        <b>{opponent.name}</b> (HP: {opponent.hp} / {getMaxHP(opponent)})
+              border: idx === npcActiveIdx ? '2px solid gold' : '1px solid #aaa',
+              borderRadius: '8px',
+              background: mon.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
+              padding: 8,
+              minWidth: 90,
+              textAlign: 'center',
+              opacity: mon.hp > 0 ? 1 : 0.5
+            }}>
+            <img src={mon.sprite} alt={mon.name} width="44" /><br />
+            <strong>{mon.name}</strong><br />
+            Level: {mon.level} <br />
+            HP: {mon.hp} / {mon.maxhp}
+            <br />
+            {idx === npcActiveIdx && <span style={{ color: "#ffd700", fontWeight: "bold" }}>Active</span>}
+          </div>
+        ))}
       </div>
       {!battleOver && turn === 'player' && (
         <div>
@@ -498,46 +474,29 @@ export default function Arena() {
           <button className="poke-button" onClick={() => setShowBag(true)} style={{ marginLeft: 10 }}>
             🎒 Bag
           </button>
-          <button className="poke-button" onClick={runAway} style={{ marginLeft: 10 }}>
-            🏃‍♂️ Run Away
-          </button>
         </div>
       )}
       <p>
         {battleOver
           ? null
           : turn === 'player'
-          ? "Your turn! Attack, Use Bag, Switch, or Run Away."
-          : "Wild Pokémon's turn..."}
+          ? "Your turn! Attack, Use Bag, or Switch."
+          : `${npcName}'s turn...`}
       </p>
       <p>{message}</p>
-      {battleOver && (rewardOptions || rewardClaimed) && (
+      {battleOver && (
         <div>
-          {rewardOptions && (
+          {!rewardClaimed ? (
             <>
-              <h3>🎉 You Won! Choose your reward:</h3>
-              <button className="poke-button" onClick={claimCoins}>💰 50 Coins</button>
-              {canCatch &&
-                <>
-                  <span style={{ margin: "0 10px" }} />
-                  <span>or try to catch:</span>
-                  {balls.map(ball => (
-                    <button
-                      key={ball}
-                      className="poke-button"
-                      onClick={() => tryCatch(ball)}
-                      style={{ marginLeft: '10px' }}
-                    >
-                      🎯 {ball[0].toUpperCase() + ball.slice(1).replace('ball', ' Ball')}
-                    </button>
-                  ))}
-                </>
-              }
+              <h3>🎉 You Won! Claim your reward:</h3>
+              <button className="poke-button" onClick={claimReward}>💰 Claim {reward} Coins</button>
             </>
+          ) : (
+            <h3>🎉 You received {reward} coins!</h3>
           )}
           <div style={{ marginTop: 18 }}>
             <button className="poke-button" onClick={battleAnother}>
-              ⚔️ Battle Another Wild Pokémon
+              ⚔️ Battle Another NPC Trainer
             </button>
           </div>
         </div>
