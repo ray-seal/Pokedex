@@ -3,6 +3,40 @@ import { useRouter } from 'next/router';
 import pokedex from '../public/pokedex.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
+function xpForNextLevel(level) {
+  if (level >= 100) return Infinity;
+  return Math.ceil(10 * Math.pow(1.01, level - 5));
+}
+
+function getStartingLevel(mon) {
+  if (mon.legendary) return 50;
+  if (mon.stage === 3) return 30;
+  if (mon.stage === 2) return 15;
+  return 5;
+}
+
+function tryEvolve(mon) {
+  if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
+    const next = pokedex.find(p => p.id === mon.evolves_to);
+    if (next) return {
+      ...next,
+      level: mon.level,
+      xp: mon.xp,
+      hp: getPokemonStats(next).hp
+    };
+  }
+  if (mon.stage === 2 && mon.level >= 30 && mon.evolves_to) {
+    const next = pokedex.find(p => p.id === mon.evolves_to);
+    if (next) return {
+      ...next,
+      level: mon.level,
+      xp: mon.xp,
+      hp: getPokemonStats(next).hp
+    };
+  }
+  return mon;
+}
+
 export default function Arena() {
   const [game, setGame] = useState(null);
   const [team, setTeam] = useState([]);
@@ -44,6 +78,27 @@ export default function Arena() {
     return balls;
   }
 
+  // XP/LEVEL: Grant XP, handle level-up and evolution
+  function grantBattleXP(team, winnerIdx, xpAmount) {
+    const updatedTeam = [...team];
+    let mon = updatedTeam[winnerIdx];
+    if (!mon.level) mon.level = getStartingLevel(mon);
+    if (!mon.xp) mon.xp = 0;
+    let newXP = mon.xp + xpAmount;
+    let newLevel = mon.level;
+    while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
+      newXP -= xpForNextLevel(newLevel);
+      newLevel++;
+    }
+    mon.xp = newXP;
+    mon.level = newLevel;
+    // Try evolution
+    let evolvedMon = tryEvolve(mon);
+    evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
+    updatedTeam[winnerIdx] = evolvedMon;
+    return updatedTeam;
+  }
+
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     if (!saved || !saved.team || saved.team.length === 0) {
@@ -54,12 +109,19 @@ export default function Arena() {
     let upgradedTeam = saved.team.map(member => {
       const mon = pokedex.find(p => p.id === member.id);
       const stats = getPokemonStats(mon);
-      return { ...mon, hp: member.hp ?? stats.hp };
+      return {
+        ...mon,
+        ...member,
+        level: member.level || getStartingLevel(mon),
+        xp: member.xp || 0,
+        hp: member.hp ?? stats.hp
+      };
     });
     setGame({ ...saved, team: upgradedTeam });
     setTeam(upgradedTeam);
     setActiveIdx(0);
     spawnWild(upgradedTeam, { ...saved, team: upgradedTeam });
+    // eslint-disable-next-line
   }, []);
 
   function spawnWild(currentTeam = team, currentGame = game) {
@@ -103,7 +165,13 @@ export default function Arena() {
     setOpponent({ ...opponent, hp: newOpponentHP });
 
     if (newOpponentHP === 0) {
-      setMessage(`You attacked and defeated the wild ${opponent.name}!`);
+      // Grant XP to winner
+      const newTeam = grantBattleXP(team, activeIdx, 10); // 10 XP per win
+      setTeam(newTeam);
+      setGame((prev) => ({ ...prev, team: newTeam }));
+      localStorage.setItem('gameState', JSON.stringify({ ...game, team: newTeam }));
+
+      setMessage(`You attacked and defeated the wild ${opponent.name}! Your ${newTeam[activeIdx].name} gained 10 XP!`);
       setBattleOver(true);
       setRewardOptions(true);
       setRewardClaimed(false);
@@ -196,14 +264,28 @@ export default function Arena() {
       return;
     }
 
-    updated.inventory = updated.inventory || {};
-    updated.inventory[opponent.id] = (updated.inventory[opponent.id] || 0) + 1;
-    if (!updated.pokedex.includes(opponent.id)) updated.pokedex.push(opponent.id);
+    // Duplicates logic
+    if (!updated.pokedex.includes(opponent.id)) {
+      updated.pokedex = [...updated.pokedex, opponent.id];
+      setMessage(
+        `You caught ${opponent.name}!`
+      );
+    } else {
+      if (!updated.duplicates) updated.duplicates = {};
+      updated.duplicates[opponent.id] = (updated.duplicates[opponent.id] || 0) + 1;
+      setMessage(
+        `You caught another ${opponent.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
+      );
+    }
+
+    // Add level/xp for new/duplicate Pokémon if you store in inventory/team
+    // (Optional: Adjust to add to team if you want)
+    // If you want, you could also add to inventory here.
+
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
     setRewardOptions(false);
     setRewardClaimed(true);
-    setMessage(`You caught ${opponent.name}!`);
   }
 
   function goToCenter() {
@@ -262,6 +344,8 @@ export default function Arena() {
             }}>
             <img src={mon.sprite} alt={mon.name} width="44" /><br />
             <strong>{mon.name}</strong><br />
+            Level: {mon.level} <br />
+            XP: {mon.xp} / {xpForNextLevel(mon.level)}<br />
             HP: {mon.hp} / {getMaxHP(mon)}
             <br />
             <button
@@ -278,7 +362,6 @@ export default function Arena() {
       <h2>Wild Opponent</h2>
       <div style={{ marginBottom: 20, position: 'relative', display: 'inline-block' }}>
         <img src={opponent.sprite} alt={opponent.name} width="64" />
-        {/* Pokéball Sprite if already caught */}
         {game?.pokedex?.includes(opponent.id) && (
           <img
             src="/pokeball.png"
@@ -316,7 +399,6 @@ export default function Arena() {
       </p>
       <p>{message}</p>
 
-      {/* Rewards and Battle Another button logic */}
       {battleOver && (rewardOptions || rewardClaimed) && (
         <div>
           {rewardOptions && (
@@ -352,32 +434,6 @@ export default function Arena() {
       <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
         🏥 Go to Pokémon Center (Heal & Visit)
       </button>
-
-      <button className="poke-button" onClick={() => router.push('/')}>
-        🏠 Back to Home Page
-      </button>
-
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 10px 20px;
-          border-radius: 6px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-          margin: 6px 8px 6px 0;
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.2s, border 0.2s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
     </main>
   );
 }
