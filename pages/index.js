@@ -395,6 +395,7 @@ export default function Home() {
         <button className="poke-button" onClick={() => router.push('/arena')}>🏟️ Pokémon Arena</button>
         <button className="poke-button" onClick={() => router.push('/pokedex')}>📖 Pokédex</button>
         <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
+        <button className="poke-button" onClick={() => router.push('/bag')}>🎒 Bag</button>
       </div>
 
       <style jsx>{`
