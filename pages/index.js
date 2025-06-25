@@ -50,6 +50,19 @@ function getWildXP(wild) {
   if (wild.stage === 2) return 3;
   return 2;
 }
+function usePotion(team, idx, type) {
+  const healedTeam = [...team];
+  const mon = healedTeam[idx];
+  const maxHP = getPokemonStats(mon).hp;
+  if (type === 'potion') {
+    mon.hp = Math.min(mon.hp + 10, maxHP);
+  } else if (type === 'superpotion') {
+    mon.hp = Math.min(mon.hp + 50, maxHP);
+  } else if (type === 'fullheal') {
+    mon.hp = maxHP;
+  }
+  return healedTeam;
+}
 
 export default function Home() {
   const [game, setGame] = useState(null);
@@ -71,7 +84,6 @@ export default function Home() {
       router.push('/team');
       return;
     }
-    // Ensure all team Pokémon have level/xp/hp
     const newTeam = saved.team.map(mon => ({
       ...mon,
       level: mon.level || getStartingLevel(mon),
@@ -110,7 +122,6 @@ export default function Home() {
     }
     mon.xp = newXP;
     mon.level = newLevel;
-    // Try evolution
     let evolvedMon = tryEvolve(mon);
     evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
     updatedTeam[idx] = evolvedMon;
@@ -119,7 +130,6 @@ export default function Home() {
     localStorage.setItem('gameState', JSON.stringify({ ...game, team: updatedTeam }));
   }
 
-  // Start a new wild encounter
   function searchLongGrass() {
     const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
     let level = 5;
@@ -136,7 +146,6 @@ export default function Home() {
     setMessage(`A wild ${wild.name} appeared in the long grass!`);
   }
 
-  // Player attacks wild Pokémon
   function playerAttack() {
     if (!wildPokemon || wildHP === null || battleOver) return;
     const attacker = team[activeIdx];
@@ -169,7 +178,6 @@ export default function Home() {
     }
   }
 
-  // Wild attacks player
   function wildAttack() {
     if (!wildPokemon || battleOver) {
       setTurn('player');
@@ -206,7 +214,6 @@ export default function Home() {
     }
   }
 
-  // Switch active Pokémon
   function handleSwitch(idx) {
     if (battleOver || idx === activeIdx || team[idx].hp <= 0 || turn !== 'player') return;
     setActiveIdx(idx);
@@ -215,7 +222,29 @@ export default function Home() {
     setTimeout(() => wildAttack(), 1200);
   }
 
-  // Catch wild Pokémon logic
+  function handleUsePotion(type) {
+    if (!game || !team[activeIdx]) return;
+    if (team[activeIdx].hp === getMaxHP(team[activeIdx])) {
+      setMessage("HP is already full!");
+      return;
+    }
+    let updatedTeam = usePotion(team, activeIdx, type);
+    let updatedGame = { ...game, team: updatedTeam };
+    if (type === 'potion') updatedGame.potions = (updatedGame.potions || 0) - 1;
+    else if (type === 'superpotion') updatedGame.superpotions = (updatedGame.superpotions || 0) - 1;
+    else if (type === 'fullheal') updatedGame.fullheals = (updatedGame.fullheals || 0) - 1;
+    setTeam(updatedTeam);
+    setGame(updatedGame);
+    localStorage.setItem('gameState', JSON.stringify(updatedGame));
+    setMessage(
+      type === 'potion' ? "Potion used! Healed 10 HP." :
+      type === 'superpotion' ? "Super Potion used! Healed 50 HP." :
+      "Full Heal used! Restored to full HP."
+    );
+    setTurn('wild');
+    setTimeout(() => wildAttack(), 1200);
+  }
+
   function catchWild(ball) {
     if (!game || !wildPokemon || battleOver || catching) return;
     setCatching(true);
@@ -344,14 +373,43 @@ export default function Home() {
           </div>
           <div style={{ marginTop: 12 }}>
             {turn === "player" && !battleOver && (
-              <button
-                className="poke-button"
-                style={{margin: '8px 12px 0 0'}}
-                disabled={team[activeIdx].hp <= 0}
-                onClick={playerAttack}
-              >
-                Attack
-              </button>
+              <>
+                <button
+                  className="poke-button"
+                  style={{margin: '8px 12px 0 0'}}
+                  disabled={team[activeIdx].hp <= 0}
+                  onClick={playerAttack}
+                >
+                  Attack
+                </button>
+                {game.potions > 0 && (
+                  <button
+                    className="poke-button"
+                    onClick={() => handleUsePotion('potion')}
+                    style={{margin: '8px 12px 0 0'}}
+                  >
+                    Use Potion (+10HP) ({game.potions})
+                  </button>
+                )}
+                {game.superpotions > 0 && (
+                  <button
+                    className="poke-button"
+                    onClick={() => handleUsePotion('superpotion')}
+                    style={{margin: '8px 12px 0 0'}}
+                  >
+                    Use Super Potion (+50HP) ({game.superpotions})
+                  </button>
+                )}
+                {game.fullheals > 0 && (
+                  <button
+                    className="poke-button"
+                    onClick={() => handleUsePotion('fullheal')}
+                    style={{margin: '8px 12px 0 0'}}
+                  >
+                    Use Full Heal (Full HP) ({game.fullheals})
+                  </button>
+                )}
+              </>
             )}
             {turn === "player" && !battleOver && availableBallsForWild(wildPokemon, game).length > 0 && (
               <span>
