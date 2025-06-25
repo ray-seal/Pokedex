@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import data from '../public/pokedex.json';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function Pokedex() {
   const [game, setGame] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
@@ -18,6 +20,15 @@ export default function Pokedex() {
 
   return (
     <div style={{ fontFamily: 'monospace', padding: '20px' }}>
+      {/* Home Button */}
+      <button
+        className="poke-button"
+        style={{ marginBottom: 18 }}
+        onClick={() => router.push('/')}
+      >
+        🏠 Back to Main Page
+      </button>
+
       {/* Caught Counter Box */}
       <div style={{
         background: '#f9f9f9',
@@ -51,7 +62,27 @@ export default function Pokedex() {
           );
         })}
       </ul>
-      <Link href="/">🏠 Back to Main Page</Link>
+      <style jsx>{`
+        .poke-button {
+          border: 1px solid #ccc;
+          background: #f9f9f9;
+          padding: 10px 18px;
+          border-radius: 7px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+          margin: 6px 0;
+          cursor: pointer;
+          color: #222;
+          text-decoration: none;
+          font-family: inherit;
+          font-size: 1rem;
+          display: inline-block;
+          transition: background 0.18s, border 0.18s;
+        }
+        .poke-button:hover {
+          background: #e0e0e0;
+          border-color: #888;
+        }
+      `}</style>
     </div>
   );
 }
