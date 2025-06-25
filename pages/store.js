@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const ITEMS = [
-  { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', price: 10 },
-  { key: 'greatballs', name: 'Great Ball', emoji: '🔵', price: 25 },
-  { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡', price: 50 },
+  { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', price: 25 },
+  { key: 'greatballs', name: 'Great Ball', emoji: '🔵', price: 50 },
+  { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡', price: 75 },
   { key: 'masterballs', name: 'Master Ball', emoji: '🟣', price: 500 },
   { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', price: 30 },
   { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', price: 60 },
