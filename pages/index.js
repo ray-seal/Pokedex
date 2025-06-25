@@ -41,10 +41,6 @@ export default function Home() {
 
   function catchWild(ball) {
     if (!game || !wildPokemon) return;
-    if (game.pokedex && game.pokedex.includes(wildPokemon.id)) {
-      setMessage("You already caught this Pokémon!");
-      return;
-    }
     setCatching(true);
     setTimeout(() => {
       // Deduct ball
@@ -64,15 +60,23 @@ export default function Home() {
         return;
       }
 
-      // Add to pokedex on success
+      // Duplicates logic
       if (!updated.pokedex.includes(wildPokemon.id)) {
         updated.pokedex = [...updated.pokedex, wildPokemon.id];
+        setMessage(
+          `You caught ${wildPokemon.name} with a ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')}!`
+        );
+      } else {
+        // Increment duplicates inventory
+        if (!updated.duplicates) updated.duplicates = {};
+        updated.duplicates[wildPokemon.id] = (updated.duplicates[wildPokemon.id] || 0) + 1;
+        setMessage(
+          `You caught another ${wildPokemon.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
+        );
       }
+
       setGame(updated);
       localStorage.setItem('gameState', JSON.stringify(updated));
-      setMessage(
-        `You caught ${wildPokemon.name} with a ${ball.replace('pokeball', 'Poké Ball').replace('greatball','Great Ball').replace('ultraball','Ultra Ball').replace('masterball','Master Ball')}!`
-      );
       setCatching(false);
     }, 750);
   }
@@ -137,7 +141,7 @@ export default function Home() {
           <br />
           <b>{wildPokemon.name}</b>
           <div style={{marginTop: 8}}>
-            {availableBallsForWild(wildPokemon, game).length > 0 && !game.pokedex.includes(wildPokemon.id) && (
+            {availableBallsForWild(wildPokemon, game).length > 0 && (
               <div>
                 <span>Try to catch: </span>
                 {availableBallsForWild(wildPokemon, game).map((ball) => (
