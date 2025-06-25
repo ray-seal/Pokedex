@@ -7,39 +7,40 @@ import { getPokemonStats } from '../lib/pokemonStats';
 function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed }) {
   const [selected, setSelected] = useState([]);
 
-  if (!open) return null;
+  if (!open || !gameState) return null;
 
-  // Build full collection: team + pokedex + duplicates (all as unique slots)
+  // Build collection: team + additional owned Pokémon (including duplicates as unique slots)
   let collection = [];
-  if (gameState) {
-    // Add all current team Pokémon as separate slots (preserve their stats)
-    (gameState.team || []).forEach(mon => {
-      collection.push({ ...mon, _uniqueKey: Math.random().toString(36).slice(2) });
-    });
+  // Add all current team Pokémon as separate slots (preserve their stats)
+  (gameState.team || []).forEach(mon => {
+    collection.push({ ...mon, _uniqueKey: Math.random().toString(36).slice(2) });
+  });
 
-    // Add all pokedex Pokémon not already in team (base stats)
-    const teamIds = (gameState.team || []).map(mon => mon.id);
-    (gameState.pokedex || []).forEach(id => {
-      const countInTeam = (gameState.team || []).filter(mon => mon.id === id).length;
-      // How many of this id are already in team
-      const totalOwned = 1 + ((gameState.duplicates && gameState.duplicates[id]) || 0);
-      // Add missing (pokedex - team count)
-      for (let i = countInTeam; i < totalOwned; ++i) {
-        const dexEntry = pokedex.find(p => p.id === id);
-        if (dexEntry) {
-          const stats = getPokemonStats(dexEntry);
-          collection.push({
-            ...dexEntry,
-            level: dexEntry.level || 5,
-            xp: dexEntry.xp || 0,
-            hp: stats.hp,
-            maxhp: stats.hp,
-            _uniqueKey: Math.random().toString(36).slice(2)
-          });
-        }
+  // Add all pokedex Pokémon not already in team (base stats),
+  // for each count including duplicates
+  const teamCounts = {};
+  (gameState.team || []).forEach(mon => {
+    teamCounts[mon.id] = (teamCounts[mon.id] || 0) + 1;
+  });
+  (gameState.pokedex || []).forEach(id => {
+    const owned = 1 + ((gameState.duplicates && gameState.duplicates[id]) || 0);
+    const alreadyInTeam = teamCounts[id] || 0;
+    const needToAdd = owned - alreadyInTeam;
+    for (let i = 0; i < needToAdd; ++i) {
+      const dexEntry = pokedex.find(p => p.id === id);
+      if (dexEntry) {
+        const stats = getPokemonStats(dexEntry);
+        collection.push({
+          ...dexEntry,
+          level: dexEntry.level || 5,
+          xp: dexEntry.xp || 0,
+          hp: stats.hp,
+          maxhp: stats.hp,
+          _uniqueKey: Math.random().toString(36).slice(2)
+        });
       }
-    });
-  }
+    }
+  });
 
   // On modal open, set selected to the current team (by index in collection)
   useEffect(() => {
@@ -47,13 +48,12 @@ function PCModal({ open, onClose, gameState, setGameState, setTeam, setHealed })
       // Find, in order, the collection indexes matching the current team
       let selectedIndexes = [];
       (gameState.team || []).forEach(teamMon => {
-        // Find first matching unslotted mon in collection
         for (let i = 0; i < collection.length; ++i) {
           const colMon = collection[i];
           if (
-            !selectedIndexes.includes(i) && // not already selected
+            !selectedIndexes.includes(i) &&
             colMon.id === teamMon.id &&
-            (colMon.level === teamMon.level || !colMon.level) // best effort
+            (colMon.level === teamMon.level || !colMon.level)
           ) {
             selectedIndexes.push(i);
             break;
@@ -189,7 +189,7 @@ export default function Center() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     setGameState(saved);
-    setTeam(saved?.team || []);
+    setTeam((saved && saved.team) || []);
   }, []);
 
   const handleHeal = () => {
@@ -220,14 +220,16 @@ export default function Center() {
       backgroundSize: 'cover',
       position: 'relative'
     }}>
-      <PCModal
-        open={showPC}
-        onClose={() => setShowPC(false)}
-        gameState={gameState}
-        setGameState={setGameState}
-        setTeam={setTeam}
-        setHealed={setHealed}
-      />
+      {gameState && (
+        <PCModal
+          open={showPC}
+          onClose={() => setShowPC(false)}
+          gameState={gameState}
+          setGameState={setGameState}
+          setTeam={setTeam}
+          setHealed={setHealed}
+        />
+      )}
       <h1>🏥 Pokémon Center</h1>
       {healed ? (
         <p>Your team is fully healed!</p>
