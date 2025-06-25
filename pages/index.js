@@ -511,6 +511,7 @@ export default function Home() {
 
       <p style={{minHeight: 32}}>{message}</p>
 
+      {/* Dropdown Navigation Menu */}
       <div style={{
         position: 'fixed',
         bottom: 24,
@@ -518,17 +519,25 @@ export default function Home() {
         width: '100%',
         display: 'flex',
         justifyContent: 'center',
-        gap: 12,
-        flexWrap: 'wrap',
         zIndex: 100
       }}>
-        <button className="poke-button" onClick={() => router.push('/store')}>🛒 Pokemart</button>
-        <button className="poke-button" onClick={() => router.push('/lab')}>🧑‍🔬 Professor Oak's Lab</button>
-        <button className="poke-button" onClick={() => router.push('/center')}>🏥 Pokémon Center</button>
-        <button className="poke-button" onClick={() => router.push('/arena')}>🏟️ Pokémon Arena</button>
-        <button className="poke-button" onClick={() => router.push('/pokedex')}>📖 Pokédex</button>
-        <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
-        <button className="poke-button" onClick={() => router.push('/bag')}>🎒 Bag</button>
+        <select
+          className="poke-button"
+          style={{ fontSize: '1rem', padding: '10px 18px', borderRadius: 7 }}
+          defaultValue=""
+          onChange={e => {
+            if (e.target.value) router.push(e.target.value);
+          }}
+        >
+          <option value="" disabled>Navigate to…</option>
+          <option value="/store">🛒 Pokemart</option>
+          <option value="/lab">🧑‍🔬 Professor Oak's Lab</option>
+          <option value="/center">🏥 Pokémon Center</option>
+          <option value="/arena">🏟️ Pokémon Arena</option>
+          <option value="/pokedex">📖 Pokédex</option>
+          <option value="/team">🧑‍🤝‍🧑 Choose Team</option>
+          <option value="/bag">🎒 Bag</option>
+        </select>
       </div>
 
       <style jsx>{`
