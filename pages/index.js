@@ -460,7 +460,7 @@ export default function Home() {
             style={{
               border: idx === activeIdx ? '2px solid gold' : '2px solid #fff',
               borderRadius: 12,
-              background: mon.hp > 0 ? 'rgba(255,255,255,0.12)' : 'rgba(200,50,50,0.17)',
+              background: mon.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
               padding: 12,
               minWidth: 95,
               textAlign: 'center',
