@@ -16,13 +16,14 @@ export default function Bag() {
 
   if (!game) return <p>Loading your bag...</p>;
 
-  // Prepare for future items like potions
   const items = [
     { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴' },
     { key: 'greatballs', name: 'Great Ball', emoji: '🔵' },
     { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡' },
     { key: 'masterballs', name: 'Master Ball', emoji: '🟣' },
-    { key: 'potions', name: 'Potion', emoji: '🧪' }, // For future use
+    { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪' },
+    { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴' },
+    { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧' },
   ];
 
   return (
