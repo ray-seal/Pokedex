@@ -63,6 +63,20 @@ function availableBallsForOpponent(opponent, inventory) {
   if (legendary && inventory.masterballs > 0) balls.push('masterball');
   return balls;
 }
+function usePotion(team, idx, type) {
+  const healedTeam = [...team];
+  const mon = healedTeam[idx];
+  const maxHP = getMaxHP(mon);
+
+  if (type === 'potion') {
+    mon.hp = Math.min(mon.hp + 10, maxHP);
+  } else if (type === 'superpotion') {
+    mon.hp = Math.min(mon.hp + 50, maxHP);
+  } else if (type === 'fullheal') {
+    mon.hp = maxHP;
+  }
+  return healedTeam;
+}
 function grantBattleXP(team, winnerIdx, xpAmount) {
   const updatedTeam = [...team];
   let mon = updatedTeam[winnerIdx];
@@ -147,6 +161,29 @@ export default function Arena() {
     setTimeout(() => wildAttack(idx), 900);
   }
 
+  function handleUsePotion(type) {
+    if (!game || !team[activeIdx]) return;
+    if (team[activeIdx].hp === getMaxHP(team[activeIdx])) {
+      setMessage("HP is already full!");
+      return;
+    }
+    let updatedTeam = usePotion(team, activeIdx, type);
+    let updatedGame = { ...game, team: updatedTeam };
+    if (type === 'potion') updatedGame.potions = (updatedGame.potions || 0) - 1;
+    else if (type === 'superpotion') updatedGame.superpotions = (updatedGame.superpotions || 0) - 1;
+    else if (type === 'fullheal') updatedGame.fullheals = (updatedGame.fullheals || 0) - 1;
+    setTeam(updatedTeam);
+    setGame(updatedGame);
+    localStorage.setItem('gameState', JSON.stringify(updatedGame));
+    setMessage(
+      type === 'potion' ? "Potion used! Healed 10 HP." :
+      type === 'superpotion' ? "Super Potion used! Healed 50 HP." :
+      "Full Heal used! Restored to full HP."
+    );
+    setTurn('opponent');
+    setTimeout(() => wildAttack(activeIdx), 900);
+  }
+
   function playerAttack() {
     if (!team.length || !opponent || battleOver || turn !== 'player') return;
     const player = team[activeIdx];
@@ -163,7 +200,6 @@ export default function Arena() {
     setOpponent({ ...opponent, hp: newOpponentHP });
 
     if (newOpponentHP === 0) {
-      // Grant XP to winner
       const xpGained = getWildXP(opponent);
       const newTeam = grantBattleXP(team, activeIdx, xpGained);
       setTeam(newTeam);
@@ -227,7 +263,6 @@ export default function Arena() {
     setMessage("You received 50 coins!");
   }
 
-  // 2.5% fail rate for Arena catching
   function tryCatch(ballType) {
     if (!canCatch || !battleOver) return;
     const updated = { ...game };
@@ -251,7 +286,6 @@ export default function Arena() {
       updated.masterballs--;
     }
 
-    // 2.5% fail chance
     if (Math.random() < 0.025) {
       setGame(updated);
       localStorage.setItem('gameState', JSON.stringify(updated));
@@ -263,7 +297,6 @@ export default function Arena() {
       return;
     }
 
-    // Duplicates logic
     if (!updated.pokedex.includes(opponent.id)) {
       updated.pokedex = [...updated.pokedex, opponent.id];
       setMessage(
@@ -379,6 +412,33 @@ export default function Arena() {
           <button className="poke-button" onClick={playerAttack} disabled={team[activeIdx].hp <= 0}>
             Attack!
           </button>
+          {game.potions > 0 && (
+            <button
+              className="poke-button"
+              onClick={() => handleUsePotion('potion')}
+              style={{marginLeft: 10}}
+            >
+              Use Potion (+10HP) ({game.potions})
+            </button>
+          )}
+          {game.superpotions > 0 && (
+            <button
+              className="poke-button"
+              onClick={() => handleUsePotion('superpotion')}
+              style={{marginLeft: 10}}
+            >
+              Use Super Potion (+50HP) ({game.superpotions})
+            </button>
+          )}
+          {game.fullheals > 0 && (
+            <button
+              className="poke-button"
+              onClick={() => handleUsePotion('fullheal')}
+              style={{marginLeft: 10}}
+            >
+              Use Full Heal (Full HP) ({game.fullheals})
+            </button>
+          )}
           <button className="poke-button" onClick={runAway} style={{ marginLeft: 10 }}>
             🏃‍♂️ Run Away
           </button>
@@ -389,7 +449,7 @@ export default function Arena() {
         {battleOver
           ? null
           : turn === 'player'
-          ? "Your turn! Attack, Switch, or Run Away."
+          ? "Your turn! Attack, Use Item, Switch, or Run Away."
           : "Wild Pokémon's turn..."}
       </p>
       <p>{message}</p>
@@ -428,6 +488,9 @@ export default function Arena() {
 
       <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
         🏥 Go to Pokémon Center (Heal & Visit)
+      </button>
+      <button className="poke-button" onClick={() => router.push('/bag')} style={{ marginTop: '12px' }}>
+        🎒 Bag
       </button>
     </main>
   );
