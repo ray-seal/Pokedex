@@ -9,10 +9,10 @@ import SatNav from '../components/SatNav';
 function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUseItem }) {
   if (!open) return null;
   const ITEMS = [
-    { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', type: 'ball' },
-    { key: 'greatballs', name: 'Great Ball', emoji: '🔵', type: 'ball' },
-    { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡', type: 'ball' },
-    { key: 'masterballs', name: 'Master Ball', emoji: '🟣', type: 'ball' },
+    { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', type: 'net' },
+    { key: 'greatballs', name: 'Medium Net', emoji: '🪢', type: 'net' },
+    { key: 'ultraballs', name: 'Large Net', emoji: '🪣', type: 'net' },
+    { key: 'masterballs', name: 'Large Chains', emoji: '⛓️', type: 'net' },
     { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', type: 'heal' },
     { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', type: 'heal' },
     { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', type: 'heal' },
@@ -34,7 +34,7 @@ function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUs
                 <span style={{ fontSize: 22 }}>{item.emoji}</span>
                 <span>{item.name}</span>
                 <b style={{marginLeft:2}}>{game[item.key]}</b>
-                {item.type === "ball" && wildAnimal && turn === "player" &&
+                {item.type === 'net' && wildAnimal && turn === 'player' &&
                   <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
                     Use
                   </button>
@@ -82,41 +82,41 @@ function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
   return Math.ceil(10 * Math.pow(1.2, level - 5));
 }
-function getStartingLevel(mon) {
-  if (mon.legendary) return 50;
-  if (mon.stage === 3) return 30;
-  if (mon.stage === 2) return 15;
+function getStartingLevel(animal) {
+  if (animal.legendary) return 50;
+  if (animal.stage === 3) return 30;
+  if (animal.stage === 2) return 15;
   return 5;
 }
-function tryEvolve(mon) {
-  if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
-    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
+function tryEvolve(animal) {
+  if (animal.stage === 1 && animal.level >= 15 && animal.evolves_to) {
+    const next = wildlifejournal.find(a => a.id === animal.evolves_to);
     if (next) {
       return {
         ...next,
-        level: mon.level,
-        xp: mon.xp,
+        level: animal.level,
+        xp: animal.xp,
         hp: getPokemonStats(next).hp
       };
     }
   }
-  if (mon.stage === 2 && mon.level >= 30 && mon.evolves_to) {
-    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
+  if (animal.stage === 2 && animal.level >= 30 && animal.evolves_to) {
+    const next = wildlifejournal.find(a => a.id === animal.evolves_to);
     if (next) {
       return {
         ...next,
-        level: mon.level,
-        xp: mon.xp,
+        level: animal.level,
+        xp: animal.xp,
         hp: getPokemonStats(next).hp
       };
     }
   }
-  return mon;
+  return animal;
 }
-function getStageMultiplier(mon) {
-  if (mon.legendary) return 1.7;
-  if (mon.stage === 3) return 1.4;
-  if (mon.stage === 2) return 1.2;
+function getStageMultiplier(animal) {
+  if (animal.legendary) return 1.7;
+  if (animal.stage === 3) return 1.4;
+  if (animal.stage === 2) return 1.2;
   return 1.0;
 }
 function getWildXP(wild) {
@@ -125,36 +125,36 @@ function getWildXP(wild) {
   if (wild.stage === 2) return 3;
   return 2;
 }
-function getMaxHP(mon) {
-  return getPokemonStats(mon).hp;
+function getMaxHP(animal) {
+  return getPokemonStats(animal).hp;
 }
 function usePotion(team, idx, type) {
   const healedTeam = [...team];
-  const mon = healedTeam[idx];
-  const maxHP = getMaxHP(mon);
-  mon.maxhp = maxHP;
-  if (type === 'potions') mon.hp = Math.min(mon.hp + 10, maxHP);
-  else if (type === 'superpotions') mon.hp = Math.min(mon.hp + 50, maxHP);
-  else if (type === 'fullheals') mon.hp = maxHP;
+  const animal = healedTeam[idx];
+  const maxHP = getMaxHP(animal);
+  animal.maxhp = maxHP;
+  if (type === 'potions') animal.hp = Math.min(animal.hp + 10, maxHP);
+  else if (type === 'superpotions') animal.hp = Math.min(animal.hp + 50, maxHP);
+  else if (type === 'fullheals') animal.hp = maxHP;
   return healedTeam;
 }
 function grantBattleXP(team, idx, xpAmount) {
   const updatedTeam = [...team];
-  let mon = updatedTeam[idx];
-  if (!mon.level) mon.level = getStartingLevel(mon);
-  if (!mon.xp) mon.xp = 0;
-  let newXP = mon.xp + xpAmount;
-  let newLevel = mon.level;
+  let animal = updatedTeam[idx];
+  if (!animal.level) animal.level = getStartingLevel(animal);
+  if (!animal.xp) animal.xp = 0;
+  let newXP = animal.xp + xpAmount;
+  let newLevel = animal.level;
   while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
     newXP -= xpForNextLevel(newLevel);
     newLevel++;
   }
-  mon.xp = newXP;
-  mon.level = newLevel;
-  let evolvedMon = tryEvolve(mon);
-  evolvedMon.hp = Math.max(evolvedMon.hp || 0, mon.hp || 0);
-  evolvedMon.maxhp = getMaxHP(evolvedMon);
-  updatedTeam[idx] = evolvedMon;
+  animal.xp = newXP;
+  animal.level = newLevel;
+  let evolvedAnimal = tryEvolve(animal);
+  evolvedAnimal.hp = Math.max(evolvedAnimal.hp || 0, animal.hp || 0);
+  evolvedAnimal.maxhp = getMaxHP(evolvedAnimal);
+  updatedTeam[idx] = evolvedAnimal;
   return updatedTeam;
 }
 
@@ -191,13 +191,13 @@ export default function Home() {
       router.push('/team');
       return;
     }
-    const newTeam = saved.team.map(mon => {
-      const stats = getPokemonStats(mon);
+    const newTeam = saved.team.map(animal => {
+      const stats = getPokemonStats(animal);
       return {
-        ...mon,
-        level: mon.level || getStartingLevel(mon),
-        xp: mon.xp || 0,
-        hp: typeof mon.hp === "number" ? mon.hp : stats.hp,
+        ...animal,
+        level: animal.level || getStartingLevel(animal),
+        xp: animal.xp || 0,
+        hp: typeof animal.hp === "number" ? animal.hp : stats.hp,
         maxhp: stats.hp
       };
     });
@@ -205,16 +205,6 @@ export default function Home() {
     setGame({ ...saved, team: newTeam, location });
     setActiveIdx(0);
   }, [router.query.county]);
-
-  function availableBallsForWild(wild, inventory) {
-    if (!wild || !inventory) return [];
-    const balls = [];
-    if (inventory.pokeballs > 0 && !wild.legendary && (wild.stage || 1) <= 1) balls.push('pokeball');
-    if (inventory.greatballs > 0 && !wild.legendary && (wild.stage || 1) <= 2) balls.push('greatball');
-    if (inventory.ultraballs > 0 && !wild.legendary) balls.push('ultraball');
-    if (inventory.masterballs > 0 && wild.legendary) balls.push('masterball');
-    return balls;
-  }
 
   // --- RANDOMIZED LEVELS BY STAGE ---
   function searchLongGrass() {
@@ -236,14 +226,14 @@ export default function Home() {
     setWildLevel(level);
     setTurn('player');
     setBattleOver(false);
-    setMessage(`A wild ${wild.name} (Lv.${level}) appeared in the long grass!`);
+    setMessage(`A wild ${wild.name} (Lv.${level}) appeared in the wild grass!`);
   }
 
   function playerAttack() {
     if (!wildAnimal || wildHP === null || battleOver || turn !== 'player') return;
     const attacker = team[activeIdx];
     if (attacker.hp <= 0) {
-      setMessage("This Pokémon has fainted! Switch to another.");
+      setMessage("This wildlife has fainted! Switch to another.");
       return;
     }
     const base = Math.floor(Math.random() * 11) + 15;
@@ -254,7 +244,7 @@ export default function Home() {
 
     if (newWildHP === 0) {
       const xpGained = getWildXP(wildAnimal);
-      setMessage(`Your ${attacker.name} attacked and defeated ${wildAnimal.name}!`);
+      setMessage(`Your ${attacker.name} attacked and subdued ${wildAnimal.name}!`);
       const newTeam = grantBattleXP(team, activeIdx, xpGained);
       setTeam(newTeam);
       setGame(prev => ({ ...prev, team: newTeam }));
@@ -292,12 +282,12 @@ export default function Home() {
 
     if (newHP === 0) {
       setMessage(`Wild ${wild.name} attacked! Your ${defender.name} fainted!`);
-      if (newTeam.some(mon => mon.hp > 0)) {
+      if (newTeam.some(animal => animal.hp > 0)) {
         setTurn('player');
       } else {
         setBattleOver(true);
         setTurn('player');
-        setMessage(`All your Pokémon have fainted!`);
+        setMessage(`All your wildlife have fainted!`);
         setTimeout(() => {
           setWildAnimal(null);
           setWildHP(null);
@@ -319,7 +309,7 @@ export default function Home() {
   }
 
   function handleUseBagItem(type) {
-    // Balls:
+    // Nets:
     if (['pokeballs','greatballs','ultraballs','masterballs'].includes(type)) {
       catchWild(type);
       setShowBag(false);
@@ -349,38 +339,38 @@ export default function Home() {
     }
   }
 
-  // --- DYNAMIC FAIL RATE and REMEMBER LEVEL ON CATCH ---
-  function catchWild(ballType) {
+  // --- DYNAMIC FAIL RATE and REMEMBER LEVEL ON CAPTURE ---
+  function catchWild(netType) {
     if (!game || !wildAnimal || battleOver || catching) return;
     setCatching(true);
     setTimeout(() => {
       const updated = { ...game };
-      // Ball checks...
-      if (ballType === 'pokeballs') {
+      // Net checks...
+      if (netType === 'pokeballs') {
         updated.pokeballs--;
         if (wildAnimal.legendary || (wildAnimal.stage || 1) > 1) {
-          setMessage("Too strong for a Poké Ball.");
+          setMessage("Too strong for a Small Net.");
           setCatching(false);
           return;
         }
-      } else if (ballType === 'greatballs') {
+      } else if (netType === 'greatballs') {
         updated.greatballs--;
         if (wildAnimal.legendary || (wildAnimal.stage || 1) > 2) {
-          setMessage("Too strong for a Great Ball.");
+          setMessage("Too strong for a Medium Net.");
           setCatching(false);
           return;
         }
-      } else if (ballType === 'ultraballs') {
+      } else if (netType === 'ultraballs') {
         updated.ultraballs--;
         if (wildAnimal.legendary) {
-          setMessage("Use a Master Ball for legendary Pokémon.");
+          setMessage("Use Large Chains for legendary wildlife.");
           setCatching(false);
           return;
         }
-      } else if (ballType === 'masterballs') {
+      } else if (netType === 'masterballs') {
         updated.masterballs--;
         if (!wildAnimal.legendary) {
-          setMessage("Master Balls are for legendary Pokémon only.");
+          setMessage("Large Chains are for legendary wildlife only.");
           setCatching(false);
           return;
         }
@@ -407,14 +397,14 @@ export default function Home() {
       if (Math.random() < failRate) {
         setGame(updated);
         localStorage.setItem('gameState', JSON.stringify(updated));
-        setMessage("Oh no! The ball missed!");
+        setMessage("Oh no! The net missed!");
         setCatching(false);
         setTurn('wild');
         setTimeout(() => wildAttack(), 1200);
         return;
       }
 
-      // ---- REMEMBER LEVEL ON CATCH ----
+      // ---- REMEMBER LEVEL ON CAPTURE ----
       if (!updated.wildlifejournal) updated.wildlifejournal = [];
       if (!updated.wildlifejournal.includes(wildAnimal.id)) {
         updated.wildlifejournal = [...updated.wildlifejournal, wildAnimal.id];
@@ -427,12 +417,12 @@ export default function Home() {
           hp: wildMaxHP, // Caught at full HP; you can use wildHP if you want
           maxhp: wildMaxHP
         });
-        setMessage(`You caught ${wildAnimal.name}!`);
+        setMessage(`You captured ${wildAnimal.name}!`);
       } else {
         if (!updated.duplicates) updated.duplicates = {};
         updated.duplicates[wildAnimal.id] = (updated.duplicates[wildAnimal.id] || 0) + 1;
         setMessage(
-          `You caught another ${wildAnimal.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
+          `You captured another ${wildAnimal.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
         );
       }
       setGame(updated);
@@ -465,7 +455,7 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        position: 'relative', // Required for absolute dropdown
+        position: 'relative',
       }}
     >
       {/* SatNav Dropdown (left) */}
@@ -487,10 +477,10 @@ export default function Home() {
           }}
         >
           <option value="" disabled>Navigate to…</option>
-          <option value="/store">🛒 Pokemart</option>
-          <option value="/lab">🧑‍🔬 Professor Oak's Lab</option>
-          <option value="/center">🏥 Pokémon Center</option>
-          <option value="/arena">🏟️ Pokémon Arena</option>
+          <option value="/store">🛒 Wildlife Store</option>
+          <option value="/lab">🧑‍🔬 Wildlife Lab</option>
+          <option value="/center">🏥 Wildlife Center</option>
+          <option value="/arena">🏟️ Wildlife Arena</option>
           <option value="/wildlifejournal">📖 Wildlife Journal</option>
           <option value="/team">🧑‍🤝‍🧑 Choose Team</option>
           <option value="/bag">🎒 Bag</option>
@@ -557,28 +547,28 @@ export default function Home() {
 
       <h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {team.map((mon, idx) => (
-          <div key={mon.id}
+        {team.map((animal, idx) => (
+          <div key={animal.id}
             style={{
               border: idx === activeIdx ? '2px solid gold' : '2px solid #fff',
               borderRadius: 12,
-              background: mon.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
+              background: animal.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
               padding: 12,
               minWidth: 95,
               textAlign: 'center',
-              opacity: mon.hp > 0 ? 1 : 0.5,
+              opacity: animal.hp > 0 ? 1 : 0.5,
               position: 'relative'
             }}>
-            <img src={mon.sprite} alt={mon.name} width="48" /><br />
-            <strong>{mon.name}</strong><br />
-            Level: {mon.level}<br />
-            XP: {mon.xp} / {xpForNextLevel(mon.level)}<br />
-            HP: {mon.hp} / {mon.maxhp}
+            <img src={animal.sprite} alt={animal.name} width="48" /><br />
+            <strong>{animal.name}</strong><br />
+            Level: {animal.level}<br />
+            XP: {animal.xp} / {xpForNextLevel(animal.level)}<br />
+            HP: {animal.hp} / {animal.maxhp}
             <br />
             <button
-              disabled={battleOver || idx === activeIdx || mon.hp <= 0 || turn !== 'player'}
+              disabled={battleOver || idx === activeIdx || animal.hp <= 0 || turn !== 'player'}
               className="poke-button"
-              style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || mon.hp <= 0) ? 0.5 : 1 }}
+              style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || animal.hp <= 0) ? 0.5 : 1 }}
               onClick={() => handleSwitch(idx)}
             >{idx === activeIdx ? 'Active' : 'Switch'}
             </button>
@@ -587,7 +577,7 @@ export default function Home() {
       </div>
 
       <button className="poke-button" onClick={searchLongGrass} style={{margin: '12px 0 18px 0', fontWeight: 'bold', fontSize: '1.08rem'}}>
-        🌾 Search Long Grass
+        🌾 Search Wild Grass
       </button>
 
       {wildAnimal && (
@@ -597,7 +587,7 @@ export default function Home() {
             {game.wildlifejournal && game.wildlifejournal.includes(wildAnimal.id) && (
               <img
                 src="/pokeball.png"
-                alt="Caught"
+                alt="Captured"
                 width="32"
                 style={{
                   position: 'absolute',
