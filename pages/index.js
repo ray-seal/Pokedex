@@ -6,7 +6,6 @@ import { counties } from '../data/regions';
 import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
-// ------- Medal Definitions -------
 const ALL_MEDALS = [
   { title: 'South England Medal', emoji: '🏅' },
   { title: 'West England Medal', emoji: '🥇' },
@@ -41,78 +40,6 @@ function getUnlockedRegions(game) {
   return unlocked;
 }
 
-// --- BagModal Component (unchanged) ---
-function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUseItem }) {
-  if (!open) return null;
-  const ITEMS = [
-    { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', type: 'net' },
-    { key: 'greatballs', name: 'Medium Net', emoji: '🪢', type: 'net' },
-    { key: 'ultraballs', name: 'Large Net', emoji: '🪣', type: 'net' },
-    { key: 'masterballs', name: 'Large Chains', emoji: '⛓️', type: 'net' },
-    { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', type: 'heal' },
-    { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', type: 'heal' },
-    { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', type: 'heal' },
-  ];
-  return (
-    <div style={{
-      position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
-      background: 'rgba(0,0,0,0.70)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
-    }}>
-      <div style={{
-        background: '#262626', color: 'white', padding: 32, borderRadius: 18, minWidth: 300,
-        boxShadow: '0 4px 32px #000a'
-      }}>
-        <h2 style={{marginTop:0}}>🎒 Bag</h2>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {ITEMS.map(item =>
-            game[item.key] > 0 && (
-              <li key={item.key} style={{ fontSize: 18, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 22 }}>{item.emoji}</span>
-                <span>{item.name}</span>
-                <b style={{marginLeft:2}}>{game[item.key]}</b>
-                {item.type === 'net' && wildAnimal && turn === 'player' &&
-                  <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
-                    Use
-                  </button>
-                }
-                {item.type === "heal" && team && team[activeIdx] && turn === "player" && team[activeIdx].hp < team[activeIdx].maxhp &&
-                  <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
-                    Use
-                  </button>
-                }
-                {item.type === "heal" && team && team[activeIdx] && team[activeIdx].hp >= team[activeIdx].maxhp &&
-                  <span style={{color:'#aaa',marginLeft:10,fontSize:13}}>(Full HP)</span>
-                }
-              </li>
-            )
-          )}
-        </ul>
-        <button className="poke-button" style={{marginTop:18}} onClick={onClose}>Close</button>
-      </div>
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 8px 14px;
-          border-radius: 7px;
-          box-shadow: 0 4px 32px rgba(0,0,0,0.09);
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.18s, border 0.18s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
-    </div>
-  );
-}
-
 function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
   return Math.ceil(10 * Math.pow(1.2, level - 5));
@@ -123,93 +50,18 @@ function getStartingLevel(animal) {
   if (animal.stage === 2) return 15;
   return 5;
 }
-function tryEvolve(animal) {
-  if (animal.stage === 1 && animal.level >= 15 && animal.evolves_to) {
-    const next = wildlifejournal.find(a => a.id === animal.evolves_to);
-    if (next) {
-      return {
-        ...next,
-        level: animal.level,
-        xp: animal.xp,
-        hp: getPokemonStats(next).hp
-      };
-    }
-  }
-  if (animal.stage === 2 && animal.level >= 30 && animal.evolves_to) {
-    const next = wildlifejournal.find(a => a.id === animal.evolves_to);
-    if (next) {
-      return {
-        ...next,
-        level: animal.level,
-        xp: animal.xp,
-        hp: getPokemonStats(next).hp
-      };
-    }
-  }
-  return animal;
-}
-function getStageMultiplier(animal) {
-  if (animal.legendary) return 1.7;
-  if (animal.stage === 3) return 1.4;
-  if (animal.stage === 2) return 1.2;
-  return 1.0;
-}
-function getWildXP(wild) {
-  if (wild.legendary) return 5;
-  if (wild.stage === 3) return 4;
-  if (wild.stage === 2) return 3;
-  return 2;
-}
 function getMaxHP(animal) {
   return getPokemonStats(animal).hp;
-}
-function usePotion(team, idx, type) {
-  const healedTeam = [...team];
-  const animal = healedTeam[idx];
-  const maxHP = getMaxHP(animal);
-  animal.maxhp = maxHP;
-  if (type === 'potions') animal.hp = Math.min(animal.hp + 10, maxHP);
-  else if (type === 'superpotions') animal.hp = Math.min(animal.hp + 50, maxHP);
-  else if (type === 'fullheals') animal.hp = maxHP;
-  return healedTeam;
-}
-function grantBattleXP(team, idx, xpAmount) {
-  const updatedTeam = [...team];
-  let animal = updatedTeam[idx];
-  if (!animal.level) animal.level = getStartingLevel(animal);
-  if (!animal.xp) animal.xp = 0;
-  let newXP = animal.xp + xpAmount;
-  let newLevel = animal.level;
-  while (newLevel < 100 && newXP >= xpForNextLevel(newLevel)) {
-    newXP -= xpForNextLevel(newLevel);
-    newLevel++;
-  }
-  animal.xp = newXP;
-  animal.level = newLevel;
-  let evolvedAnimal = tryEvolve(animal);
-  evolvedAnimal.hp = Math.max(evolvedAnimal.hp || 0, animal.hp || 0);
-  evolvedAnimal.maxhp = getMaxHP(evolvedAnimal);
-  updatedTeam[idx] = evolvedAnimal;
-  return updatedTeam;
 }
 
 export default function Home() {
   const [game, setGame] = useState(null);
   const [team, setTeam] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [wildAnimal, setWildAnimal] = useState(null);
-  const [wildHP, setWildHP] = useState(null);
-  const [wildMaxHP, setWildMaxHP] = useState(null);
-  const [wildLevel, setWildLevel] = useState(null);
-  const [message, setMessage] = useState('');
-  const [catching, setCatching] = useState(false);
-  const [turn, setTurn] = useState('player');
-  const [battleOver, setBattleOver] = useState(false);
-  const [showBag, setShowBag] = useState(false);
   const [showArena, setShowArena] = useState(false);
+  const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
   const router = useRouter();
 
-  // --- SatNav handler ---
   const currentCounty =
     game?.location ||
     router.query.county ||
@@ -218,8 +70,6 @@ export default function Home() {
   const handleCountyChange = (countyId) => {
     setGame(g => g ? { ...g, location: countyId } : g);
     router.push({ pathname: "/", query: { county: countyId } });
-    setWildAnimal(null);
-    setMessage(`Arrived in ${counties.find(c => c.id === countyId)?.name || countyId}!`);
     setShowArena(false);
   };
 
@@ -245,15 +95,42 @@ export default function Home() {
     setActiveIdx(0);
   }, [router.query.county]);
 
-  // ---------- Battle and Bag handlers (unchanged) ----------
-  // ... keep all your battle, catch, and bag logic as before ...
-
-  // Get only unlocked regions/counties for SatNav
+  // Only unlocked regions/counties for SatNav
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
 
   if (!game) return <p>Loading...</p>;
   const countyInfo = counties.find(c => c.id === currentCounty);
+
+  // Handle medal/area unlock on arena win
+  function handleArenaMedal(medalTitle, setUnlockedAreas) {
+    setGame(g => {
+      if (g.medals?.includes(medalTitle)) return g; // already awarded
+      const unlocks = [];
+      if (medalTitle === "South England Medal") unlocks.push("West");
+      if (medalTitle === "West England Medal") unlocks.push("North");
+      if (medalTitle === "North England Medal") unlocks.push("East");
+      if (medalTitle === "England Medal") unlocks.push("South Wales");
+      if (medalTitle === "South Wales Medal") unlocks.push("West Wales");
+      if (medalTitle === "West Wales Medal") unlocks.push("North Wales");
+      if (medalTitle === "North Wales Medal") unlocks.push("East Wales");
+      if (medalTitle === "Wales Medal") unlocks.push("South Scotland");
+      if (medalTitle === "South Scotland Medal") unlocks.push("West Scotland");
+      if (medalTitle === "West Scotland Medal") unlocks.push("North Scotland");
+      if (medalTitle === "North Scotland Medal") unlocks.push("East Scotland");
+      if (medalTitle === "Scotland Medal") unlocks.push("Northern Ireland");
+      // Save medal
+      const newMedals = [...(g.medals || []), medalTitle];
+      const updated = { ...g, medals: newMedals };
+      localStorage.setItem("gameState", JSON.stringify(updated));
+      setUnlockedAreas && setUnlockedAreas(unlocks);
+      if (unlocks.length) {
+        setArenaUnlockMsg(`New areas unlocked: ${unlocks.join(', ')}`);
+        setTimeout(() => setArenaUnlockMsg(''), 5000);
+      }
+      return updated;
+    });
+  }
 
   return (
     <main
@@ -270,7 +147,7 @@ export default function Home() {
         position: 'relative',
       }}
     >
-      {/* SatNav Multi-Select */}
+      {/* SatNav */}
       <SatNav
         currentCounty={currentCounty}
         onChange={handleCountyChange}
@@ -331,17 +208,21 @@ export default function Home() {
           arena={countyInfo.arena}
           game={game}
           setGame={setGame}
-          onMedalEarned={medalTitle => {
-            setGame(g => ({
-              ...g,
-              medals: [...(g.medals || []), medalTitle]
-            }));
-            setShowArena(false);
-          }}
+          onMedalEarned={handleArenaMedal}
         />
       )}
+      {arenaUnlockMsg && (
+        <div style={{
+          background: "#173e11",
+          color: "#2fd80a",
+          fontWeight: "bold",
+          borderRadius: 8,
+          padding: "8px 18px",
+          margin: "10px 0"
+        }}>{arenaUnlockMsg}</div>
+      )}
 
-      {/* Show current county info and arena */}
+      {/* County info */}
       <div
         style={{
           background: "rgba(0,0,0,0.35)",
@@ -366,7 +247,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* YOUR TEAM */}
+      {/* TEAM DISPLAY */}
       <h2>Your Team</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
         {team.map((animal, idx) => (
@@ -388,7 +269,7 @@ export default function Home() {
             HP: {animal.hp} / {animal.maxhp}
             <br />
             <button
-              disabled={battleOver || idx === activeIdx || animal.hp <= 0 || turn !== 'player'}
+              disabled={idx === activeIdx || animal.hp <= 0}
               className="poke-button"
               style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || animal.hp <= 0) ? 0.5 : 1 }}
               onClick={() => setActiveIdx(idx)}
@@ -397,8 +278,6 @@ export default function Home() {
           </div>
         ))}
       </div>
-
-      {/* ...rest of your wild animal encounter and bag modal logic as before... */}
 
       <style jsx>{`
         .poke-button {
