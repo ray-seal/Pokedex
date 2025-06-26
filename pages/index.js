@@ -4,6 +4,7 @@ import SatNav from '../components/SatNav';
 import { counties } from '../data/regions';
 import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
+import ArenaChallenge from '../components/ArenaChallenge';
 
 // ------- Medal Definitions -------
 const ALL_MEDALS = [
