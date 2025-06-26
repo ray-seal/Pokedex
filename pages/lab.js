@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import data from '../public/pokedex.json';
+import data from '../public/wildlifejournal.json';
 
 export default function Lab() {
   const [game, setGame] = useState(null);
