@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import pokedex from '../public/pokedex.json';
+import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 import { counties } from '../data/regions';
 import SatNav from '../components/SatNav';
