@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import wildlifejournal from '../public/wildlifejournal.json';
 
 function getArenaBattleAnimals(battleNum, wildlifejournal) {
   const pool = wildlifejournal.filter(a => !a.legendary && a.stage <= 3);
