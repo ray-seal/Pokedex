@@ -60,6 +60,7 @@ export default function Home() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [showArena, setShowArena] = useState(false);
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
+  const [coins, setCoins] = useState(0);
   const router = useRouter();
 
   const currentCounty =
@@ -73,11 +74,14 @@ export default function Home() {
     setShowArena(false);
   };
 
+  // Load game state
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     let location = router.query.county || saved?.location || (counties.length > 0 ? counties[0].id : '');
     if (!saved || !saved.team || saved.team.length === 0) {
-      router.push('/team');
+      setGame(null); // Set to null to show "Start Adventure" if needed
+      setTeam([]);
+      setCoins(0);
       return;
     }
     const newTeam = saved.team.map(animal => {
@@ -93,13 +97,13 @@ export default function Home() {
     setTeam(newTeam);
     setGame({ ...saved, team: newTeam, location });
     setActiveIdx(0);
+    setCoins(saved.coins || 0);
   }, [router.query.county]);
 
   // Only unlocked regions/counties for SatNav
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
 
-  if (!game) return <p>Loading...</p>;
   const countyInfo = counties.find(c => c.id === currentCounty);
 
   // Handle medal/area unlock on arena win
@@ -132,6 +136,66 @@ export default function Home() {
     });
   }
 
+  // Reset ALL progress, with confirm
+  const handleResetProgress = () => {
+    if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+  };
+
+  // If no save/team, show "Start Adventure"
+  if (!game || !game.team || game.team.length === 0) {
+    return (
+      <main style={{
+        fontFamily: 'monospace',
+        minHeight: '100vh',
+        color: 'white',
+        background: '#184218',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative'
+      }}>
+        <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
+          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+          <b>{coins}</b>
+        </div>
+
+        <h1>Wildlife Hunter</h1>
+        <p>Welcome adventurer! Start your British wildlife journey.</p>
+        <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {router.push('/team')}}>
+          🚀 Start Adventure
+        </button>
+        <button className="poke-button" style={{ marginTop: 40, background: "#300", color: "white" }} onClick={handleResetProgress}>
+          🗑️ Reset All Progress
+        </button>
+        <style jsx>{`
+          .poke-button {
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            padding: 12px 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+            margin: 6px 0;
+            cursor: pointer;
+            color: #222;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: background 0.18s, border 0.18s;
+          }
+          .poke-button:hover {
+            background: #e0e0e0;
+            border-color: #888;
+          }
+        `}</style>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{
@@ -147,6 +211,24 @@ export default function Home() {
         position: 'relative',
       }}
     >
+      {/* Coins visual */}
+      <div style={{
+        position: "fixed",
+        top: 18,
+        right: 24,
+        fontSize: 22,
+        background: "#252",
+        borderRadius: 10,
+        padding: "6px 18px",
+        boxShadow: "0 2px 8px #0009",
+        display: "flex",
+        alignItems: "center",
+        zIndex: 10
+      }}>
+        <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+        <b>{game.coins || 0}</b>
+      </div>
+
       {/* SatNav */}
       <SatNav
         currentCounty={currentCounty}
@@ -278,6 +360,15 @@ export default function Home() {
           </div>
         ))}
       </div>
+
+      {/* RESET ALL PROGRESS BUTTON */}
+      <button
+        className="poke-button"
+        style={{ background: "#300", color: "white", marginTop: 32, marginBottom: 18, fontWeight: 'bold' }}
+        onClick={handleResetProgress}
+      >
+        🗑️ Reset All Progress
+      </button>
 
       <style jsx>{`
         .poke-button {
