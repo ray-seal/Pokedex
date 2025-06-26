@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import pokedex from '../public/pokedex.json';
+import pokedex from '../public/wildlifejournal.json';
 import Link from 'next/link';
 import { getPokemonStats } from '../lib/pokemonStats';
 
