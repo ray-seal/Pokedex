@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import pokedex from '../public/wildlifejournal.json';
+import wildlifejournal from '../public/wildlifejournal.json';
 import Link from 'next/link';
 import { getPokemonStats } from '../lib/pokemonStats';
 
@@ -10,22 +10,22 @@ export default function TeamBuilder() {
   const router = useRouter();
 
   // Utility: get stats from progressBank or initialize defaults
-  function getProgress(mon, progressBank = {}) {
-    const prog = progressBank[mon.id] || {};
+  function getProgress(animal, progressBank = {}) {
+    const prog = progressBank[animal.id] || {};
     let autoLevel = 1;
-    if (mon.legendary) autoLevel = 50;
-    else if (mon.stage === 3) autoLevel = 30;
-    else if (mon.stage === 2) autoLevel = 15;
+    if (animal.legendary) autoLevel = 50;
+    else if (animal.stage === 3) autoLevel = 30;
+    else if (animal.stage === 2) autoLevel = 15;
 
     return {
-      ...mon,
+      ...animal,
       xp: prog.xp !== undefined ? prog.xp : 0,
       level: prog.level !== undefined ? prog.level : autoLevel,
-      hp: prog.hp !== undefined ? prog.hp : getPokemonStats(mon).hp,
+      hp: prog.hp !== undefined ? prog.hp : getPokemonStats(animal).hp,
     };
   }
 
-  // INIT: load game, team, and progress for all Pokémon
+  // INIT: load game, team, and progress for all Wildlife
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("gameState"));
     if (!saved) {
@@ -33,55 +33,55 @@ export default function TeamBuilder() {
       router.push('/');
       return;
     }
-    if (!saved.pokemonProgress) saved.pokemonProgress = {};
+    if (!saved.wildlifeProgress) saved.wildlifeProgress = {};
     let upgradedTeam = [];
     if (saved.team) {
       upgradedTeam = saved.team.map(member => {
-        const mon = pokedex.find(p => p.id === (member.id || member));
-        return getProgress(mon, saved.pokemonProgress);
+        const animal = wildlifejournal.find(a => a.id === (member.id || member));
+        return getProgress(animal, saved.wildlifeProgress);
       });
     }
     setGame(saved);
     setTeam(upgradedTeam.slice(0, 6));
   }, []);
 
-  // Add/remove Pokémon from team, always preserving progress
+  // Add/remove Wildlife from team, always preserving progress
   const handleSelect = (id) => {
     if (!game) return;
-    let progressBank = { ...game.pokemonProgress };
-    const selectedIdx = team.findIndex(p => p.id === id);
+    let progressBank = { ...game.wildlifeProgress };
+    const selectedIdx = team.findIndex(a => a.id === id);
 
     if (selectedIdx !== -1) {
       // Removing from team: save current stats to progressBank
-      const mon = team[selectedIdx];
-      progressBank[mon.id] = {
-        xp: mon.xp,
-        level: mon.level,
-        hp: mon.hp,
+      const animal = team[selectedIdx];
+      progressBank[animal.id] = {
+        xp: animal.xp,
+        level: animal.level,
+        hp: animal.hp,
       };
-      setTeam(prev => prev.filter(p => p.id !== id));
-      setGame(g => ({ ...g, pokemonProgress: progressBank }));
+      setTeam(prev => prev.filter(a => a.id !== id));
+      setGame(g => ({ ...g, wildlifeProgress: progressBank }));
     } else if (team.length < 6) {
       // Adding: restore stats from progressBank if available
-      const mon = pokedex.find(p => p.id === id);
-      const progress = getProgress(mon, game.pokemonProgress);
+      const animal = wildlifejournal.find(a => a.id === id);
+      const progress = getProgress(animal, game.wildlifeProgress);
       setTeam(prev => [...prev, progress]);
     } else {
-      alert("You can only choose up to 6 Pokémon.");
+      alert("You can only choose up to 6 Wildlife.");
     }
   };
 
-  // Save team and all Pokémon progress when user confirms
+  // Save team and all Wildlife progress when user confirms
   const saveTeam = () => {
-    let progressBank = { ...(game.pokemonProgress || {}) };
-    team.forEach(mon => {
-      progressBank[mon.id] = {
-        xp: mon.xp,
-        level: mon.level,
-        hp: mon.hp,
+    let progressBank = { ...(game.wildlifeProgress || {}) };
+    team.forEach(animal => {
+      progressBank[animal.id] = {
+        xp: animal.xp,
+        level: animal.level,
+        hp: animal.hp,
       };
     });
-    const updated = { ...game, team, pokemonProgress: progressBank };
+    const updated = { ...game, team, wildlifeProgress: progressBank };
     localStorage.setItem("gameState", JSON.stringify(updated));
     router.push('/arena');
   };
@@ -96,32 +96,32 @@ export default function TeamBuilder() {
 
   if (!game) return <p>Loading team builder...</p>;
 
-  // Show all caught Pokémon in Pokédex order
-  const caughtMons = pokedex
-    .filter(mon => game.pokedex.includes(mon.id))
+  // Show all caught Wildlife in Journal order
+  const caughtAnimals = wildlifejournal
+    .filter(animal => (game.wildlifejournal || game.pokedex || []).includes(animal.id))
     .sort((a, b) => a.id - b.id);
 
   return (
     <main style={{ fontFamily: 'monospace', padding: '20px' }}>
-      <h1>🧩 Build Your Team</h1>
-      <p>Select up to 6 Pokémon:</p>
+      <h1>🧩 Build Your Wildlife Team</h1>
+      <p>Select up to 6 Wildlife:</p>
       <ul>
-        {caughtMons.map(mon => {
-          const selected = !!team.find(t => t.id === mon.id);
+        {caughtAnimals.map(animal => {
+          const selected = !!team.find(t => t.id === animal.id);
           // Show XP/Level if on team
-          const teamMon = team.find(t => t.id === mon.id);
+          const teamAnimal = team.find(t => t.id === animal.id);
           return (
-            <li key={mon.id}>
+            <li key={animal.id}>
               <label>
                 <input
                   type="checkbox"
                   checked={selected}
-                  onChange={() => handleSelect(mon.id)}
+                  onChange={() => handleSelect(animal.id)}
                 />
-                <img src={mon.sprite} alt={mon.name} width="32" /> {mon.name}
-                {teamMon && (
+                <img src={animal.sprite} alt={animal.name} width="32" /> {animal.name}
+                {teamAnimal && (
                   <span style={{marginLeft:8, color:'#888', fontSize:13}}>
-                    Lv.{teamMon.level} | XP: {teamMon.xp}
+                    Lv.{teamAnimal.level} | XP: {teamAnimal.xp}
                   </span>
                 )}
               </label>
