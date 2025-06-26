@@ -4,15 +4,26 @@ import wildlifejournal from "../public/wildlifejournal.json";
 function getArenaBattleAnimals(battleNum) {
   // pool of animals for arena battles (no legendary, stage 1-3 only)
   const pool = wildlifejournal.filter(a => !a.legendary && a.stage <= 3);
-  const count = [3, 4, 6][battleNum];
-  const maxLevel = [15, 25, 35][battleNum];
-  return Array.from({ length: count }).map(() => {
+
+  // Define animal count and level ranges for each battle
+  const config = [
+    { count: 3, min: 1, max: 15 },
+    { count: 4, min: 15, max: 30 },
+    { count: 6, min: 30, max: 50 }
+  ][battleNum];
+
+  return Array.from({ length: config.count }).map(() => {
     const wild = pool[Math.floor(Math.random() * pool.length)];
+    // Random level in the range
+    const level = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+    // Scale HP: base + (level * factor)
+    const baseHP = wild.base_hp || wild.hp || 50;
+    const hp = Math.round(baseHP + level * 4);
     return {
       ...wild,
-      level: Math.floor(Math.random() * maxLevel) + 1,
-      hp: wild.hp || 50,
-      maxhp: wild.hp || 50,
+      level,
+      hp,
+      maxhp: hp,
     };
   });
 }
@@ -34,8 +45,9 @@ export default function ArenaChallenge({ arena, game, setGame, onMedalEarned }) 
   const enemyAlive = enemyTeam.some(a => a.hp > 0);
 
   function attack(attacker, defender) {
-    // Simple damage formula: attacker.level + 8-13, random
-    const dmg = Math.max(1, Math.floor(attacker.level + 8 + Math.random() * 5));
+    // Damage scales more strongly with level
+    // (level * 1.2 + 10 + small random), minimum 1, cap at defender.hp
+    const dmg = Math.max(1, Math.floor(attacker.level * 1.2 + 10 + Math.random() * (attacker.level / 3 + 5)));
     return Math.min(defender.hp, dmg);
   }
 
