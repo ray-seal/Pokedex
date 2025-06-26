@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import pokedex from '../public/wildlifejournal.json';
+import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
 export default function Center() {
@@ -35,8 +35,8 @@ export default function Center() {
       }
       if (saved && Array.isArray(saved.team) && saved.team.length > 0) {
         saved.team = saved.team.map(p => {
-          const pokedexEntry = pokedex.find(mon => mon.id === p.id);
-          const stats = pokedexEntry ? getPokemonStats(pokedexEntry) : { hp: 100 };
+          const journalEntry = wildlifejournal.find(mon => mon.id === p.id);
+          const stats = journalEntry ? getPokemonStats(journalEntry) : { hp: 100 };
           return { ...p, hp: stats.hp, maxhp: stats.hp };
         });
         localStorage.setItem("gameState", JSON.stringify(saved));
