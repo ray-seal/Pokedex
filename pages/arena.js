@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import pokedex from '../public/wildlifejournal.json';
+import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
 // Utility to generate random NPC names
@@ -96,7 +96,7 @@ function getStartingLevel(mon) {
 }
 function tryEvolve(mon) {
   if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
-    const next = pokedex.find(p => p.id === mon.evolves_to);
+    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
     if (next) return {
       ...next,
       level: mon.level,
@@ -105,7 +105,7 @@ function tryEvolve(mon) {
     };
   }
   if (mon.stage === 2 && mon.level >= 30 && mon.evolves_to) {
-    const next = pokedex.find(p => p.id === mon.evolves_to);
+    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
     if (next) return {
       ...next,
       level: mon.level,
@@ -194,7 +194,7 @@ export default function Arena() {
       return;
     }
     let upgradedTeam = saved.team.map(member => {
-      const mon = pokedex.find(p => p.id === member.id);
+      const mon = wildlifejournal.find(p => p.id === member.id);
       const stats = getPokemonStats(mon);
       return {
         ...mon,
@@ -217,11 +217,11 @@ export default function Arena() {
     const size = getRandomInt(1, 6);
     const ids = [];
     while (ids.length < size) {
-      const candidate = pokedex[getRandomInt(0, pokedex.length - 1)];
+      const candidate = wildlifejournal[getRandomInt(0, wildlifejournal.length - 1)];
       if (!ids.includes(candidate.id)) ids.push(candidate.id);
     }
     return ids.map(id => {
-      const mon = pokedex.find(p => p.id === id);
+      const mon = wildlifejournal.find(p => p.id === id);
       const stats = getPokemonStats(mon);
       // NPC levels: 5–(10+teamSize*5), scale up with team size
       const level = getRandomInt(5 + size * 2, 10 + size * 5);
@@ -505,8 +505,8 @@ export default function Arena() {
         🏥 Go to Pokémon Center (Heal & Visit)
       </button>
       <button className="poke-button" onClick={() => router.push('/')} style={{ marginTop: '12px' }}>
-  ⬅️ Return Home
-</button>
+        ⬅️ Return Home
+      </button>
     </main>
   );
 }
