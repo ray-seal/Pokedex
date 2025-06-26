@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useGame } from '../context/GameContext';
 
 const ITEMS = [
   { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', price: 25 },
@@ -12,55 +13,42 @@ const ITEMS = [
 ];
 
 export default function Store() {
-  const [game, setGame] = useState(null);
+  const { game, setGame } = useGame();
   const [tab, setTab] = useState('buy');
   const [message, setMessage] = useState('');
   const [buyQuantities, setBuyQuantities] = useState({});
   const [sellQuantities, setSellQuantities] = useState({});
   const router = useRouter();
 
-  // Update buy/sell quantities when switching tabs or on initial load
   useEffect(() => {
     if (game) {
-      // For buy: max user can afford
       const newBuy = {};
       const newSell = {};
       ITEMS.forEach(item => {
-        const maxBuy = Math.floor(game.coins / item.price);
+        const maxBuy = Math.floor((game.coins || 0) / item.price);
         newBuy[item.key] = maxBuy >= 1 ? 1 : 0;
-        newSell[item.key] = game[item.key] > 0 ? 1 : 0;
+        newSell[item.key] = (game[item.key] || 0) > 0 ? 1 : 0;
       });
       setBuyQuantities(newBuy);
       setSellQuantities(newSell);
     }
   }, [game, tab]);
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('gameState'));
-    if (!saved) {
-      router.push('/');
-      return;
-    }
-    setGame(saved);
-  }, []);
-
   if (!game) return <p>Loading store...</p>;
 
   function handleBuy(item) {
     const quantity = buyQuantities[item.key] || 1;
-    const maxBuy = Math.floor(game.coins / item.price);
+    const maxBuy = Math.floor((game.coins || 0) / item.price);
     if (maxBuy < 1) {
       setMessage(`Not enough coins for ${item.name}!`);
       return;
     }
     const qty = Math.min(quantity, maxBuy);
     const totalCost = qty * item.price;
-    const updated = { ...game, coins: game.coins - totalCost };
+    const updated = { ...game, coins: (game.coins || 0) - totalCost };
     updated[item.key] = (updated[item.key] || 0) + qty;
     setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
     setMessage(`Bought ${qty} ${item.name}${qty > 1 ? 's' : ''} for ${totalCost} coins!`);
-    // Update buyQuantities for new max
     const newMax = Math.floor(updated.coins / item.price);
     setBuyQuantities(q => ({ ...q, [item.key]: newMax >= 1 ? 1 : 0 }));
     setSellQuantities(q => ({ ...q, [item.key]: updated[item.key] }));
@@ -76,18 +64,15 @@ export default function Store() {
     const qty = Math.min(quantity, owned);
     const sellPrice = Math.floor(item.price / 2);
     const totalGain = qty * sellPrice;
-    const updated = { ...game, coins: game.coins + totalGain };
+    const updated = { ...game, coins: (game.coins || 0) + totalGain };
     updated[item.key] = owned - qty;
     setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
     setMessage(`Sold ${qty} ${item.name}${qty > 1 ? 's' : ''} for ${totalGain} coins!`);
-    // Update sellQuantities for new max
     setSellQuantities(q => ({ ...q, [item.key]: updated[item.key] > 0 ? 1 : 0 }));
     setBuyQuantities(q => ({ ...q, [item.key]: Math.floor(updated.coins / item.price) >= 1 ? 1 : 0 }));
   }
 
   function renderQuantityDropdown(type, item, max) {
-    // type: "buy" or "sell"
     const quantities = Array.from({ length: max }, (_, i) => i + 1);
     if (max < 1) return <span style={{ color: '#aaa', fontSize: 13 }}>—</span>;
     return (
@@ -171,7 +156,7 @@ export default function Store() {
               <tbody>
                 {ITEMS.map(item => {
                   const owned = game[item.key] || 0;
-                  const maxBuy = Math.floor(game.coins / item.price);
+                  const maxBuy = Math.floor((game.coins || 0) / item.price);
                   return (
                     <tr key={item.key}>
                       <td>
