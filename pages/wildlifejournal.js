@@ -48,9 +48,9 @@ export default function Pokedex() {
         display: 'inline-block',
         fontSize: '1.2rem'
       }}>
-        You’ve caught {caughtCount} out of {totalCount} Pokémon!
+        You’ve caught {caughtCount} out of {totalCount} Wildlife!
       </div>
-      <h1>📖 Pokédex</h1>
+      <h1>📖 Wildlife Journal</h1>
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {data.map(p => {
           const caught = game.pokedex.includes(p.id);
