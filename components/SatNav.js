@@ -1,8 +1,7 @@
-// components/SatNav.js
 import { useState, useEffect } from 'react';
-import { counties } from '../data/regions';
 
-export default function SatNav({ currentCounty, onChange }) {
+// Pass in only the unlocked counties as the 'counties' prop!
+export default function SatNav({ currentCounty, onChange, counties }) {
   // Extract unique countries, preserving order from counties array
   const countryOrder = ['England', 'Wales', 'Scotland', 'Northern Ireland'];
   const countries = countryOrder.filter(country =>
@@ -20,7 +19,7 @@ export default function SatNav({ currentCounty, onChange }) {
   // When currentCounty changes (from props), update selected country if needed
   useEffect(() => {
     setSelectedCountry(getCountryOfCounty(currentCounty));
-  }, [currentCounty]);
+  }, [currentCounty, counties]);
 
   // Counties in the selected country, in travel order as per counties array
   const filteredCounties = counties.filter(c => c.country === selectedCountry);
