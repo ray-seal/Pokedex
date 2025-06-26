@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import SatNav from '../components/SatNav';
+import ArenaChallenge from '../components/ArenaChallenge';
 import { counties } from '../data/regions';
 import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
-import ArenaChallenge from '../components/ArenaChallenge';
 
 // ------- Medal Definitions -------
 const ALL_MEDALS = [
@@ -113,7 +113,6 @@ function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUs
   );
 }
 
-// --- Other Helper functions (unchanged) ---
 function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
   return Math.ceil(10 * Math.pow(1.2, level - 5));
@@ -207,6 +206,7 @@ export default function Home() {
   const [turn, setTurn] = useState('player');
   const [battleOver, setBattleOver] = useState(false);
   const [showBag, setShowBag] = useState(false);
+  const [showArena, setShowArena] = useState(false);
   const router = useRouter();
 
   // --- SatNav handler ---
@@ -220,6 +220,7 @@ export default function Home() {
     router.push({ pathname: "/", query: { county: countyId } });
     setWildAnimal(null);
     setMessage(`Arrived in ${counties.find(c => c.id === countyId)?.name || countyId}!`);
+    setShowArena(false);
   };
 
   useEffect(() => {
@@ -244,8 +245,8 @@ export default function Home() {
     setActiveIdx(0);
   }, [router.query.county]);
 
-  // ---------- Battle and Bag handlers unchanged ----------
-  // ... keep all your battle, catch, and bag logic as before
+  // ---------- Battle and Bag handlers (unchanged) ----------
+  // ... keep all your battle, catch, and bag logic as before ...
 
   // Get only unlocked regions/counties for SatNav
   const unlockedRegions = getUnlockedRegions(game);
@@ -276,6 +277,14 @@ export default function Home() {
         counties={unlockedCounties}
       />
 
+      {/* NAVIGATION BUTTONS */}
+      <div style={{ display: 'flex', gap: 16, margin: '14px 0' }}>
+        <button className="poke-button" onClick={() => router.push('/store')}>🛒 Store</button>
+        <button className="poke-button" onClick={() => router.push('/lab')}>🧑‍🔬 Lab</button>
+        <button className="poke-button" onClick={() => router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
+        <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
+      </div>
+
       {/* Medals Box */}
       <div style={{
         background: "rgba(0,0,0,0.4)",
@@ -305,9 +314,113 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ... KEEP THE REST OF YOUR PAGE AS BEFORE ... */}
-      {/* For brevity, all your battle UI, team display, wild animal, etc., can remain unchanged */}
-      {/* Just make sure SatNav and Medals box are in your preferred spot */}
+      {/* Arena Button */}
+      {countyInfo?.arena && countyInfo.id === currentCounty && (
+        <button
+          className="poke-button"
+          style={{ margin: '14px 0', fontWeight: 'bold', fontSize: '1.1rem' }}
+          onClick={() => setShowArena(true)}
+        >
+          🏟️ Enter {countyInfo.arena.name}
+        </button>
+      )}
+
+      {/* Arena Modal */}
+      {showArena && countyInfo?.arena && (
+        <ArenaChallenge
+          arena={countyInfo.arena}
+          game={game}
+          setGame={setGame}
+          onMedalEarned={medalTitle => {
+            setGame(g => ({
+              ...g,
+              medals: [...(g.medals || []), medalTitle]
+            }));
+            setShowArena(false);
+          }}
+        />
+      )}
+
+      {/* Show current county info and arena */}
+      <div
+        style={{
+          background: "rgba(0,0,0,0.35)",
+          padding: 16,
+          borderRadius: 12,
+          marginBottom: 24,
+          maxWidth: 350,
+        }}
+      >
+        <h2 style={{ margin: "0 0 8px 0" }}>
+          {countyInfo?.name || currentCounty}
+        </h2>
+        <div style={{ fontSize: 16, marginBottom: 6 }}>
+          {countyInfo?.description}
+        </div>
+        {countyInfo?.arena && (
+          <div style={{ fontSize: 15, marginTop: 5 }}>
+            <b>Arena:</b> {countyInfo.arena.name}
+            <br />
+            <b>Reward:</b> {countyInfo.arena.reward}
+          </div>
+        )}
+      </div>
+
+      {/* YOUR TEAM */}
+      <h2>Your Team</h2>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {team.map((animal, idx) => (
+          <div key={animal.id}
+            style={{
+              border: idx === activeIdx ? '2px solid gold' : '2px solid #fff',
+              borderRadius: 12,
+              background: animal.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
+              padding: 12,
+              minWidth: 95,
+              textAlign: 'center',
+              opacity: animal.hp > 0 ? 1 : 0.5,
+              position: 'relative'
+            }}>
+            <img src={animal.sprite} alt={animal.name} width="48" /><br />
+            <strong>{animal.name}</strong><br />
+            Level: {animal.level}<br />
+            XP: {animal.xp} / {xpForNextLevel(animal.level)}<br />
+            HP: {animal.hp} / {animal.maxhp}
+            <br />
+            <button
+              disabled={battleOver || idx === activeIdx || animal.hp <= 0 || turn !== 'player'}
+              className="poke-button"
+              style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || animal.hp <= 0) ? 0.5 : 1 }}
+              onClick={() => setActiveIdx(idx)}
+            >{idx === activeIdx ? 'Active' : 'Switch'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* ...rest of your wild animal encounter and bag modal logic as before... */}
+
+      <style jsx>{`
+        .poke-button {
+          border: 1px solid #ccc;
+          background: #f9f9f9;
+          padding: 10px 18px;
+          border-radius: 7px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+          margin: 6px 0;
+          cursor: pointer;
+          color: #222;
+          text-decoration: none;
+          font-family: inherit;
+          font-size: 1rem;
+          display: inline-block;
+          transition: background 0.18s, border 0.18s;
+        }
+        .poke-button:hover {
+          background: #e0e0e0;
+          border-color: #888;
+        }
+      `}</style>
     </main>
   );
 }
