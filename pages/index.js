@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import SatNav from '../components/SatNav';
+import { counties } from '../data/regions';
 import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
-import { counties } from '../data/regions';
-import SatNav from '../components/SatNav';
 
 // --- BagModal Component ---
 function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUseItem }) {
@@ -76,7 +76,6 @@ function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUs
     </div>
   );
 }
-// --- End BagModal ---
 
 function xpForNextLevel(level) {
   if (level >= 100) return Infinity;
@@ -168,25 +167,29 @@ export default function Home() {
   const [wildLevel, setWildLevel] = useState(null);
   const [message, setMessage] = useState('');
   const [catching, setCatching] = useState(false);
-  const [turn, setTurn] = useState('player'); // 'player' or 'wild'
+  const [turn, setTurn] = useState('player');
   const [battleOver, setBattleOver] = useState(false);
   const [showBag, setShowBag] = useState(false);
   const router = useRouter();
 
   // --- SatNav handler ---
+  // Find the current county from game state, query, or default to the first county
+  const currentCounty =
+    game?.location ||
+    router.query.county ||
+    (counties.length > 0 ? counties[0].id : '');
+
+  // When country/county changes, update game state and router
   const handleCountyChange = (countyId) => {
-    setGame(g => ({ ...g, location: countyId }));
+    setGame(g => g ? { ...g, location: countyId } : g);
     router.push({ pathname: "/", query: { county: countyId } });
     setWildAnimal(null);
-    setMessage(`Arrived in ${countyId}!`);
+    setMessage(`Arrived in ${counties.find(c => c.id === countyId)?.name || countyId}!`);
   };
-
-  // Get county from game state, fallback to first county
-  const currentCounty = game?.location || counties[0].id;
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
-    let location = router.query.county || saved?.location || counties[0].id;
+    let location = router.query.county || saved?.location || (counties.length > 0 ? counties[0].id : '');
     if (!saved || !saved.team || saved.team.length === 0) {
       router.push('/team');
       return;
@@ -339,7 +342,6 @@ export default function Home() {
     }
   }
 
-  // --- DYNAMIC FAIL RATE and REMEMBER LEVEL ON CAPTURE ---
   function catchWild(netType) {
     if (!game || !wildAnimal || battleOver || catching) return;
     setCatching(true);
@@ -458,7 +460,7 @@ export default function Home() {
         position: 'relative',
       }}
     >
-      {/* SatNav Dropdown (left) */}
+      {/* SatNav Multi-Select */}
       <SatNav currentCounty={currentCounty} onChange={handleCountyChange} />
 
       {/* Dropdown Navigation Menu - Top Right */}
