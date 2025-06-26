@@ -20,8 +20,10 @@ export const counties = [
     next: 'west_sussex',
     arena: {
       name: 'Brighton Arena',
-      medal: 'South England Medal',
-      description: 'Defeat the Brighton Arena to unlock the West England region!'
+      medal: '🏅',
+      medalTitle: 'South England Medal',
+      description: 'Defeat the Brighton Arena to unlock the West England region!',
+      unlocks: ['West England Region']
     }
   },
   {
@@ -163,8 +165,10 @@ export const counties = [
     next: null,
     arena: {
       name: 'Cornwall Arena',
-      medal: 'West England Medal',
-      description: 'Defeat the Cornwall Arena to unlock the North England region!'
+      medal: '🥇',
+        medalTitle: 'West England Medal',
+      description: 'Defeat the Cornwall Arena to unlock the North England region!',
+        unlocks: ['North England']
     }
   },
 // --- North England (locked until West England Medal) ---
@@ -260,8 +264,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Tyne and Wear Arena',
-    medal: 'North England Medal',
-    description: 'Defeat the Tyne and Wear Arena to unlock East England!'
+    medal: '🥈',
+    medalTitle: 'North England Medal',
+    description: 'Defeat the Tyne and Wear Arena to unlock East England!',
+    unlocks: ['East England']
   }
 },
 // --- East England (locked until North England Medal) ---
@@ -330,8 +336,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Peterborough Arena',
-    medal: 'East England Medal',
+    medal: '🏆',
+    medalTitle: 'East England Medal',
     description: 'Defeat the Peterborough Arena to complete England and unlock Wales!'
+    unlocks: ['South Wales']
   }
 },
 // ------------------ WALES ------------------
@@ -455,8 +463,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Carmarthenshire Arena',
-    medal: 'South Wales Medal',
+    medal: '🏅',
+    medalTitle: 'South Wales Medal',
     description: 'Defeat the Carmarthenshire Arena to unlock West Wales!'
+    unlocks: ['West Wales']
   }
 }, 
 // --- West Wales (locked until South Wales Medal) ---
@@ -498,8 +508,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Powys Arena',
-    medal: 'West Wales Medal',
-    description: 'Defeat the Powys Arena to unlock the next region!'
+    medal: '🥇',
+    medalTitle: 'West Wales Medal',
+    description: 'Defeat the Powys Arena to unlock the next region!',
+    unlocks: ['North Wales']
   }
 },
 // --- North Wales (locked until West Wales Medal) ---
@@ -559,8 +571,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Wrexham Arena',
-    medal: 'North Wales Medal',
-    description: 'Defeat the Wrexham Arena to unlock East Wales!'
+    medal: '🥈',
+    medalTitle: 'North Wales Medal',
+    description: 'Defeat the Wrexham Arena to unlock East Wales!',
+    unlocks: ['East Wales']
   }
 },
 // --- East Wales (locked until North Wales Medal) ---
@@ -602,8 +616,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Torfaen Arena',
-    medal: 'East Wales Medal',
+    medal: '🏆',
+    medalTitle: 'Wales Medal',
     description: 'Defeat the Torfaen Arena to complete Wales and unlock South Scotland!'
+    unlocks: ['South Scotland']
   }
 },
   // ------------------ SCOTLAND ------------------
@@ -655,8 +671,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Ayrshire Arena',
-    medal: 'South Scotland Medal',
-    description: 'Defeat the Ayrshire Arena to unlock West Scotland!'
+    medal: '🏅',
+    medalTitle: 'South Scotland Medal',
+    description: 'Defeat the Ayrshire Arena to unlock West Scotland!',
+    unlocks: ['West Scotland']
   }
 },
 // --- West Scotland (locked until South Scotland Medal) ---
@@ -707,8 +725,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Argyll and Bute Arena',
-    medal: 'West Scotland Medal',
+    medal: '🥇'
+    medalTitle: 'West Scotland Medal',
     description: 'Defeat the Argyll and Bute Arena to unlock North Scotland!'
+    unlocks: ['North Scotland']
   }
 },
 // --- North Scotland (locked until West Scotland Medal) ---
@@ -759,8 +779,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Shetland Arena',
-    medal: 'North Scotland Medal',
+    medal: '🥈',
+    medalTitle: 'North Scotland Medal',
     description: 'Defeat the Shetland Arena to unlock East Scotland!'
+    unlocks: ['East Scotland']
   }
 },
 // --- East Scotland (locked until North Scotland Medal) ---
@@ -811,8 +833,10 @@ export const counties = [
   next: null,
   arena: {
     name: 'Fife Arena',
-    medal: 'East Scotland Medal',
+    medal: '🏆',
+    medalTitle: 'Scotland Medal',
     description: 'Defeat the Fife Arena to complete Scotland and unlock Northern Ireland!'
+    unlocks: ['Northern Ireland']
   }
 },
 // --- Northern Ireland (locked until East Scotland Medal) ---
@@ -827,7 +851,9 @@ export const counties = [
   locked: true,
   arena: {
     name: 'Northern Ireland Arena',
-    medal: 'Northern Ireland Medal',
+    medal: '🏆'
+    medalTitle: 'Northern Ireland Medal',
     description: 'Defeat the Northern Ireland Arena to complete your journey and finish the game!'
   }
 },
+]
