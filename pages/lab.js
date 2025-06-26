@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import data from '../public/wildlifejournal.json';
+import wildlifejournal from '../public/wildlifejournal.json';
 
 export default function Lab() {
   const [game, setGame] = useState(null);
@@ -30,8 +30,8 @@ export default function Lab() {
     }
 
     saveGame(updatedGame);
-    const pokemon = data.find(p => p.id === parseInt(id));
-    setMessage(`🧪 You sold a duplicate ${pokemon.name} for 25 coins.`);
+    const animal = wildlifejournal.find(p => p.id === parseInt(id));
+    setMessage(`🧪 You sold a duplicate ${animal.name} for 25 coins.`);
   };
 
   if (!game) return <p>Loading...</p>;
@@ -52,7 +52,7 @@ export default function Lab() {
         padding: '20px'
       }}
     >
-      <h1>🧪 Professor Oak's Lab</h1>
+      <h1>🧪 Wildlife Research Lab</h1>
       <p>💰 Coins: {game.coins}</p>
 
       {duplicatesArr.length === 0 ? (
@@ -60,11 +60,11 @@ export default function Lab() {
       ) : (
         <ul>
           {duplicatesArr.map(([id, count]) => {
-            const p = data.find(mon => mon.id === parseInt(id));
+            const animal = wildlifejournal.find(mon => mon.id === parseInt(id));
             return (
               <li key={id}>
-                <img src={p.sprite} alt={p.name} width="32" /> {p.name} ×{count}
-                <button onClick={() => handleSell(p.id)} style={{ marginLeft: '10px' }}>
+                <img src={animal.sprite} alt={animal.name} width="32" /> {animal.name} ×{count}
+                <button onClick={() => handleSell(animal.id)} style={{ marginLeft: '10px' }}>
                   Sell for 25 coins
                 </button>
               </li>
