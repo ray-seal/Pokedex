@@ -337,8 +337,8 @@ export const counties = [
   arena: {
     name: 'Peterborough Arena',
     medal: '🏆',
-    medalTitle: 'East England Medal',
-    description: 'Defeat the Peterborough Arena to complete England and unlock Wales!'
+    medalTitle: 'England Medal',
+    description: 'Defeat the Peterborough Arena to complete England and unlock Wales!',
     unlocks: ['South Wales']
   }
 },
@@ -725,9 +725,9 @@ export const counties = [
   next: null,
   arena: {
     name: 'Argyll and Bute Arena',
-    medal: '🥇'
+    medal: '🥇',
     medalTitle: 'West Scotland Medal',
-    description: 'Defeat the Argyll and Bute Arena to unlock North Scotland!'
+    description: 'Defeat the Argyll and Bute Arena to unlock North Scotland!',
     unlocks: ['North Scotland']
   }
 },
@@ -781,7 +781,7 @@ export const counties = [
     name: 'Shetland Arena',
     medal: '🥈',
     medalTitle: 'North Scotland Medal',
-    description: 'Defeat the Shetland Arena to unlock East Scotland!'
+    description: 'Defeat the Shetland Arena to unlock East Scotland!',
     unlocks: ['East Scotland']
   }
 },
@@ -835,7 +835,7 @@ export const counties = [
     name: 'Fife Arena',
     medal: '🏆',
     medalTitle: 'Scotland Medal',
-    description: 'Defeat the Fife Arena to complete Scotland and unlock Northern Ireland!'
+    description: 'Defeat the Fife Arena to complete Scotland and unlock Northern Ireland!',
     unlocks: ['Northern Ireland']
   }
 },
@@ -851,7 +851,7 @@ export const counties = [
   locked: true,
   arena: {
     name: 'Northern Ireland Arena',
-    medal: '🏆'
+    medal: '🏆',
     medalTitle: 'Northern Ireland Medal',
     description: 'Defeat the Northern Ireland Arena to complete your journey and finish the game!'
   }
