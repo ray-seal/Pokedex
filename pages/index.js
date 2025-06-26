@@ -23,6 +23,13 @@ const ALL_MEDALS = [
   { title: 'Northern Ireland Medal', emoji: '🏆' }
 ];
 
+const NET_TYPES = [
+  { key: 'pokeballs', label: 'Small Net', emoji: '🕸️', short: 'S' },
+  { key: 'greatballs', label: 'Medium Net', emoji: '🪢', short: 'M' },
+  { key: 'ultraballs', label: 'Large Net', emoji: '🪣', short: 'L' },
+  { key: 'masterballs', label: 'Large Chains', emoji: '⛓️', short: 'LC' }
+];
+
 function getUnlockedRegions(game) {
   const unlocked = ['South'];
   if (game?.medals?.includes('South England Medal')) unlocked.push('West');
@@ -59,6 +66,7 @@ export default function Home() {
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
   const [encounter, setEncounter] = useState(null);
   const [encounterMsg, setEncounterMsg] = useState("");
+  const [chosenNet, setChosenNet] = useState(null);
   const router = useRouter();
 
   const currentCounty =
@@ -133,15 +141,17 @@ export default function Home() {
     const random = wildPool[Math.floor(Math.random() * wildPool.length)];
     setEncounter(random);
     setEncounterMsg("");
+    setChosenNet(null);
   }
 
-  function handleCatch() {
-    if ((game.nets || 0) < 1) {
-      setEncounterMsg("You have no nets left!");
+  // This will be called when user selects a net and clicks "Use Net"
+  function handleCatchWithNet(netKey) {
+    if (!game[netKey] || game[netKey] < 1) {
+      setEncounterMsg("You don't have any of that net left!");
       return;
     }
     const alreadyCaught = (game.wildlifejournal || []).includes(encounter.id);
-    const newNets = (game.nets || 0) - 1;
+    const newCount = (game[netKey] || 0) - 1;
     let newJournal = [...(game.wildlifejournal || [])];
     let newDuplicates = { ...(game.duplicates || {}) };
     let msg = "";
@@ -156,13 +166,14 @@ export default function Home() {
 
     const updatedGame = {
       ...game,
-      nets: newNets,
+      [netKey]: newCount,
       wildlifejournal: newJournal,
       duplicates: newDuplicates
     };
 
     setGame(updatedGame);
     setEncounterMsg(msg);
+    setChosenNet(null);
   }
 
   const handleResetProgress = () => {
@@ -171,6 +182,11 @@ export default function Home() {
       window.location.href = "/";
     }
   };
+
+  // Helper: does the user have any nets?
+  function userHasAnyNet() {
+    return NET_TYPES.some(nt => (game[nt.key] || 0) > 0);
+  }
 
   // If no save, show intro/start
   if (!game) {
@@ -197,7 +213,10 @@ export default function Home() {
         <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {
           const starterSave = {
             coins: 100,
-            nets: 10,
+            pokeballs: 10,
+            greatballs: 0,
+            ultraballs: 0,
+            masterballs: 0,
             medals: [],
             team: [],
             wildlifejournal: [],
@@ -265,13 +284,21 @@ export default function Home() {
         padding: "6px 18px",
         boxShadow: "0 2px 8px #0009",
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
+        alignItems: "flex-end",
         zIndex: 10
       }}>
-        <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
-        <b>{game.coins || 0}</b>
-        <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
-        <b style={{marginLeft:2}}>{game.nets || 0}</b>
+        <div>
+          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+          <b>{game.coins || 0}</b>
+        </div>
+        <div style={{ fontSize: 17, marginTop: 3 }}>
+          {NET_TYPES.map(nt => (
+            <span key={nt.key} title={nt.label} style={{marginRight: 6}}>
+              {nt.emoji}{nt.short}: <b>{game[nt.key] || 0}</b>
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* SatNav */}
@@ -304,6 +331,7 @@ export default function Home() {
         </button>
       )}
 
+      {/* SEARCH WILD GRASS BUTTON & ENCOUNTER */}
       <button
         className="poke-button"
         style={{ marginBottom: 18, marginTop: 0, background: "#329932", color: "white", fontWeight: "bold", fontSize: "1.13rem" }}
@@ -319,7 +347,7 @@ export default function Home() {
           padding: 18,
           margin: "12px 0",
           boxShadow: "0 4px 20px #000b",
-          maxWidth: 320,
+          maxWidth: 360,
           textAlign: "center"
         }}>
           <img src={encounter.sprite} alt={encounter.name} style={{ width: 60, marginBottom: 8 }} />
@@ -327,12 +355,27 @@ export default function Home() {
           <div>Type: {encounter.type.join(", ")}</div>
           <div>Level: {encounter.level || 1}</div>
           <div style={{ margin: '6px 0 12px 0' }}>Region: {Array.isArray(encounter.regions_found) ? encounter.regions_found.join(", ") : encounter.regions_found}</div>
-          {game.nets > 0 ? (
-            <button className="poke-button" style={{ fontWeight: 'bold', background: '#338', color: 'white' }} onClick={handleCatch}>
-              🕸️ Use Net to Catch
-            </button>
+          {userHasAnyNet() ? (
+            <>
+              <div style={{ marginBottom: 8, marginTop: 4 }}>Choose a net to use:</div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                {NET_TYPES.filter(nt => (game[nt.key] || 0) > 0).map(nt => (
+                  <button
+                    key={nt.key}
+                    className="poke-button"
+                    style={{ fontWeight: 'bold', background: '#338', color: 'white', minWidth: 90 }}
+                    onClick={() => {
+                      setChosenNet(nt.key);
+                      handleCatchWithNet(nt.key);
+                    }}
+                  >
+                    {nt.emoji} {nt.label} ({game[nt.key]})
+                  </button>
+                ))}
+              </div>
+            </>
           ) : (
-            <div style={{ color: '#f44' }}>No nets left!</div>
+            <div style={{ color: '#f44', marginTop: 6 }}>No nets left!</div>
           )}
           <div style={{ color: '#af0', marginTop: 8 }}>{encounterMsg}</div>
         </div>
