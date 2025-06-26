@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useGame } from '../context/GameContext';
 import SatNav from '../components/SatNav';
 import ArenaChallenge from '../components/ArenaChallenge';
 import { counties } from '../data/regions';
@@ -51,13 +52,11 @@ function getStartingLevel(animal) {
 }
 
 export default function Home() {
-  const [game, setGame] = useState(null);
+  const { game, setGame, reloadGame } = useGame();
   const [team, setTeam] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [showArena, setShowArena] = useState(false);
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
-  const [coins, setCoins] = useState(0);
-  const [nets, setNets] = useState(0);
   const [encounter, setEncounter] = useState(null);
   const [encounterMsg, setEncounterMsg] = useState("");
   const router = useRouter();
@@ -67,24 +66,23 @@ export default function Home() {
     router.query.county ||
     (counties.length > 0 ? counties[0].id : '');
 
-  // Load or initialize save on mount
+  // Reload on tab focus for up-to-date state
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('gameState'));
-    let location = router.query.county || saved?.location || (counties.length > 0 ? counties[0].id : '');
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') reloadGame();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [reloadGame]);
 
-    if (!saved) {
-      setGame(null);
-      setTeam([]);
-      setCoins(0);
-      setNets(0);
-      return;
-    }
-
-    if (!saved.team) saved.team = [];
-    if (!saved.duplicates) saved.duplicates = {};
-    if (!saved.wildlifejournal) saved.wildlifejournal = [];
-
-    const newTeam = saved.team.map(animal => {
+  useEffect(() => {
+    if (!game) return;
+    if (!game.team) game.team = [];
+    if (!game.duplicates) game.duplicates = {};
+    if (!game.wildlifejournal) game.wildlifejournal = [];
+    const newTeam = game.team.map(animal => {
       const stats = getPokemonStats(animal);
       return {
         ...animal,
@@ -95,37 +93,8 @@ export default function Home() {
       };
     });
     setTeam(newTeam);
-    setGame({ ...saved, team: newTeam, location });
     setActiveIdx(0);
-    setCoins(saved.coins || 0);
-    setNets(saved.nets || 0);
-  }, [router.query.county]);
-
-  // --- Begin: Keep nets/coins/game in sync with localStorage on tab focus or route change ---
-  useEffect(() => {
-    const reloadGameState = () => {
-      const saved = JSON.parse(localStorage.getItem('gameState'));
-      if (!saved) return;
-      setNets(saved.nets || 0);
-      setCoins(saved.coins || 0);
-      setGame(g => g ? { ...g, nets: saved.nets || 0, coins: saved.coins || 0 } : g);
-    };
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') reloadGameState();
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    if (router.events) {
-      router.events.on('routeChangeComplete', reloadGameState);
-      return () => {
-        router.events.off('routeChangeComplete', reloadGameState);
-        document.removeEventListener('visibilitychange', handleVisibility);
-      };
-    }
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, []);
-  // --- End: Keep nets/coins/game in sync with localStorage ---
+  }, [game]);
 
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
@@ -159,7 +128,6 @@ export default function Home() {
     });
   }
 
-  // SEARCH GRASS ENCOUNTER
   function handleSearchGrass() {
     const wildPool = wildlifejournal.filter(a => !a.legendary);
     const random = wildPool[Math.floor(Math.random() * wildPool.length)];
@@ -194,12 +162,9 @@ export default function Home() {
     };
 
     setGame(updatedGame);
-    setNets(newNets);
-    localStorage.setItem("gameState", JSON.stringify(updatedGame));
     setEncounterMsg(msg);
   }
 
-  // RESET ALL PROGRESS
   const handleResetProgress = () => {
     if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
       localStorage.clear();
@@ -223,11 +188,10 @@ export default function Home() {
       }}>
         <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
           <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
-          <b>{coins}</b>
+          <b>0</b>
           <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
-          <b style={{marginLeft:2}}>{nets}</b>
+          <b style={{marginLeft:2}}>0</b>
         </div>
-
         <h1>Wildlife Hunter</h1>
         <p>Welcome adventurer! Start your British wildlife journey.</p>
         <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {
@@ -329,7 +293,6 @@ export default function Home() {
         <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
       </div>
 
-      {/* If no team, encourage catching and team building */}
       {(!game.team || game.team.length === 0) && (
         <div style={{margin: "20px", color: "#ffd700", fontWeight: "bold", fontSize: "1.1em"}}>
           You have no team yet! Search wild grass to catch wildlife, then build your team.
@@ -341,7 +304,6 @@ export default function Home() {
         </button>
       )}
 
-      {/* SEARCH WILD GRASS BUTTON & ENCOUNTER */}
       <button
         className="poke-button"
         style={{ marginBottom: 18, marginTop: 0, background: "#329932", color: "white", fontWeight: "bold", fontSize: "1.13rem" }}
