@@ -23,7 +23,7 @@ export const counties = [
       medal: '🏅',
       medalTitle: 'South England Medal',
       description: 'Defeat the Brighton Arena to unlock the West England region!',
-      unlocks: ['West England Region']
+      unlocks: ['West']
     }
   },
   {
@@ -107,7 +107,7 @@ export const counties = [
     prev: 'buckinghamshire',
     next: null
   },
-];
+  
   // --- West England (locked until South England Medal) ---
   {
     id: 'gloucestershire',
@@ -168,7 +168,7 @@ export const counties = [
       medal: '🥇',
         medalTitle: 'West England Medal',
       description: 'Defeat the Cornwall Arena to unlock the North England region!',
-        unlocks: ['North England']
+        unlocks: ['North']
     }
   },
 // --- North England (locked until West England Medal) ---
@@ -267,7 +267,7 @@ export const counties = [
     medal: '🥈',
     medalTitle: 'North England Medal',
     description: 'Defeat the Tyne and Wear Arena to unlock East England!',
-    unlocks: ['East England']
+    unlocks: ['East']
   }
 },
 // --- East England (locked until North England Medal) ---
@@ -465,7 +465,7 @@ export const counties = [
     name: 'Carmarthenshire Arena',
     medal: '🏅',
     medalTitle: 'South Wales Medal',
-    description: 'Defeat the Carmarthenshire Arena to unlock West Wales!'
+    description: 'Defeat the Carmarthenshire Arena to unlock West Wales!',
     unlocks: ['West Wales']
   }
 }, 
@@ -618,7 +618,7 @@ export const counties = [
     name: 'Torfaen Arena',
     medal: '🏆',
     medalTitle: 'Wales Medal',
-    description: 'Defeat the Torfaen Arena to complete Wales and unlock South Scotland!'
+    description: 'Defeat the Torfaen Arena to complete Wales and unlock South Scotland!',
     unlocks: ['South Scotland']
   }
 },
@@ -855,5 +855,5 @@ export const counties = [
     medalTitle: 'Northern Ireland Medal',
     description: 'Defeat the Northern Ireland Arena to complete your journey and finish the game!'
   }
-},
+}
 ]
