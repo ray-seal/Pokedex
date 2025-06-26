@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const ITEMS = [
-  { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', price: 25 },
-  { key: 'greatballs', name: 'Great Ball', emoji: '🔵', price: 50 },
-  { key: 'ultraballs', name: 'Ultra Ball', emoji: '🟡', price: 75 },
-  { key: 'masterballs', name: 'Master Ball', emoji: '🟣', price: 500 },
+  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', price: 25 },
+  { key: 'greatballs', name: 'Medium Net', emoji: '🪢', price: 50 },
+  { key: 'ultraballs', name: 'Large Net', emoji: '🪣', price: 75 },
+  { key: 'masterballs', name: 'Large Chains', emoji: '⛓️', price: 500 },
   { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', price: 30 },
   { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', price: 60 },
   { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', price: 100 },
@@ -128,7 +128,7 @@ export default function Store() {
         alignItems: 'center',
       }}
     >
-      <h1 style={{ marginTop: 32 }}>🛒 Pokémart</h1>
+      <h1 style={{ marginTop: 32 }}>🛒 Wildlife Supply Store</h1>
       <h2>Coins: <span style={{ color: '#ffde59' }}>{game.coins}</span></h2>
       <div style={{ display: 'flex', gap: 18, margin: '18px 0 0 0' }}>
         <button
