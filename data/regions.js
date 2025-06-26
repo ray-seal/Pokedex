@@ -1,87 +1,111 @@
-// data/regions.js
-
-// Major routes (simplified for demo)
-export const routes = [
-  { id: "m20", name: "M20 Motorway", from: "Kent", to: "London" },
-  { id: "m25", name: "M25 Motorway", from: "London", to: "Surrey" },
-  { id: "a12", name: "A12", from: "London", to: "Essex" },
-  { id: "m11", name: "M11 Motorway", from: "London", to: "Cambridgeshire" },
-  { id: "m1", name: "M1 Motorway", from: "London", to: "Hertfordshire" },
-  { id: "a23", name: "A23", from: "London", to: "Sussex" },
-  // Add more routes as desired
-];
-
-// UK Counties (small subset for demo, expand as desired)
 export const counties = [
-  {
-    id: "Kent",
-    name: "Kent",
-    description: "The Garden of England.",
-    arena: {
-      name: "Canterbury Arena",
-      reward: "Kent Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  {
-    id: "London",
-    name: "London",
-    description: "The bustling capital.",
-    arena: {
-      name: "O2 Arena",
-      reward: "London Wildlife Badge"
-    },
-    neighbours: ["Kent", "Surrey", "Essex", "Cambridgeshire", "Hertfordshire", "Sussex"]
-  },
-  {
-    id: "Essex",
-    name: "Essex",
-    description: "Known for its coastline.",
-    arena: {
-      name: "Colchester Arena",
-      reward: "Essex Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  {
-    id: "Surrey",
-    name: "Surrey",
-    description: "Leafy suburb of London.",
-    arena: {
-      name: "Guildford Arena",
-      reward: "Surrey Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  {
-    id: "Cambridgeshire",
-    name: "Cambridgeshire",
-    description: "Historic university county.",
-    arena: {
-      name: "Cambridge Arena",
-      reward: "Cambridge Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  {
-    id: "Hertfordshire",
-    name: "Hertfordshire",
-    description: "Green belt county north of London.",
-    arena: {
-      name: "St Albans Arena",
-      reward: "Hertfordshire Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  {
-    id: "Sussex",
-    name: "Sussex",
-    description: "Coastal county to the south.",
-    arena: {
-      name: "Brighton Arena",
-      reward: "Sussex Wildlife Badge"
-    },
-    neighbours: ["London"]
-  },
-  // ... Add more counties as needed
+  // ------------------ ENGLAND ------------------
+  { id: 'kent', name: 'Kent', country: 'England', description: 'The Garden of England.' },
+  { id: 'east_sussex', name: 'East Sussex', country: 'England', description: '' },
+  { id: 'west_sussex', name: 'West Sussex', country: 'England', description: '' },
+  { id: 'surrey', name: 'Surrey', country: 'England', description: '' },
+  { id: 'greater_london', name: 'Greater London', country: 'England', description: '' },
+  { id: 'essex', name: 'Essex', country: 'England', description: '' },
+  { id: 'hertfordshire', name: 'Hertfordshire', country: 'England', description: '' },
+  { id: 'bedfordshire', name: 'Bedfordshire', country: 'England', description: '' },
+  { id: 'buckinghamshire', name: 'Buckinghamshire', country: 'England', description: '' },
+  { id: 'berkshire', name: 'Berkshire', country: 'England', description: '' },
+  { id: 'oxfordshire', name: 'Oxfordshire', country: 'England', description: '' },
+  { id: 'hampshire', name: 'Hampshire', country: 'England', description: '' },
+  { id: 'isle_of_wight', name: 'Isle of Wight', country: 'England', description: '' },
+  { id: 'dorset', name: 'Dorset', country: 'England', description: '' },
+  { id: 'wiltshire', name: 'Wiltshire', country: 'England', description: '' },
+  { id: 'gloucestershire', name: 'Gloucestershire', country: 'England', description: '' },
+  { id: 'bristol', name: 'Bristol', country: 'England', description: '' },
+  { id: 'somerset', name: 'Somerset', country: 'England', description: '' },
+  { id: 'devon', name: 'Devon', country: 'England', description: '' },
+  { id: 'cornwall', name: 'Cornwall', country: 'England', description: '' },
+  { id: 'suffolk', name: 'Suffolk', country: 'England', description: '' },
+  { id: 'norfolk', name: 'Norfolk', country: 'England', description: '' },
+  { id: 'cambridgeshire', name: 'Cambridgeshire', country: 'England', description: '' },
+  { id: 'peterborough', name: 'Peterborough', country: 'England', description: '' },
+  { id: 'lincolnshire', name: 'Lincolnshire', country: 'England', description: '' },
+  { id: 'rutland', name: 'Rutland', country: 'England', description: '' },
+  { id: 'leicestershire', name: 'Leicestershire', country: 'England', description: '' },
+  { id: 'nottinghamshire', name: 'Nottinghamshire', country: 'England', description: '' },
+  { id: 'derbyshire', name: 'Derbyshire', country: 'England', description: '' },
+  { id: 'staffordshire', name: 'Staffordshire', country: 'England', description: '' },
+  { id: 'shropshire', name: 'Shropshire', country: 'England', description: '' },
+  { id: 'herefordshire', name: 'Herefordshire', country: 'England', description: '' },
+  { id: 'worcestershire', name: 'Worcestershire', country: 'England', description: '' },
+  { id: 'warwickshire', name: 'Warwickshire', country: 'England', description: '' },
+  { id: 'west_midlands', name: 'West Midlands', country: 'England', description: '' },
+  { id: 'northamptonshire', name: 'Northamptonshire', country: 'England', description: '' },
+  { id: 'cheshire', name: 'Cheshire', country: 'England', description: '' },
+  { id: 'merseyside', name: 'Merseyside', country: 'England', description: '' },
+  { id: 'greater_manchester', name: 'Greater Manchester', country: 'England', description: '' },
+  { id: 'lancashire', name: 'Lancashire', country: 'England', description: '' },
+  { id: 'east_riding', name: 'East Riding of Yorkshire', country: 'England', description: '' },
+  { id: 'south_yorkshire', name: 'South Yorkshire', country: 'England', description: '' },
+  { id: 'west_yorkshire', name: 'West Yorkshire', country: 'England', description: '' },
+  { id: 'north_yorkshire', name: 'North Yorkshire', country: 'England', description: '' },
+  { id: 'durham', name: 'County Durham', country: 'England', description: '' },
+  { id: 'tyne_and_wear', name: 'Tyne and Wear', country: 'England', description: '' },
+  { id: 'northumberland', name: 'Northumberland', country: 'England', description: '' },
+  { id: 'cumbria', name: 'Cumbria', country: 'England', description: '' },
+
+  // ------------------ WALES ------------------
+  { id: 'monmouthshire', name: 'Monmouthshire', country: 'Wales', description: '' },
+  { id: 'newport', name: 'Newport', country: 'Wales', description: '' },
+  { id: 'torfaen', name: 'Torfaen', country: 'Wales', description: '' },
+  { id: 'blaenau_gwent', name: 'Blaenau Gwent', country: 'Wales', description: '' },
+  { id: 'caerphilly', name: 'Caerphilly', country: 'Wales', description: '' },
+  { id: 'cardiff', name: 'Cardiff', country: 'Wales', description: '' },
+  { id: 'vale_of_glamorgan', name: 'Vale of Glamorgan', country: 'Wales', description: '' },
+  { id: 'bridgend', name: 'Bridgend', country: 'Wales', description: '' },
+  { id: 'rhondda', name: 'Rhondda Cynon Taf', country: 'Wales', description: '' },
+  { id: 'merthyr_tydfil', name: 'Merthyr Tydfil', country: 'Wales', description: '' },
+  { id: 'powys', name: 'Powys', country: 'Wales', description: '' },
+  { id: 'ceredigion', name: 'Ceredigion', country: 'Wales', description: '' },
+  { id: 'swansea', name: 'Swansea', country: 'Wales', description: '' },
+  { id: 'neath_port_talbot', name: 'Neath Port Talbot', country: 'Wales', description: '' },
+  { id: 'carmarthenshire', name: 'Carmarthenshire', country: 'Wales', description: '' },
+  { id: 'pembrokeshire', name: 'Pembrokeshire', country: 'Wales', description: '' },
+  { id: 'gwynedd', name: 'Gwynedd', country: 'Wales', description: '' },
+  { id: 'anglesey', name: 'Isle of Anglesey', country: 'Wales', description: '' },
+  { id: 'conwy', name: 'Conwy', country: 'Wales', description: '' },
+  { id: 'denbighshire', name: 'Denbighshire', country: 'Wales', description: '' },
+  { id: 'flintshire', name: 'Flintshire', country: 'Wales', description: '' },
+  { id: 'wrexham', name: 'Wrexham', country: 'Wales', description: '' },
+  { id: 'snowdonia', name: 'Snowdonia', country: 'Wales', description: 'Mountainous region.' },
+
+  // ------------------ SCOTLAND ------------------
+  { id: 'dumfries', name: 'Dumfries and Galloway', country: 'Scotland', description: '' },
+  { id: 'scottish_borders', name: 'Scottish Borders', country: 'Scotland', description: '' },
+  { id: 'east_lothian', name: 'East Lothian', country: 'Scotland', description: '' },
+  { id: 'midlothian', name: 'Midlothian', country: 'Scotland', description: '' },
+  { id: 'west_lothian', name: 'West Lothian', country: 'Scotland', description: '' },
+  { id: 'edinburgh', name: 'City of Edinburgh', country: 'Scotland', description: '' },
+  { id: 'glasgow', name: 'Glasgow City', country: 'Scotland', description: '' },
+  { id: 'north_lanarkshire', name: 'North Lanarkshire', country: 'Scotland', description: '' },
+  { id: 'south_lanarkshire', name: 'South Lanarkshire', country: 'Scotland', description: '' },
+  { id: 'fife', name: 'Fife', country: 'Scotland', description: '' },
+  { id: 'angus', name: 'Angus', country: 'Scotland', description: '' },
+  { id: 'perth_and_kinross', name: 'Perth and Kinross', country: 'Scotland', description: '' },
+  { id: 'dunbartonshire', name: 'Dunbartonshire', country: 'Scotland', description: '' },
+  { id: 'stirling', name: 'Stirling', country: 'Scotland', description: '' },
+  { id: 'clackmannanshire', name: 'Clackmannanshire', country: 'Scotland', description: '' },
+  { id: 'aberdeenshire', name: 'Aberdeenshire', country: 'Scotland', description: '' },
+  { id: 'aberdeen_city', name: 'Aberdeen City', country: 'Scotland', description: '' },
+  { id: 'moray', name: 'Moray', country: 'Scotland', description: '' },
+  { id: 'highland', name: 'Highland', country: 'Scotland', description: '' },
+  { id: 'na_h_eileanan_siar', name: 'Na h-Eileanan Siar (Western Isles)', country: 'Scotland', description: '' },
+  { id: 'orkney', name: 'Orkney Islands', country: 'Scotland', description: '' },
+  { id: 'shetland', name: 'Shetland Islands', country: 'Scotland', description: '' },
+  { id: 'argyll_and_bute', name: 'Argyll and Bute', country: 'Scotland', description: '' },
+  { id: 'renfrewshire', name: 'Renfrewshire', country: 'Scotland', description: '' },
+  { id: 'inverclyde', name: 'Inverclyde', country: 'Scotland', description: '' },
+
+  // ------------------ NORTHERN IRELAND ------------------
+  { id: 'antrim', name: 'Antrim', country: 'Northern Ireland', description: '' },
+  { id: 'down', name: 'Down', country: 'Northern Ireland', description: '' },
+  { id: 'armagh', name: 'Armagh', country: 'Northern Ireland', description: '' },
+  { id: 'tyrone', name: 'Tyrone', country: 'Northern Ireland', description: '' },
+  { id: 'fermanagh', name: 'Fermanagh', country: 'Northern Ireland', description: '' },
+  { id: 'londonderry', name: 'Londonderry', country: 'Northern Ireland', description: '' },
 ];
