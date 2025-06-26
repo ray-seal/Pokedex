@@ -6,7 +6,7 @@ import { counties } from '../data/regions';
 import SatNav from '../components/SatNav';
 
 // --- BagModal Component ---
-function BagModal({ open, onClose, game, turn, wildPokemon, team, activeIdx, onUseItem }) {
+function BagModal({ open, onClose, game, turn, wildAnimal, team, activeIdx, onUseItem }) {
   if (!open) return null;
   const ITEMS = [
     { key: 'pokeballs', name: 'Poké Ball', emoji: '🔴', type: 'ball' },
@@ -34,7 +34,7 @@ function BagModal({ open, onClose, game, turn, wildPokemon, team, activeIdx, onU
                 <span style={{ fontSize: 22 }}>{item.emoji}</span>
                 <span>{item.name}</span>
                 <b style={{marginLeft:2}}>{game[item.key]}</b>
-                {item.type === "ball" && wildPokemon && turn === "player" &&
+                {item.type === "ball" && wildAnimal && turn === "player" &&
                   <button className="poke-button" style={{marginLeft:10, fontSize:13}} onClick={() => onUseItem(item.key)}>
                     Use
                   </button>
@@ -90,7 +90,7 @@ function getStartingLevel(mon) {
 }
 function tryEvolve(mon) {
   if (mon.stage === 1 && mon.level >= 15 && mon.evolves_to) {
-    const next = pokedex.find(p => p.id === mon.evolves_to);
+    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
     if (next) {
       return {
         ...next,
@@ -101,7 +101,7 @@ function tryEvolve(mon) {
     }
   }
   if (mon.stage === 2 && mon.level >= 30 && mon.evolves_to) {
-    const next = pokedex.find(p => p.id === mon.evolves_to);
+    const next = wildlifejournal.find(p => p.id === mon.evolves_to);
     if (next) {
       return {
         ...next,
@@ -162,7 +162,7 @@ export default function Home() {
   const [game, setGame] = useState(null);
   const [team, setTeam] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [wildPokemon, setWildPokemon] = useState(null);
+  const [wildAnimal, setWildAnimal] = useState(null);
   const [wildHP, setWildHP] = useState(null);
   const [wildMaxHP, setWildMaxHP] = useState(null);
   const [wildLevel, setWildLevel] = useState(null);
@@ -177,7 +177,7 @@ export default function Home() {
   const handleCountyChange = (countyId) => {
     setGame(g => ({ ...g, location: countyId }));
     router.push({ pathname: "/", query: { county: countyId } });
-    setWildPokemon(null);
+    setWildAnimal(null);
     setMessage(`Arrived in ${countyId}!`);
   };
 
@@ -218,7 +218,7 @@ export default function Home() {
 
   // --- RANDOMIZED LEVELS BY STAGE ---
   function searchLongGrass() {
-    const wild = pokedex[Math.floor(Math.random() * pokedex.length)];
+    const wild = wildlifejournal[Math.floor(Math.random() * wildlifejournal.length)];
     let level;
     if (wild.legendary) {
       level = 50 + Math.floor(Math.random() * 51); // 50-100
@@ -230,7 +230,7 @@ export default function Home() {
       level = 1 + Math.floor(Math.random() * 14); // 1-14
     }
     const baseStats = getPokemonStats(wild);
-    setWildPokemon(wild);
+    setWildAnimal(wild);
     setWildHP(baseStats.hp);
     setWildMaxHP(baseStats.hp);
     setWildLevel(level);
@@ -240,7 +240,7 @@ export default function Home() {
   }
 
   function playerAttack() {
-    if (!wildPokemon || wildHP === null || battleOver || turn !== 'player') return;
+    if (!wildAnimal || wildHP === null || battleOver || turn !== 'player') return;
     const attacker = team[activeIdx];
     if (attacker.hp <= 0) {
       setMessage("This Pokémon has fainted! Switch to another.");
@@ -253,8 +253,8 @@ export default function Home() {
     setWildHP(newWildHP);
 
     if (newWildHP === 0) {
-      const xpGained = getWildXP(wildPokemon);
-      setMessage(`Your ${attacker.name} attacked and defeated ${wildPokemon.name}!`);
+      const xpGained = getWildXP(wildAnimal);
+      setMessage(`Your ${attacker.name} attacked and defeated ${wildAnimal.name}!`);
       const newTeam = grantBattleXP(team, activeIdx, xpGained);
       setTeam(newTeam);
       setGame(prev => ({ ...prev, team: newTeam }));
@@ -262,24 +262,24 @@ export default function Home() {
       setBattleOver(true);
       setTurn('player');
       setTimeout(() => {
-        setWildPokemon(null);
+        setWildAnimal(null);
         setWildHP(null);
         setWildLevel(null);
         setMessage(`${attacker.name} gained ${xpGained} XP!`);
       }, 1200);
     } else {
-      setMessage(`Your ${attacker.name} attacked! ${wildPokemon.name} lost ${damage} HP.`);
+      setMessage(`Your ${attacker.name} attacked! ${wildAnimal.name} lost ${damage} HP.`);
       setTurn('wild');
       setTimeout(() => wildAttack(), 1200);
     }
   }
 
   function wildAttack() {
-    if (!wildPokemon || battleOver) {
+    if (!wildAnimal || battleOver) {
       setTurn('player');
       return;
     }
-    const wild = wildPokemon;
+    const wild = wildAnimal;
     const defender = team[activeIdx];
     const base = Math.floor(Math.random() * 11) + 15;
     const multiplier = getStageMultiplier(wild) * (wildLevel / 10);
@@ -299,7 +299,7 @@ export default function Home() {
         setTurn('player');
         setMessage(`All your Pokémon have fainted!`);
         setTimeout(() => {
-          setWildPokemon(null);
+          setWildAnimal(null);
           setWildHP(null);
           setWildLevel(null);
         }, 1500);
@@ -351,35 +351,35 @@ export default function Home() {
 
   // --- DYNAMIC FAIL RATE and REMEMBER LEVEL ON CATCH ---
   function catchWild(ballType) {
-    if (!game || !wildPokemon || battleOver || catching) return;
+    if (!game || !wildAnimal || battleOver || catching) return;
     setCatching(true);
     setTimeout(() => {
       const updated = { ...game };
       // Ball checks...
       if (ballType === 'pokeballs') {
         updated.pokeballs--;
-        if (wildPokemon.legendary || (wildPokemon.stage || 1) > 1) {
+        if (wildAnimal.legendary || (wildAnimal.stage || 1) > 1) {
           setMessage("Too strong for a Poké Ball.");
           setCatching(false);
           return;
         }
       } else if (ballType === 'greatballs') {
         updated.greatballs--;
-        if (wildPokemon.legendary || (wildPokemon.stage || 1) > 2) {
+        if (wildAnimal.legendary || (wildAnimal.stage || 1) > 2) {
           setMessage("Too strong for a Great Ball.");
           setCatching(false);
           return;
         }
       } else if (ballType === 'ultraballs') {
         updated.ultraballs--;
-        if (wildPokemon.legendary) {
+        if (wildAnimal.legendary) {
           setMessage("Use a Master Ball for legendary Pokémon.");
           setCatching(false);
           return;
         }
       } else if (ballType === 'masterballs') {
         updated.masterballs--;
-        if (!wildPokemon.legendary) {
+        if (!wildAnimal.legendary) {
           setMessage("Master Balls are for legendary Pokémon only.");
           setCatching(false);
           return;
@@ -389,11 +389,11 @@ export default function Home() {
       // ---- Dynamic fail rate calculation ----
       let wildLvl = wildLevel || 1;
       let failRate;
-      if (wildPokemon.legendary) {
+      if (wildAnimal.legendary) {
         failRate = 0.3 + 0.005 * (wildLvl - 50); // 30% at 50, up to 55% at 100
-      } else if (wildPokemon.stage === 3) {
+      } else if (wildAnimal.stage === 3) {
         failRate = 0.15 + 0.003 * (wildLvl - 30); // 15% at 30, up to ~36% at 100
-      } else if (wildPokemon.stage === 2) {
+      } else if (wildAnimal.stage === 2) {
         failRate = 0.08 + 0.005 * (wildLvl - 15); // 8% at 15, up to ~15% at 29
       } else {
         failRate = 0.03 + 0.005 * (wildLvl - 1); // 3% at 1, up to 10% at 14
@@ -415,23 +415,24 @@ export default function Home() {
       }
 
       // ---- REMEMBER LEVEL ON CATCH ----
-      if (!updated.pokedex.includes(wildPokemon.id)) {
-        updated.pokedex = [...updated.pokedex, wildPokemon.id];
-        // Save caught Pokémon's level and HP
-        if (!updated.caughtMons) updated.caughtMons = [];
-        updated.caughtMons.push({
-          id: wildPokemon.id,
+      if (!updated.wildlifejournal) updated.wildlifejournal = [];
+      if (!updated.wildlifejournal.includes(wildAnimal.id)) {
+        updated.wildlifejournal = [...updated.wildlifejournal, wildAnimal.id];
+        // Save caught animal's level and HP
+        if (!updated.caughtAnimals) updated.caughtAnimals = [];
+        updated.caughtAnimals.push({
+          id: wildAnimal.id,
           level: wildLevel,
           xp: 0,
           hp: wildMaxHP, // Caught at full HP; you can use wildHP if you want
           maxhp: wildMaxHP
         });
-        setMessage(`You caught ${wildPokemon.name}!`);
+        setMessage(`You caught ${wildAnimal.name}!`);
       } else {
         if (!updated.duplicates) updated.duplicates = {};
-        updated.duplicates[wildPokemon.id] = (updated.duplicates[wildPokemon.id] || 0) + 1;
+        updated.duplicates[wildAnimal.id] = (updated.duplicates[wildAnimal.id] || 0) + 1;
         setMessage(
-          `You caught another ${wildPokemon.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
+          `You caught another ${wildAnimal.name}! It's a duplicate and can be sold in the Lab for 25 coins.`
         );
       }
       setGame(updated);
@@ -439,7 +440,7 @@ export default function Home() {
       setCatching(false);
       setBattleOver(true);
       setTimeout(() => {
-        setWildPokemon(null);
+        setWildAnimal(null);
         setWildHP(null);
         setWildLevel(null);
         setBattleOver(false);
@@ -490,7 +491,7 @@ export default function Home() {
           <option value="/lab">🧑‍🔬 Professor Oak's Lab</option>
           <option value="/center">🏥 Pokémon Center</option>
           <option value="/arena">🏟️ Pokémon Arena</option>
-          <option value="/pokedex">📖 Pokédex</option>
+          <option value="/wildlifejournal">📖 Wildlife Journal</option>
           <option value="/team">🧑‍🤝‍🧑 Choose Team</option>
           <option value="/bag">🎒 Bag</option>
         </select>
@@ -501,13 +502,13 @@ export default function Home() {
         onClose={() => setShowBag(false)}
         game={game}
         turn={turn}
-        wildPokemon={wildPokemon}
+        wildAnimal={wildAnimal}
         team={team}
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
       />
 
-      <h1 style={{marginTop: 32}}>Pokémon Adventure</h1>
+      <h1 style={{marginTop: 32}}>Wildlife Adventure</h1>
       <div style={{
         textAlign: 'center',
         width: '100%',
@@ -589,11 +590,11 @@ export default function Home() {
         🌾 Search Long Grass
       </button>
 
-      {wildPokemon && (
+      {wildAnimal && (
         <div style={{ position: 'relative', display: 'inline-block', marginBottom: 18, textAlign: 'center', minWidth: 120 }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <img src={wildPokemon.sprite} alt={wildPokemon.name} width="96" style={{ display: 'block' }} />
-            {game.pokedex && game.pokedex.includes(wildPokemon.id) && (
+            <img src={wildAnimal.sprite} alt={wildAnimal.name} width="96" style={{ display: 'block' }} />
+            {game.wildlifejournal && game.wildlifejournal.includes(wildAnimal.id) && (
               <img
                 src="/pokeball.png"
                 alt="Caught"
@@ -609,7 +610,7 @@ export default function Home() {
             )}
           </div>
           <br />
-          <b>{wildPokemon.name}</b>
+          <b>{wildAnimal.name}</b>
           <div style={{marginTop: 8, fontWeight: 'bold'}}>
             HP: {wildHP} / {wildMaxHP} <span style={{marginLeft:8}}>Lv.{wildLevel}</span>
           </div>
