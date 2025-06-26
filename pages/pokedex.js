@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import data from '../public/pokedex.json';
+import data from '../public/wildlifejournal.json';
 import { useRouter } from 'next/router';
 
 export default function Pokedex() {
