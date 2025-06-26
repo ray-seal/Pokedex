@@ -57,6 +57,9 @@ export default function Home() {
   const [showArena, setShowArena] = useState(false);
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
   const [coins, setCoins] = useState(0);
+  const [nets, setNets] = useState(0);
+  const [encounter, setEncounter] = useState(null);
+  const [encounterMsg, setEncounterMsg] = useState("");
   const router = useRouter();
 
   const currentCounty =
@@ -70,19 +73,10 @@ export default function Home() {
     let location = router.query.county || saved?.location || (counties.length > 0 ? counties[0].id : '');
 
     if (!saved) {
-      // No save: create default save, go to team page
-      const starterSave = {
-        coins: 100,
-        medals: [],
-        team: [],
-        wildlifejournal: [],
-        wildlifeProgress: {},
-        location: counties.length > 0 ? counties[0].id : "",
-      };
-      localStorage.setItem('gameState', JSON.stringify(starterSave));
-      setTimeout(() => {
-        router.push('/team');
-      }, 100);
+      setGame(null);
+      setTeam([]);
+      setCoins(0);
+      setNets(0);
       return;
     }
 
@@ -90,6 +84,7 @@ export default function Home() {
       setGame(saved);
       setTeam([]);
       setCoins(saved.coins || 0);
+      setNets(saved.nets || 0);
       return;
     }
 
@@ -107,7 +102,15 @@ export default function Home() {
     setGame({ ...saved, team: newTeam, location });
     setActiveIdx(0);
     setCoins(saved.coins || 0);
+    setNets(saved.nets || 0);
   }, [router.query.county]);
+
+  // Force player to team builder if no team chosen
+  useEffect(() => {
+    if (game && Array.isArray(game.team) && game.team.length === 0) {
+      router.push('/team');
+    }
+  }, [game]);
 
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
@@ -141,6 +144,46 @@ export default function Home() {
     });
   }
 
+  // SEARCH GRASS ENCOUNTER
+  function handleSearchGrass() {
+    const wildPool = wildlifejournal.filter(a => !a.legendary);
+    const random = wildPool[Math.floor(Math.random() * wildPool.length)];
+    setEncounter(random);
+    setEncounterMsg("");
+  }
+
+  function handleCatch() {
+    if ((game.nets || 0) < 1) {
+      setEncounterMsg("You have no nets left!");
+      return;
+    }
+    const alreadyCaught = (game.wildlifejournal || []).includes(encounter.id);
+    const newNets = (game.nets || 0) - 1;
+    let newJournal = [...(game.wildlifejournal || [])];
+    let newDuplicates = { ...(game.duplicates || {}) };
+    let msg = "";
+
+    if (!alreadyCaught) {
+      newJournal.push(encounter.id);
+      msg = `You caught a ${encounter.name}!`;
+    } else {
+      newDuplicates[encounter.id] = (newDuplicates[encounter.id] || 0) + 1;
+      msg = `You caught another ${encounter.name}! (Added to duplicates for Lab)`;
+    }
+
+    const updatedGame = {
+      ...game,
+      nets: newNets,
+      wildlifejournal: newJournal,
+      duplicates: newDuplicates
+    };
+
+    setGame(updatedGame);
+    setNets(newNets);
+    localStorage.setItem("gameState", JSON.stringify(updatedGame));
+    setEncounterMsg(msg);
+  }
+
   // RESET ALL PROGRESS
   const handleResetProgress = () => {
     if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
@@ -149,17 +192,71 @@ export default function Home() {
     }
   };
 
-  // No team selected yet (but save exists): force to team builder
-  useEffect(() => {
-    if (game && Array.isArray(game.team) && game.team.length === 0) {
-      router.push('/team');
-    }
-  }, [game]);
+  // If no save, show intro/start
+  if (!game) {
+    return (
+      <main style={{
+        fontFamily: 'monospace',
+        minHeight: '100vh',
+        color: 'white',
+        background: '#184218',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative'
+      }}>
+        <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
+          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+          <b>{coins}</b>
+          <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
+          <b style={{marginLeft:2}}>{nets}</b>
+        </div>
 
-  // Main screen
-  if (!game || !game.team || game.team.length === 0) {
-    // This will only flash for a moment before redirecting to /team if needed
-    return null;
+        <h1>Wildlife Hunter</h1>
+        <p>Welcome adventurer! Start your British wildlife journey.</p>
+        <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {
+          const starterSave = {
+            coins: 100,
+            nets: 10,
+            medals: [],
+            team: [],
+            wildlifejournal: [],
+            wildlifeProgress: {},
+            duplicates: {},
+            location: counties.length > 0 ? counties[0].id : "",
+          };
+          localStorage.setItem('gameState', JSON.stringify(starterSave));
+          window.location.href = '/';
+        }}>
+          🚀 Start Adventure
+        </button>
+        <button className="poke-button" style={{ marginTop: 40, background: "#300", color: "white" }} onClick={handleResetProgress}>
+          🗑️ Reset All Progress
+        </button>
+        <style jsx>{`
+          .poke-button {
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            padding: 12px 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+            margin: 6px 0;
+            cursor: pointer;
+            color: #222;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: background 0.18s, border 0.18s;
+          }
+          .poke-button:hover {
+            background: #e0e0e0;
+            border-color: #888;
+          }
+        `}</style>
+      </main>
+    );
   }
 
   return (
@@ -178,7 +275,7 @@ export default function Home() {
         position: 'relative',
       }}
     >
-      {/* Coins visual */}
+      {/* Coins and nets visual */}
       <div style={{
         position: "fixed",
         top: 18,
@@ -194,6 +291,8 @@ export default function Home() {
       }}>
         <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
         <b>{game.coins || 0}</b>
+        <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
+        <b style={{marginLeft:2}}>{game.nets || 0}</b>
       </div>
 
       {/* SatNav */}
@@ -215,6 +314,41 @@ export default function Home() {
         <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
       </div>
 
+      {/* SEARCH WILD GRASS BUTTON & ENCOUNTER */}
+      <button
+        className="poke-button"
+        style={{ marginBottom: 18, marginTop: 0, background: "#329932", color: "white", fontWeight: "bold", fontSize: "1.13rem" }}
+        onClick={handleSearchGrass}
+      >
+        🌿 Search Wild Grass
+      </button>
+
+      {encounter && (
+        <div style={{
+          background: "rgba(0,0,0,0.65)",
+          borderRadius: 10,
+          padding: 18,
+          margin: "12px 0",
+          boxShadow: "0 4px 20px #000b",
+          maxWidth: 320,
+          textAlign: "center"
+        }}>
+          <img src={encounter.sprite} alt={encounter.name} style={{ width: 60, marginBottom: 8 }} />
+          <h3 style={{ margin: 0 }}>{encounter.name}</h3>
+          <div>Type: {encounter.type.join(", ")}</div>
+          <div>Level: {encounter.level || 1}</div>
+          <div style={{ margin: '6px 0 12px 0' }}>Region: {Array.isArray(encounter.regions_found) ? encounter.regions_found.join(", ") : encounter.regions_found}</div>
+          {game.nets > 0 ? (
+            <button className="poke-button" style={{ fontWeight: 'bold', background: '#338', color: 'white' }} onClick={handleCatch}>
+              🕸️ Use Net to Catch
+            </button>
+          ) : (
+            <div style={{ color: '#f44' }}>No nets left!</div>
+          )}
+          <div style={{ color: '#af0', marginTop: 8 }}>{encounterMsg}</div>
+        </div>
+      )}
+
       {/* Medals Box */}
       <div style={{
         background: "rgba(0,0,0,0.4)",
@@ -227,7 +361,7 @@ export default function Home() {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <b style={{width:'100%',textAlign:'center'}}>Your Medals:</b>
+        <b style={{ width: '100%', textAlign: 'center' }}>Your Medals:</b>
         {ALL_MEDALS.map(m => (
           <span
             key={m.title}
