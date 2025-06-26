@@ -856,4 +856,4 @@ export const counties = [
     description: 'Defeat the Northern Ireland Arena to complete your journey and finish the game!'
   }
 }
-]
+];
