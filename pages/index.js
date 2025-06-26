@@ -101,6 +101,32 @@ export default function Home() {
     setNets(saved.nets || 0);
   }, [router.query.county]);
 
+  // --- Begin: Keep nets/coins/game in sync with localStorage on tab focus or route change ---
+  useEffect(() => {
+    const reloadGameState = () => {
+      const saved = JSON.parse(localStorage.getItem('gameState'));
+      if (!saved) return;
+      setNets(saved.nets || 0);
+      setCoins(saved.coins || 0);
+      setGame(g => g ? { ...g, nets: saved.nets || 0, coins: saved.coins || 0 } : g);
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') reloadGameState();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    if (router.events) {
+      router.events.on('routeChangeComplete', reloadGameState);
+      return () => {
+        router.events.off('routeChangeComplete', reloadGameState);
+        document.removeEventListener('visibilitychange', handleVisibility);
+      };
+    }
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+  // --- End: Keep nets/coins/game in sync with localStorage ---
+
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
   const countyInfo = counties.find(c => c.id === currentCounty);
