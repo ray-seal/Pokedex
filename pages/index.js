@@ -22,7 +22,6 @@ const ALL_MEDALS = [
   { title: 'Northern Ireland Medal', emoji: '🏆' }
 ];
 
-// Helper: get unlocked regions based on medals in game.medals
 function getUnlockedRegions(game) {
   const unlocked = ['South'];
   if (game?.medals?.includes('South England Medal')) unlocked.push('West');
@@ -50,9 +49,6 @@ function getStartingLevel(animal) {
   if (animal.stage === 2) return 15;
   return 5;
 }
-function getMaxHP(animal) {
-  return getPokemonStats(animal).hp;
-}
 
 export default function Home() {
   const [game, setGame] = useState(null);
@@ -68,22 +64,35 @@ export default function Home() {
     router.query.county ||
     (counties.length > 0 ? counties[0].id : '');
 
-  const handleCountyChange = (countyId) => {
-    setGame(g => g ? { ...g, location: countyId } : g);
-    router.push({ pathname: "/", query: { county: countyId } });
-    setShowArena(false);
-  };
-
-  // Load game state
+  // Load or initialize save on mount
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('gameState'));
     let location = router.query.county || saved?.location || (counties.length > 0 ? counties[0].id : '');
-    if (!saved || !saved.team || saved.team.length === 0) {
-      setGame(null); // Set to null to show "Start Adventure" if needed
-      setTeam([]);
-      setCoins(0);
+
+    if (!saved) {
+      // No save: create default save, go to team page
+      const starterSave = {
+        coins: 100,
+        medals: [],
+        team: [],
+        wildlifejournal: [],
+        wildlifeProgress: {},
+        location: counties.length > 0 ? counties[0].id : "",
+      };
+      localStorage.setItem('gameState', JSON.stringify(starterSave));
+      setTimeout(() => {
+        router.push('/team');
+      }, 100);
       return;
     }
+
+    if (!saved.team || saved.team.length === 0) {
+      setGame(saved);
+      setTeam([]);
+      setCoins(saved.coins || 0);
+      return;
+    }
+
     const newTeam = saved.team.map(animal => {
       const stats = getPokemonStats(animal);
       return {
@@ -100,16 +109,13 @@ export default function Home() {
     setCoins(saved.coins || 0);
   }, [router.query.county]);
 
-  // Only unlocked regions/counties for SatNav
   const unlockedRegions = getUnlockedRegions(game);
   const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
-
   const countyInfo = counties.find(c => c.id === currentCounty);
 
-  // Handle medal/area unlock on arena win
   function handleArenaMedal(medalTitle, setUnlockedAreas) {
     setGame(g => {
-      if (g.medals?.includes(medalTitle)) return g; // already awarded
+      if (g.medals?.includes(medalTitle)) return g;
       const unlocks = [];
       if (medalTitle === "South England Medal") unlocks.push("West");
       if (medalTitle === "West England Medal") unlocks.push("North");
@@ -123,7 +129,6 @@ export default function Home() {
       if (medalTitle === "West Scotland Medal") unlocks.push("North Scotland");
       if (medalTitle === "North Scotland Medal") unlocks.push("East Scotland");
       if (medalTitle === "Scotland Medal") unlocks.push("Northern Ireland");
-      // Save medal
       const newMedals = [...(g.medals || []), medalTitle];
       const updated = { ...g, medals: newMedals };
       localStorage.setItem("gameState", JSON.stringify(updated));
@@ -136,7 +141,7 @@ export default function Home() {
     });
   }
 
-  // Reset ALL progress, with confirm
+  // RESET ALL PROGRESS
   const handleResetProgress = () => {
     if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
       localStorage.clear();
@@ -144,56 +149,17 @@ export default function Home() {
     }
   };
 
-  // If no save/team, show "Start Adventure"
-  if (!game || !game.team || game.team.length === 0) {
-    return (
-      <main style={{
-        fontFamily: 'monospace',
-        minHeight: '100vh',
-        color: 'white',
-        background: '#184218',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative'
-      }}>
-        <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
-          <b>{coins}</b>
-        </div>
+  // No team selected yet (but save exists): force to team builder
+  useEffect(() => {
+    if (game && Array.isArray(game.team) && game.team.length === 0) {
+      router.push('/team');
+    }
+  }, [game]);
 
-        <h1>Wildlife Hunter</h1>
-        <p>Welcome adventurer! Start your British wildlife journey.</p>
-        <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {router.push('/team')}}>
-          🚀 Start Adventure
-        </button>
-        <button className="poke-button" style={{ marginTop: 40, background: "#300", color: "white" }} onClick={handleResetProgress}>
-          🗑️ Reset All Progress
-        </button>
-        <style jsx>{`
-          .poke-button {
-            border: 1px solid #ccc;
-            background: #f9f9f9;
-            padding: 12px 28px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.09);
-            margin: 6px 0;
-            cursor: pointer;
-            color: #222;
-            text-decoration: none;
-            font-family: inherit;
-            font-size: 1.1rem;
-            display: inline-block;
-            transition: background 0.18s, border 0.18s;
-          }
-          .poke-button:hover {
-            background: #e0e0e0;
-            border-color: #888;
-          }
-        `}</style>
-      </main>
-    );
+  // Main screen
+  if (!game || !game.team || game.team.length === 0) {
+    // This will only flash for a moment before redirecting to /team if needed
+    return null;
   }
 
   return (
@@ -202,6 +168,7 @@ export default function Home() {
         fontFamily: 'monospace',
         minHeight: '100vh',
         color: 'white',
+        background: '#184218',
         padding: 0,
         margin: 0,
         textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
@@ -232,7 +199,11 @@ export default function Home() {
       {/* SatNav */}
       <SatNav
         currentCounty={currentCounty}
-        onChange={handleCountyChange}
+        onChange={countyId => {
+          setGame(g => g ? { ...g, location: countyId } : g);
+          router.push({ pathname: "/", query: { county: countyId } });
+          setShowArena(false);
+        }}
         counties={unlockedCounties}
       />
 
