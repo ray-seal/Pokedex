@@ -90,7 +90,7 @@ export default function TeamBuilder() {
   };
 
   // Save team and all Wildlife progress when user confirms
-  const saveTeam = () => {
+  const saveTeam = (destination = '/') => {
     let progressBank = { ...(game.wildlifeProgress || {}) };
     team.forEach(animal => {
       if (animal) {
@@ -103,7 +103,7 @@ export default function TeamBuilder() {
     });
     const updated = { ...game, team: team.filter(Boolean), wildlifeProgress: progressBank };
     localStorage.setItem("gameState", JSON.stringify(updated));
-    router.push('/arena');
+    router.push(destination);
   };
 
   const resetTeam = () => {
@@ -119,9 +119,7 @@ export default function TeamBuilder() {
     return <main style={{ fontFamily: 'monospace', padding: '20px' }}>
       <h1>🧩 Build Your Wildlife Team</h1>
       <p>You haven't caught any wildlife yet!</p>
-      <Link href="/">
-        <a className="poke-button" style={{ marginTop: '15px', display: 'inline-block' }}>🏠 Back to Home Page</a>
-      </Link>
+      <button className="poke-button" style={{ marginTop: '15px', display: 'inline-block' }} onClick={() => router.push('/')}>🏠 Go Home</button>
       <style jsx>{`
         .poke-button {
           border: 1px solid #ccc;
@@ -175,10 +173,7 @@ export default function TeamBuilder() {
         })}
       </ul>
       <button onClick={resetTeam} style={{ marginRight: '10px' }}>🗑️ Reset Team</button>
-      <button onClick={saveTeam}>✅ Save Team and Go to Arena</button>
-      <Link href="/">
-        <a className="poke-button" style={{ marginTop: '15px', display: 'inline-block' }}>🏠 Back to Home Page</a>
-      </Link>
+      <button onClick={() => saveTeam('/')}>✅ Save Team and Go Home</button>
       <style jsx>{`
         .poke-button {
           border: 1px solid #ccc;
