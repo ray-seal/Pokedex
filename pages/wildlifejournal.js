@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 export default function Pokedex() {
   const [game, setGame] = useState(null);
   const [expanded, setExpanded] = useState({});
+  const [region, setRegion] = useState("all");
+  const [animalType, setAnimalType] = useState("all");
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +17,7 @@ export default function Pokedex() {
   if (!game) return <p>Loading...</p>;
 
   const caughtCount = game.wildlifejournal.length;
-  const totalCount = 151;
+  const totalCount = data.length;
 
   function padNum(n) {
     return n.toString().padStart(3, '0');
@@ -24,6 +26,16 @@ export default function Pokedex() {
   function toggleExpand(id) {
     setExpanded(exp => ({ ...exp, [id]: !exp[id] }));
   }
+
+  // Find all unique regions/types for dropdowns
+  const regions = Array.from(new Set(data.map(a => a.region))).filter(Boolean);
+  const types = Array.from(new Set(data.map(a => a.type))).filter(Boolean);
+
+  // Filter animals for display
+  const filteredData = data.filter(p => 
+    (region === "all" || p.region === region) &&
+    (animalType === "all" || p.type === animalType)
+  );
 
   return (
     <div style={{ fontFamily: 'monospace', padding: '20px', background: '#ffe5e5', minHeight: '100vh' }}>
@@ -50,9 +62,28 @@ export default function Pokedex() {
       }}>
         You’ve caught {caughtCount} out of {totalCount} Wildlife!
       </div>
+      
+      {/* FILTERS */}
+      <div style={{ marginBottom: 18 }}>
+        <label>
+          Region:
+          <select value={region} onChange={e => setRegion(e.target.value)} style={{ marginLeft: 7 }}>
+            <option value="all">All</option>
+            {regions.map(r => <option value={r} key={r}>{r[0].toUpperCase() + r.slice(1)}</option>)}
+          </select>
+        </label>
+        <label style={{ marginLeft: 24 }}>
+          Type:
+          <select value={animalType} onChange={e => setAnimalType(e.target.value)} style={{ marginLeft: 7 }}>
+            <option value="all">All</option>
+            {types.map(t => <option value={t} key={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
+          </select>
+        </label>
+      </div>
+
       <h1>📖 Wildlife Journal</h1>
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {data.map(p => {
+        {filteredData.map(p => {
           const caught = game.wildlifejournal.includes(p.id);
           const dexNum = padNum(p.id);
           if (!caught) {
@@ -120,6 +151,9 @@ export default function Pokedex() {
                 <span style={{ fontSize: 13, color: '#555', marginLeft: 8 }}>
                   {Array.isArray(p.type) ? p.type.join(' / ') : p.type}
                 </span>
+                <span style={{ fontSize: 13, color: '#555', marginLeft: 8 }}>
+                  {p.region}
+                </span>
                 <span style={{ marginLeft: 'auto', color: '#888' }}>
                   {expanded[p.id] ? "▲" : "▼"}
                 </span>
@@ -144,6 +178,7 @@ export default function Pokedex() {
                       <div><b>Pokédex #:</b> {dexNum}</div>
                       <div><b>Name:</b> {p.name}</div>
                       <div><b>Type:</b> {Array.isArray(p.type) ? p.type.join(' / ') : p.type}</div>
+                      <div><b>Region:</b> {p.region}</div>
                       {p.stage && <div><b>Stage:</b> {p.stage}</div>}
                       {typeof p.evolves_to === 'number' && <div><b>Evolves to:</b> #{padNum(p.evolves_to)}</div>}
                       {typeof p.evolves_to === 'object' && Array.isArray(p.evolves_to) && <div><b>Evolves to:</b> {p.evolves_to.map(n => `#${padNum(n)}`).join(', ')}</div>}
