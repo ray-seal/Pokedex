@@ -14,7 +14,7 @@ export default function Pokedex() {
 
   if (!game) return <p>Loading...</p>;
 
-  const caughtCount = game.pokedex.length;
+  const caughtCount = game.wildlifejournal.length;
   const totalCount = 151;
 
   function padNum(n) {
@@ -53,7 +53,7 @@ export default function Pokedex() {
       <h1>📖 Wildlife Journal</h1>
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {data.map(p => {
-          const caught = game.pokedex.includes(p.id);
+          const caught = game.wildlifejournal.includes(p.id);
           const dexNum = padNum(p.id);
           if (!caught) {
             return (
