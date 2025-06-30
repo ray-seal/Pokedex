@@ -3,13 +3,19 @@ import { useRouter } from 'next/router';
 import { useGame } from '../context/GameContext';
 
 const ITEMS = [
-  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', price: 25 },
-  { key: 'greatballs', name: 'Medium Net', emoji: '🪢', price: 50 },
-  { key: 'ultraballs', name: 'Large Net', emoji: '🪣', price: 75 },
-  { key: 'masterballs', name: 'Large Chains', emoji: '⛓️', price: 500 },
-  { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', price: 30 },
-  { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🧴', price: 60 },
-  { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', price: 100 },
+  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', price: 25, type: 'ball' },
+  { key: 'greatballs', name: 'Medium Net', emoji: '🦑', price: 50, type: 'ball' },
+  { key: 'ultraballs', name: 'Large Net', emoji: '🦈', price: 75, type: 'ball' },
+  { key: 'masterballs', name: 'Large Chains', emoji: '⚓️', price: 500, type: 'ball' },
+  { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', price: 30, type: 'heal' },
+  { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🥤', price: 60, type: 'heal' },
+  { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', price: 100, type: 'heal' },
+  { key: 'fwrod', name: 'Freshwater Rod', emoji: '🎣', price: 100, oneTime: true, type: 'rod' },
+  { key: 'swrod', name: 'Saltwater Rod', emoji: '🪝', price: 150, oneTime: true, type: 'rod' },
+  { key: 'maggots', name: 'Maggots (Bait)', emoji: '🪱', price: 5, type: 'bait' },
+  { key: 'lugworm', name: 'Lug-worm (Bait)', emoji: '🪱', price: 7, type: 'bait' },
+  { key: 'boot', name: 'Old Boot', emoji: '🥾', price: 8, sellOnly: true, type: 'junk' },
+  { key: 'lure', name: 'Lost Lure', emoji: '🪝', price: 12, sellOnly: true, type: 'junk' }
 ];
 
 export default function Store() {
@@ -37,6 +43,10 @@ export default function Store() {
   if (!game) return <p>Loading store...</p>;
 
   function handleBuy(item) {
+    if (item.oneTime && game[item.key] > 0) {
+      setMessage(`You already own ${item.name}!`);
+      return;
+    }
     const quantity = buyQuantities[item.key] || 1;
     const maxBuy = Math.floor((game.coins || 0) / item.price);
     if (maxBuy < 1) {
@@ -69,7 +79,6 @@ export default function Store() {
     setGame(updated);
     setMessage(`Sold ${qty} ${item.name}${qty > 1 ? 's' : ''} for ${totalGain} coins!`);
     setSellQuantities(q => ({ ...q, [item.key]: updated[item.key] > 0 ? 1 : 0 }));
-    setBuyQuantities(q => ({ ...q, [item.key]: Math.floor(updated.coins / item.price) >= 1 ? 1 : 0 }));
   }
 
   function renderQuantityDropdown(type, item, max) {
@@ -78,12 +87,7 @@ export default function Store() {
     return (
       <select
         value={type === "buy" ? (buyQuantities[item.key] || 1) : (sellQuantities[item.key] || 1)}
-        style={{
-          fontSize: 15,
-          padding: '1px 5px',
-          borderRadius: 5,
-          marginRight: 7,
-        }}
+        style={{ fontSize: 15, padding: '1px 5px', borderRadius: 5, marginRight: 7 }}
         onChange={e => {
           const val = parseInt(e.target.value, 10);
           if (type === "buy") setBuyQuantities(q => ({ ...q, [item.key]: val }));
@@ -98,23 +102,22 @@ export default function Store() {
   }
 
   return (
-    <main
-      style={{
-        fontFamily: 'monospace',
-        minHeight: '100vh',
-        background: 'url("/main-bg.jpg") no-repeat center center',
-        backgroundSize: 'cover',
-        color: 'white',
-        padding: 0,
-        margin: 0,
-        textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
+    <main style={{
+      fontFamily: 'monospace',
+      minHeight: '100vh',
+      background: 'url("/main-bg.jpg") no-repeat center center',
+      backgroundSize: 'cover',
+      color: 'white',
+      padding: 0,
+      margin: 0,
+      textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    }}>
       <h1 style={{ marginTop: 32 }}>🛒 Wildlife Supply Store</h1>
       <h2>Coins: <span style={{ color: '#ffde59' }}>{game.coins}</span></h2>
+
       <div style={{ display: 'flex', gap: 18, margin: '18px 0 0 0' }}>
         <button
           className="poke-button"
@@ -154,7 +157,7 @@ export default function Store() {
                 </tr>
               </thead>
               <tbody>
-                {ITEMS.map(item => {
+                {ITEMS.filter(item => !item.sellOnly && (!item.oneTime || !(game[item.key] > 0))).map(item => {
                   const owned = game[item.key] || 0;
                   const maxBuy = Math.floor((game.coins || 0) / item.price);
                   return (
@@ -198,7 +201,7 @@ export default function Store() {
                 </tr>
               </thead>
               <tbody>
-                {ITEMS.map(item => {
+                {ITEMS.filter(item => game[item.key] > 0 && (!item.oneTime || item.sellOnly)).map(item => {
                   const owned = game[item.key] || 0;
                   const maxSell = owned;
                   return (
