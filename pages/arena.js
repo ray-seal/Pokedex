@@ -183,6 +183,7 @@ export default function Arena() {
   const [turn, setTurn] = useState('player');
   const [showBag, setShowBag] = useState(false);
   const [disabledSwitch, setDisabledSwitch] = useState(false);
+  const [showHealBetween, setShowHealBetween] = useState(false); // NEW: between-battles healing option
   const router = useRouter();
 
   // On mount, load player and generate NPC
@@ -248,6 +249,7 @@ export default function Arena() {
     setMessage(`${npcName} wants to battle! They have ${team.length} Pokémon.`);
     setShowBag(false);
     setDisabledSwitch(false);
+    setShowHealBetween(false);
   }
 
   function handleSwitch(idx) {
@@ -323,6 +325,7 @@ export default function Arena() {
         setMessage(`You defeated ${npcName}! Your ${newTeam[activeIdx].name} gained ${xpGained} XP!`);
         setBattleOver(true);
         setRewardClaimed(false);
+        setShowHealBetween(true); // Show between-battles healing option
       }
     } else {
       setMessage(`You dealt ${playerDamage} damage!`);
@@ -358,6 +361,7 @@ export default function Arena() {
       } else {
         setMessage(`${npcName}'s ${npcMon.name} dealt ${npcDamage}! All your Pokémon fainted! You lose the battle.`);
         setBattleOver(true);
+        setShowHealBetween(false);
       }
     } else {
       setMessage(`${npcName}'s ${npcMon.name} dealt ${npcDamage} damage!`);
@@ -383,6 +387,57 @@ export default function Arena() {
     setGame(updated);
     localStorage.setItem('gameState', JSON.stringify(updated));
     router.push('/center');
+  }
+
+  // --- NEW: Heal all using available potions between battles ---
+  function healTeamWithBag() {
+    let updatedTeam = [...team];
+    let updatedGame = { ...game };
+    let potionsLeft = updatedGame.potions || 0;
+    let superpotionsLeft = updatedGame.superpotions || 0;
+    let fullhealsLeft = updatedGame.fullheals || 0;
+
+    // Try to heal each fainted/low HP member with available items, prioritizing fullheals > superpotions > potions
+    updatedTeam = updatedTeam.map((mon) => {
+      if (mon.hp >= mon.maxhp) return mon;
+      if (fullhealsLeft > 0) {
+        fullhealsLeft--;
+        return { ...mon, hp: mon.maxhp };
+      }
+      let healed = { ...mon };
+      if (superpotionsLeft > 0 && healed.hp < healed.maxhp) {
+        const heal = Math.min(50, healed.maxhp - healed.hp);
+        healed.hp += heal;
+        superpotionsLeft--;
+      }
+      if (potionsLeft > 0 && healed.hp < healed.maxhp) {
+        const heal = Math.min(10, healed.maxhp - healed.hp);
+        healed.hp += heal;
+        potionsLeft--;
+      }
+      healed.hp = Math.min(healed.hp, healed.maxhp);
+      return healed;
+    });
+
+    updatedGame.team = updatedTeam;
+    updatedGame.potions = potionsLeft;
+    updatedGame.superpotions = superpotionsLeft;
+    updatedGame.fullheals = fullhealsLeft;
+    setTeam(updatedTeam);
+    setGame(updatedGame);
+    localStorage.setItem('gameState', JSON.stringify(updatedGame));
+    setMessage("Your team used available healing items!");
+    setShowHealBetween(false);
+    setTimeout(() => {
+      battleAnother();
+    }, 800);
+  }
+
+  function continueWithoutHealing() {
+    setShowHealBetween(false);
+    setTimeout(() => {
+      battleAnother();
+    }, 300);
   }
 
   function battleAnother() {
@@ -415,6 +470,7 @@ export default function Arena() {
         activeIdx={activeIdx}
         onUseItem={handleUseBagItem}
       />
+
       <h1>🏟️ Battle Arena</h1>
       <h2>Your Team</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
@@ -494,11 +550,25 @@ export default function Arena() {
           ) : (
             <h3>🎉 You received {reward} coins!</h3>
           )}
-          <div style={{ marginTop: 18 }}>
-            <button className="poke-button" onClick={battleAnother}>
-              ⚔️ Battle Another NPC Trainer
-            </button>
-          </div>
+          {rewardClaimed && showHealBetween && (
+            <div style={{ marginTop: 16, background: "rgba(0,0,0,0.4)", padding: 18, borderRadius: 12 }}>
+              <h3>Prepare for the Next Battle!</h3>
+              <p>Would you like to use available healing items on your team before the next battle, or continue without healing?</p>
+              <button className="poke-button" onClick={healTeamWithBag} style={{ marginRight: 8 }}>
+                🧪 Heal Team (use available potions)
+              </button>
+              <button className="poke-button" onClick={continueWithoutHealing}>
+                Continue Without Healing
+              </button>
+            </div>
+          )}
+          {!showHealBetween && (
+            <div style={{ marginTop: 18 }}>
+              <button className="poke-button" onClick={battleAnother}>
+                ⚔️ Battle Another NPC Trainer
+              </button>
+            </div>
+          )}
         </div>
       )}
       <button className="poke-button" onClick={goToCenter} style={{ marginTop: '22px' }}>
