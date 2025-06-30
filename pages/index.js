@@ -18,149 +18,189 @@ const ITEMS = [
   { key: 'lure', name: 'Lost Lure', emoji: '🪝', type: 'junk' },
 ];
 
+const LOCATIONS = [
+  "East Sussex",
+  "West Sussex",
+  "Kent",
+  "Surrey",
+  "London"
+];
+
+const ARENAS = {
+  "East Sussex": { name: "Brighton Arena", emoji: "🏟️" },
+  // Add more arenas and their locations if needed
+};
+
 export default function Home() {
   const { game, setGame } = useGame();
   const [message, setMessage] = useState('');
   const [collapsed, setCollapsed] = useState(true);
+  const [showTeamSelect, setShowTeamSelect] = useState(false);
+  const [teamInput, setTeamInput] = useState('');
+  const [locationSelect, setLocationSelect] = useState(game?.location || LOCATIONS[0]);
   const router = useRouter();
   const [wildlifejournal, setWildlifejournal] = useState([]);
+  const [showInventory, setShowInventory] = useState(false);
 
   useEffect(() => {
-    // Load wildlifejournal from somewhere (API, localStorage, or static import)
-    // Here, assume window.wildlifejournal exists or import it
+    // Simulate wildlifejournal loading
     if (window && window.wildlifejournal) setWildlifejournal(window.wildlifejournal);
-    // Or import wildlifejournal from a file if available
   }, []);
 
-  // FISHING LOGIC
   function goFreshwaterFishing() {
     if (!game.maggots || game.maggots < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
     }
-    const candidates = wildlifejournal.filter(w => w && w.habitat === 'freshwater');
-    const junk = [
-      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-    ];
-    // 80% wildlife, 20% junk
-    const pool = [
-      ...candidates,
-      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
-    ];
-    const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, maggots: game.maggots - 1 };
-    if (!catchItem.id) {
-      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-    } else {
-      if (!updated.wildlifejournal.includes(catchItem.id)) {
-        updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-        setMessage(`You caught a ${catchItem.name}!`);
-      } else {
-        setMessage(`You caught another ${catchItem.name}!`);
-      }
-    }
-    setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
+    setMessage("You went freshwater fishing!"); // Stub
+    // ...actual fishing logic...
   }
-
   function goSaltwaterFishing() {
     if (!game.lugworm || game.lugworm < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
     }
-    const candidates = wildlifejournal.filter(w => w && w.habitat === 'saltwater');
-    const junk = [
-      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-    ];
-    const pool = [
-      ...candidates,
-      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
-    ];
-    const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, lugworm: game.lugworm - 1 };
-    if (!catchItem.id) {
-      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-    } else {
-      if (!updated.wildlifejournal.includes(catchItem.id)) {
-        updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-        setMessage(`You caught a ${catchItem.name}!`);
-      } else {
-        setMessage(`You caught another ${catchItem.name}!`);
-      }
-    }
-    setGame(updated);
-    localStorage.setItem('gameState', JSON.stringify(updated));
+    setMessage("You went saltwater fishing!"); // Stub
+    // ...actual fishing logic...
+  }
+  function searchLongGrass() {
+    setMessage("You searched the long grass!"); // Stub
+    // ...actual logic...
+  }
+  function handleTeamChange() {
+    setGame({ ...game, team: teamInput });
+    setShowTeamSelect(false);
+    setTeamInput('');
+  }
+  function handleLocationChange(e) {
+    setLocationSelect(e.target.value);
+    setGame({ ...game, location: e.target.value });
   }
 
   if (!game) return <p>Loading...</p>;
 
+  // Medals display stub (customize as needed)
+  const medalsOwned = (game.medals || []).map(m => (
+    <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
+  ));
+
   return (
     <main style={{ fontFamily: 'monospace', minHeight: '100vh', background: '#f9f9f9', color: '#222' }}>
+      {/* Inventory Dropdown */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={() => setShowInventory(!showInventory)}
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,
-          width: '100vw',
+          right: 0,
           zIndex: 999,
-          fontSize: 20,
+          fontSize: 18,
           background: '#222',
           color: '#fff',
           border: 'none',
-          padding: '8px 0'
+          padding: '8px 16px'
         }}>
-        {collapsed ? "▼ Show Inventory" : "▲ Hide Inventory"}
+        {showInventory ? "▲ Hide Inventory" : "▼ Show Inventory"}
       </button>
-      {!collapsed && (
+      {showInventory && (
         <ul style={{
           listStyle: 'none',
           padding: 0,
-          marginTop: 40,
+          marginTop: 48,
           background: '#333',
           color: '#fff',
-          borderRadius: 0,
           position: 'fixed',
           top: 40,
-          left: 0,
-          width: '100vw',
+          right: 0,
+          width: 240,
           zIndex: 998,
           maxHeight: '40vh',
-          overflowY: 'scroll'
+          overflowY: 'scroll',
+          borderRadius: 0,
         }}>
-          {ITEMS.map(item =>
-            game[item.key] > 0 ? (
-              <li key={item.key} style={{
-                fontSize: 18,
-                marginBottom: 12,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12
-              }}>
-                <span style={{ fontSize: 22 }}>{item.emoji}</span>
-                <span>{item.name}</span>
-                <b style={{ marginLeft: 2 }}>{game[item.key]}</b>
-              </li>
-            ) : null
+          {ITEMS.filter(item => game[item.key] > 0).map(item =>
+            <li key={item.key} style={{
+              fontSize: 18,
+              marginBottom: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12
+            }}>
+              <span style={{ fontSize: 22 }}>{item.emoji}</span>
+              <span>{item.name}</span>
+              <b style={{ marginLeft: 2 }}>{game[item.key]}</b>
+            </li>
           )}
         </ul>
       )}
-      <div style={{ paddingTop: 70 }}>
+
+      {/* Main UI */}
+      <div style={{ paddingTop: 70, maxWidth: 480, margin: "0 auto" }}>
         <h1>Wildlife Hunter</h1>
-        <button className='poke-button' onClick={() => {/* Check long grass logic */ }}>
-          🌾 Check Long Grass
-        </button>
-        {game.fwrod > 0 && (
-          <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: 12 }}>🎣 Go Freshwater Fishing</button>
+        {/* Satnav / Location Selector */}
+        <div style={{ margin: "18px 0" }}>
+          <label>
+            <b>Current Location: </b>
+            <select value={game.location || locationSelect} onChange={handleLocationChange}>
+              {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+            </select>
+          </label>
+        </div>
+
+        {/* Arena if at correct location */}
+        {ARENAS[game.location] && (
+          <div style={{ margin: '12px 0', padding: '10px', border: '2px solid #888', borderRadius: 8, background: '#ffe' }}>
+            <h2>{ARENAS[game.location].emoji} {ARENAS[game.location].name}</h2>
+            <button className="poke-button" style={{marginTop:8}}>🏆 Enter Arena Battle</button>
+          </div>
         )}
-        {game.swrod > 0 && (
-          <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: 12 }}>🪝 Go Saltwater Fishing</button>
+
+        {/* Current Team Display */}
+        <div style={{margin: '10px 0'}}>
+          <b>Current Team:</b> {game.team || <span style={{color:'#888'}}>No team selected</span>}{" "}
+          <button className="poke-button" style={{marginLeft:8}} onClick={() => setShowTeamSelect(true)}>
+            Choose Team
+          </button>
+        </div>
+        {showTeamSelect && (
+          <div style={{ margin: "12px 0" }}>
+            <input
+              value={teamInput}
+              onChange={e => setTeamInput(e.target.value)}
+              placeholder="Enter team name"
+              style={{fontSize:16, marginRight:8}}
+            />
+            <button className="poke-button" onClick={handleTeamChange}>Set Team</button>
+            <button className="poke-button" style={{marginLeft:8}} onClick={()=>setShowTeamSelect(false)}>Cancel</button>
+          </div>
         )}
+
+        {/* Medals */}
+        <div style={{margin: '10px 0'}}>
+          <b>Medals:</b> {medalsOwned.length ? medalsOwned : <span style={{color:'#888'}}>None yet!</span>}
+        </div>
+
+        {/* Wildlife Journal */}
+        <button className="poke-button" style={{margin:'8px 0'}} onClick={()=>router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
+
+        {/* Main Actions */}
+        <div style={{margin: '20px 0'}}>
+          <button className='poke-button' onClick={searchLongGrass} style={{marginRight:8}}>
+            🌾 Search Long Grass
+          </button>
+          {game.fwrod > 0 && (
+            <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: '0 8px' }}>
+              🎣 Fish Freshwater
+            </button>
+          )}
+          {game.swrod > 0 && (
+            <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: '0 8px' }}>
+              🪝 Fish Saltwater
+            </button>
+          )}
+        </div>
         <p style={{ marginTop: 16 }}>{message}</p>
+
         <button className='poke-button' onClick={() => router.push('/store')}>Go to Store</button>
         <button className='poke-button' onClick={() => router.push('/bag')}>Open Inventory</button>
       </div>
