@@ -157,43 +157,43 @@ export default function Store() {
                   <th>Buy</th>
                 </tr>
               </thead>
-              <tbody>
-                {ITEMS.filter(item => {
-                    // Never show junk in buy tab
-                    if (item.sellOnly) return false;
-                    // Only show oneTime (rods) if not owned
-                    if (item.oneTime && (game[item.key] || 0) > 0) 
-                  return false;
-                    return true;
-                  })
-                  .map(item => {
-                    const owned = game[item.key] || 0;
-                    const maxBuy = Math.floor((game.coins || 0) / item.price);
-                    return (
-                      <tr key={item.key}>
-                        <td>
-                          <span style={{ fontSize: 20 }}>{item.emoji}</span> {item.name}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>{owned}</td>
-                        <td style={{ color: '#ffde59', fontWeight: 'bold' }}>{item.price}🪙</td>
-                        <td>
-                          {renderQuantityDropdown("buy", item, maxBuy)}
-                          <button
-                            className="poke-button"
-                            style={{ fontSize: 14, padding: '2px 12px' }}
-                            disabled={maxBuy < 1}
-                            onClick={() => handleBuy(item)}
-                          >
-                            Buy
-                          </button>
-                          <span style={{ fontSize: 13, color: '#aaa', marginLeft: 5 }}>
-                            {maxBuy > 0 ? `(max: ${maxBuy})` : ''}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
+             <tbody>
+  {ITEMS.filter(item => {
+      // Never show junk in buy tab
+      if (item.sellOnly) return false;
+      // Only show oneTime (rods) if not owned
+      if (item.oneTime && (game[item.key] || 0) > 0) return false;
+      // Show everything else (including bait)
+      return true;
+    })
+    .map(item => {
+      const owned = game[item.key] || 0;
+      const maxBuy = Math.floor((game.coins || 0) / item.price);
+      return (
+        <tr key={item.key}>
+          <td>
+            <span style={{ fontSize: 20 }}>{item.emoji}</span> {item.name}
+          </td>
+          <td style={{ textAlign: 'center' }}>{owned}</td>
+          <td style={{ color: '#ffde59', fontWeight: 'bold' }}>{item.price}🪙</td>
+          <td>
+            {renderQuantityDropdown("buy", item, maxBuy)}
+            <button
+              className="poke-button"
+              style={{ fontSize: 14, padding: '2px 12px' }}
+              disabled={maxBuy < 1}
+              onClick={() => handleBuy(item)}
+            >
+              Buy
+            </button>
+            <span style={{ fontSize: 13, color: '#aaa', marginLeft: 5 }}>
+              {maxBuy > 0 ? `(max: ${maxBuy})` : ''}
+            </span>
+          </td>
+        </tr>
+      );
+    })}
+</tbody>
             </table>
           </>
         )}
