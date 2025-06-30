@@ -158,12 +158,12 @@ export default function Store() {
                 </tr>
               </thead>
               <tbody>
-                {ITEMS
-                  .filter(item => {
+                {ITEMS.filter(item => {
                     // Never show junk in buy tab
                     if (item.sellOnly) return false;
                     // Only show oneTime (rods) if not owned
-                    if (item.oneTime && (game[item.key] || 0) > 0) return false;
+                    if (item.oneTime && (game[item.key] || 0) > 0) 
+                  return false;
                     return true;
                   })
                   .map(item => {
