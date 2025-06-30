@@ -1,101 +1,67 @@
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/router';
-import { useGame } from '../context/GameContext';
-import SatNav from '../components/SatNav';
-import ArenaChallenge from '../components/ArenaChallenge';
-import { counties } from '../data/regions';
-import wildlifejournal from '../public/wildlifejournal.json';
-import { getPokemonStats } from '../lib/pokemonStats';
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import './index.css'; // Optional styling
 
-// Add this at top: import nipplejs
-import nipplejs from 'nipplejs';
+mapboxgl.accessToken = 'pk.eyJ1IjoicmF5c2VhbCIsImEiOiJjbWNqbmRxdngwMnpmMmtxcnAyaGF3YXRrIn0.XMUTirooUCUzGuI0CAQ2hA';
 
-export default function Home() {
-  const mapRef = useRef(null);
+const Index = () => {
+  const mapContainerRef = useRef(null);
+  const [map, setMap] = useState(null);
+  const [position, setPosition] = useState({ lng: -0.1276, lat: 51.5072 }); // London start
   const markerRef = useRef(null);
-  const panoramaRef = useRef(null);
-  const [virtualPos, setVirtualPos] = useState(null);
-  const [mapReady, setMapReady] = useState(false);
 
-  // ... existing state/context/hooks here ...
+  const moveMarker = (dir) => {
+    const step = 0.0005;
+    let { lat, lng } = position;
 
-  // 1. Get real GPS once, set virtual position
+    if (dir === 'up') lat += step;
+    if (dir === 'down') lat -= step;
+    if (dir === 'left') lng -= step;
+    if (dir === 'right') lng += step;
+
+    setPosition({ lat, lng });
+    if (markerRef.current) markerRef.current.setLngLat([lng, lat]);
+    if (map) map.flyTo({ center: [lng, lat], speed: 0.5 });
+  };
+
   useEffect(() => {
-    if (!mapReady) {
-      navigator.geolocation.getCurrentPosition(({ coords }) => {
-        const pos = {
-          lat: coords.latitude,
-          lng: coords.longitude
-        };
-        setVirtualPos(pos);
-        initMap(pos);
-      }, (err) => console.error(err));
-    }
-  }, [mapReady]);
+    const initMap = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [position.lng, position.lat],
+      zoom: 16,
+      pitch: 60,
+      bearing: -17.6,
+      antialias: true,
+    });
 
-  // 2. Initialize Google Map + StreetView + Joystick
-  function initMap(initialPos) {
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: initialPos,
-      zoom: 17
-    });
-    markerRef.current = new window.google.maps.Marker({
-      position: initialPos,
-      map
-    });
-    panoramaRef.current = new window.google.maps.StreetViewPanorama(
-      document.getElementById('street-view'), {
-        position: initialPos,
-        pov: { heading: 165, pitch: 0 },
-        visible: true
-      }
-    );
-    map.setStreetView(panoramaRef.current);
-    initJoystick(map, panoramaRef.current);
-    setMapReady(true);
-  }
+    const marker = new mapboxgl.Marker({ color: 'red' })
+      .setLngLat([position.lng, position.lat])
+      .addTo(initMap);
 
-  // 3. Joystick setup and movement logic
-  function initJoystick(map, panorama) {
-    const zone = document.getElementById('joystick-zone');
-    zone.style.position = 'absolute';
-    zone.style.bottom = '20px';
-    zone.style.left = '20px';
-    zone.style.width = '120px';
-    zone.style.height = '120px';
-    const manager = nipplejs.create({
-      zone,
-      mode: 'static',
-      position: { left: '60px', bottom: '60px' },
-      color: 'gray',
-      size: 100
-    });
-    const speed = 0.00005; // adjust as needed
+    markerRef.current = marker;
+    setMap(initMap);
 
-    manager.on('move', (_, data) => {
-      if (!virtualPos) return;
-      const dx = data.vector.x * speed;
-      const dy = -data.vector.y * speed; // Y-axis invert
-      const next = {
-        lat: virtualPos.lat + dy,
-        lng: virtualPos.lng + dx
-      };
-      setVirtualPos(next);
-      markerRef.current.setPosition(next);
-      map.panTo(next);
-      panorama.setPosition(next);
-    });
-  }
+    return () => initMap.remove();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'w') moveMarker('up');
+      if (e.key === 'ArrowDown' || e.key === 's') moveMarker('down');
+      if (e.key === 'ArrowLeft' || e.key === 'a') moveMarker('left');
+      if (e.key === 'ArrowRight' || e.key === 'd') moveMarker('right');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [position, map]);
 
   return (
-    <main style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
-      {/* Map & StreetView */}
-      <div ref={mapRef} id="map" style={{ width: '50%', height: '100%', float: 'left' }} />
-      <div id="street-view" style={{ width: '50%', height: '100%', float: 'right' }} />
-      <div id="joystick-zone" />
-
-      {/* Existing UI */}
-      {/* ... existing markup from your return ... */}
-    </main>
+    <div>
+      <div ref={mapContainerRef} style={{ width: '100vw', height: '100vh' }} />
+    </div>
   );
-}
+};
+
+export default Index;
