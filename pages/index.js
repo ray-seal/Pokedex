@@ -66,7 +66,6 @@ export default function Home() {
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
   const [encounter, setEncounter] = useState(null);
   const [encounterMsg, setEncounterMsg] = useState("");
-  const [chosenNet, setChosenNet] = useState(null);
   const router = useRouter();
 
   const currentCounty =
@@ -188,412 +187,126 @@ export default function Home() {
     return NET_TYPES.some(nt => (game[nt.key] || 0) > 0);
   }
 
-  // If no save, show intro/start
-  if (!game) {
-    return (
-      <main style={{
-        fontFamily: 'monospace',
-        minHeight: '100vh',
-        color: 'white',
-        background: '#184218',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative'
-      }}>
-        <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
-          <b>0</b>
-          <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
-          <b style={{marginLeft:2}}>0</b>
-        </div>
-        <h1>Wildlife Hunter</h1>
-        <p>Welcome adventurer! Start your British wildlife journey.</p>
-        <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {
-          const starterSave = {
-            coins: 100,
-            pokeballs: 10,
-            greatballs: 0,
-            ultraballs: 0,
-            masterballs: 0,
-            medals: [],
-            team: [],
-            wildlifejournal: [],
-            wildlifeProgress: {},
-            duplicates: {},
-            location: counties.length > 0 ? counties[0].id : "",
-          };
-          localStorage.setItem('gameState', JSON.stringify(starterSave));
-          window.location.href = '/';
-        }}>
-          🚀 Start Adventure
-        </button>
-        <button className="poke-button" style={{ marginTop: 40, background: "#300", color: "white" }} onClick={handleResetProgress}>
-          🗑️ Reset All Progress
-        </button>
-        <style jsx>{`
-          .poke-button {
-            border: 1px solid #ccc;
-            background: #f9f9f9;
-            padding: 12px 28px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.09);
-            margin: 6px 0;
-            cursor: pointer;
-            color: #222;
-            text-decoration: none;
-            font-family: inherit;
-            font-size: 1.1rem;
-            display: inline-block;
-            transition: background 0.18s, border 0.18s;
-          }
-          .poke-button:hover {
-            background: #e0e0e0;
-            border-color: #888;
-          }
-        `}</style>
-      </main>
-    );
-  }
-  function goFreshwaterFishing() {
-  if (!game.maggots || game.maggots < 1) {
-    setMessage("You need maggots to fish freshwater! Buy some from the store.");
-    return;
-  }
-  const candidates = wildlifejournal.filter(w => w && w.habitat === 'freshwater');
-  const junk = [
-    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-  ];
-  const pool = [...candidates, ...junk];
-  const catchItem = pool[Math.floor(Math.random() * pool.length)];
-  let updated = { ...game, maggots: game.maggots - 1 };
-  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
-    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-  } else {
-    // Add animal to journal
-    if (!updated.wildlifejournal.includes(catchItem.id)) {
-      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-      setMessage(`You caught a ${catchItem.name}!`);
-    } else {
-      setMessage(`You caught another ${catchItem.name}!`);
-    }
-  }
-  setGame(updated);
-  localStorage.setItem('gameState', JSON.stringify(updated));
-}
-
-function goSaltwaterFishing() {
-  if (!game.lugworm || game.lugworm < 1) {
-    setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
-    return;
-  }
-  const candidates = wildlifejournal.filter(w => w && w.habitat === 'saltwater');
-  const junk = [
-    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-  ];
-  const pool = [...candidates, ...junk];
-  const catchItem = pool[Math.floor(Math.random() * pool.length)];
-  let updated = { ...game, lugworm: game.lugworm - 1 };
-  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
-    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-  } else {
-    if (!updated.wildlifejournal.includes(catchItem.id)) {
-      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-      setMessage(`You caught a ${catchItem.name}!`);
-    } else {
-      setMessage(`You caught another ${catchItem.name}!`);
-    }
-  }
-  setGame(updated);
-  localStorage.setItem('gameState', JSON.stringify(updated));
-}
+  const [chosenNet, setChosenNet] = useState(null);
+  const [message, setMessage] = useState('');
 
   return (
-    <main
-      style={{
-        fontFamily: 'monospace',
-        minHeight: '100vh',
-        color: 'white',
-        background: '#184218',
-        padding: 0,
-        margin: 0,
-        textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative',
-      }}
-    >
-      {/* Coins and nets visual */}
-      <div style={{
-        position: "fixed",
-        top: 18,
-        right: 24,
-        fontSize: 22,
-        background: "#252",
-        borderRadius: 10,
-        padding: "6px 18px",
-        boxShadow: "0 2px 8px #0009",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
-        zIndex: 10
-      }}>
-        <div>
-          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
-          <b>{game.coins || 0}</b>
+    <>
+      <SatNav />
+      <div className="p-4 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4">Wildlife Exploration Game</h1>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Current Location</h2>
+          <p>{countyInfo ? countyInfo.name : 'Unknown'}</p>
         </div>
-        <div style={{ fontSize: 17, marginTop: 3 }}>
-          {NET_TYPES.map(nt => (
-            <span key={nt.key} title={nt.label} style={{marginRight: 6}}>
-              {nt.emoji}{nt.short}: <b>{game[nt.key] || 0}</b>
-            </span>
-          ))}
+
+        <div className="mb-6">
+          <button
+            onClick={handleSearchGrass}
+            className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded"
+            disabled={!userHasAnyNet()}
+          >
+            Search the Grass for Wildlife
+          </button>
+          {!userHasAnyNet() && (
+            <p className="text-red-600 mt-2">You need at least one net to search!</p>
+          )}
         </div>
-      </div>
 
-      {/* SatNav */}
-      <SatNav
-        currentCounty={currentCounty}
-        onChange={countyId => {
-          setGame(g => g ? { ...g, location: countyId } : g);
-          router.push({ pathname: "/", query: { county: countyId } });
-          setShowArena(false);
-        }}
-        counties={unlockedCounties}
-      />
+        {encounter && (
+          <div className="mb-6 border p-4 rounded bg-gray-100">
+            <h3 className="text-lg font-bold mb-2">Encountered: {encounter.name}</h3>
+            <p>{encounter.description || 'A wild creature!'}</p>
+            <p>Level: {getStartingLevel(encounter)}</p>
 
-      {/* NAVIGATION BUTTONS */}
-      <div style={{ display: 'flex', gap: 16, margin: '14px 0' }}>
-        <button className="poke-button" onClick={() => router.push('/store')}>🛒 Store</button>
-        <button className="poke-button" onClick={() => router.push('/lab')}>🧑‍🔬 Lab</button>
-        <button className="poke-button" onClick={() => router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
-        <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
-      </div>
-
-      {(!game.team || game.team.length === 0) && (
-        <div style={{margin: "20px", color: "#ffd700", fontWeight: "bold", fontSize: "1.1em"}}>
-          You have no team yet! Search wild grass to catch wildlife, then build your team.
-        </div>
-      )}
-      {game.wildlifejournal && game.wildlifejournal.length > 0 && (!game.team || game.team.length === 0) && (
-        <button className="poke-button" style={{marginBottom:18, marginTop:0}} onClick={() => router.push('/team')}>
-          🧑‍🤝‍🧑 Build Your Team
-        </button>
-      )}
-
-      {/* SEARCH WILD GRASS BUTTON & ENCOUNTER */}
-      <button
-        className="poke-button"
-        style={{ marginBottom: 18, marginTop: 0, background: "#329932", color: "white", fontWeight: "bold", fontSize: "1.13rem" }}
-        onClick={handleSearchGrass}
-      >
-        🌿 Search Wild Grass
-      </button>
-      {game.fwrod > 0 && (
-  <button className='poke-button' onClick={goFreshwaterFishing} style={{margin: 12}}>🎣 Go Freshwater Fishing</button>
-)}
-{game.swrod > 0 && (
-  <button className='poke-button' onClick={goSaltwaterFishing} style={{margin: 12}}>🪝 Go Saltwater Fishing</button>
-)}
-
-      {encounter && (
-        <div style={{
-          background: "rgba(0,0,0,0.65)",
-          borderRadius: 10,
-          padding: 18,
-          margin: "12px 0",
-          boxShadow: "0 4px 20px #000b",
-          maxWidth: 360,
-          textAlign: "center"
-        }}>
-          <img src={encounter.sprite} alt={encounter.name} style={{ width: 60, marginBottom: 8 }} />
-          <h3 style={{ margin: 0 }}>{encounter.name}</h3>
-          <div>Type: {encounter.type.join(", ")}</div>
-          <div>Level: {encounter.level || 1}</div>
-          <div style={{ margin: '6px 0 12px 0' }}>Region: {Array.isArray(encounter.regions_found) ? encounter.regions_found.join(", ") : encounter.regions_found}</div>
-          {userHasAnyNet() ? (
-            <>
-              <div style={{ marginBottom: 8, marginTop: 4 }}>Choose a net to use:</div>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                {NET_TYPES.filter(nt => (game[nt.key] || 0) > 0).map(nt => (
+            <div className="mt-4">
+              <h4 className="font-semibold">Choose a Net to Catch</h4>
+              <div className="flex gap-2 mt-2">
+                {NET_TYPES.map(({ key, label, emoji }) => (
                   <button
-                    key={nt.key}
-                    className="poke-button"
-                    style={{ fontWeight: 'bold', background: '#338', color: 'white', minWidth: 90 }}
-                    onClick={() => {
-                      setChosenNet(nt.key);
-                      handleCatchWithNet(nt.key);
-                    }}
+                    key={key}
+                    className={`px-3 py-1 border rounded ${
+                      chosenNet === key ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                    }`}
+                    onClick={() => setChosenNet(key)}
+                    disabled={!game[key] || game[key] < 1}
+                    title={`${label} (${game[key] || 0} left)`}
                   >
-                    {nt.emoji} {nt.label} ({game[nt.key]})
+                    {emoji} {label} ({game[key] || 0})
                   </button>
                 ))}
               </div>
-            </>
-          ) : (
-            <div style={{ color: '#f44', marginTop: 6 }}>No nets left!</div>
-          )}
-          <div style={{ color: '#af0', marginTop: 8 }}>{encounterMsg}</div>
-        </div>
-      )}
-
-      {/* Medals Box */}
-      <div style={{
-        background: "rgba(0,0,0,0.4)",
-        padding: 14,
-        borderRadius: 10,
-        margin: '18px 0',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 10,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <b style={{ width: '100%', textAlign: 'center' }}>Your Medals:</b>
-        {ALL_MEDALS.map(m => (
-          <span
-            key={m.title}
-            title={m.title}
-            style={{
-              fontSize: 28,
-              opacity: game?.medals?.includes(m.title) ? 1 : 0.18,
-              filter: game?.medals?.includes(m.title) ? 'drop-shadow(0 0 4px gold)' : 'none',
-              margin: 2
-            }}
-          >
-            {m.emoji}
-          </span>
-        ))}
-      </div>
-
-      {/* Arena Button */}
-      {countyInfo?.arena && countyInfo.id === currentCounty && (
-        <button
-          className="poke-button"
-          style={{ margin: '14px 0', fontWeight: 'bold', fontSize: '1.1rem' }}
-          onClick={() => setShowArena(true)}
-        >
-          🏟️ Enter {countyInfo.arena.name}
-        </button>
-      )}
-
-      {/* Arena Modal */}
-      {showArena && countyInfo?.arena && (
-        <ArenaChallenge
-          arena={countyInfo.arena}
-          game={game}
-          setGame={setGame}
-          onMedalEarned={handleArenaMedal}
-        />
-      )}
-      {arenaUnlockMsg && (
-        <div style={{
-          background: "#173e11",
-          color: "#2fd80a",
-          fontWeight: "bold",
-          borderRadius: 8,
-          padding: "8px 18px",
-          margin: "10px 0"
-        }}>{arenaUnlockMsg}</div>
-      )}
-
-      {/* County info */}
-      <div
-        style={{
-          background: "rgba(0,0,0,0.35)",
-          padding: 16,
-          borderRadius: 12,
-          marginBottom: 24,
-          maxWidth: 350,
-        }}
-      >
-        <h2 style={{ margin: "0 0 8px 0" }}>
-          {countyInfo?.name || currentCounty}
-        </h2>
-        <div style={{ fontSize: 16, marginBottom: 6 }}>
-          {countyInfo?.description}
-        </div>
-        {countyInfo?.arena && (
-          <div style={{ fontSize: 15, marginTop: 5 }}>
-            <b>Arena:</b> {countyInfo.arena.name}
-            <br />
-            <b>Reward:</b> {countyInfo.arena.reward}
+              <button
+                onClick={() => {
+                  if (chosenNet) {
+                    handleCatchWithNet(chosenNet);
+                  } else {
+                    setEncounterMsg("Please choose a net first.");
+                  }
+                }}
+                className="mt-3 bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded"
+              >
+                Use Net
+              </button>
+              {encounterMsg && <p className="mt-2 text-green-700">{encounterMsg}</p>}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* TEAM DISPLAY */}
-      {game.team && game.team.length > 0 && (
-        <>
-          <h2>Your Team</h2>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {team.map((animal, idx) => (
-              <div key={animal.id}
-                style={{
-                  border: idx === activeIdx ? '2px solid gold' : '2px solid #fff',
-                  borderRadius: 12,
-                  background: animal.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
-                  padding: 12,
-                  minWidth: 95,
-                  textAlign: 'center',
-                  opacity: animal.hp > 0 ? 1 : 0.5,
-                  position: 'relative'
-                }}>
-                <img src={animal.sprite} alt={animal.name} width="48" /><br />
-                <strong>{animal.name}</strong><br />
-                Level: {animal.level}<br />
-                XP: {animal.xp} / {xpForNextLevel(animal.level)}<br />
-                HP: {animal.hp} / {animal.maxhp}
-                <br />
-                <button
-                  disabled={idx === activeIdx || animal.hp <= 0}
-                  className="poke-button"
-                  style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || animal.hp <= 0) ? 0.5 : 1 }}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Your Team</h2>
+          {team.length === 0 ? (
+            <p>You have no animals on your team yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {team.map((animal, idx) => (
+                <li
+                  key={animal.id}
+                  className={`p-2 border rounded cursor-pointer ${
+                    idx === activeIdx ? 'bg-yellow-200' : 'bg-white'
+                  }`}
                   onClick={() => setActiveIdx(idx)}
-                >{idx === activeIdx ? 'Active' : 'Switch'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+                >
+                  {animal.name} (Lvl {animal.level}) HP: {animal.hp}/{animal.maxhp}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {/* RESET ALL PROGRESS BUTTON */}
-      <button
-        className="poke-button"
-        style={{ background: "#300", color: "white", marginTop: 32, marginBottom: 18, fontWeight: 'bold' }}
-        onClick={handleResetProgress}
-      >
-        🗑️ Reset All Progress
-      </button>
+        <div className="mb-6">
+          <button
+            onClick={() => setShowArena(true)}
+            className="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded"
+          >
+            Challenge Arena
+          </button>
+          {arenaUnlockMsg && (
+            <p className="mt-2 text-indigo-600 font-semibold">{arenaUnlockMsg}</p>
+          )}
+        </div>
 
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 10px 18px;
-          border-radius: 7px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
-          margin: 6px 0;
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.18s, border 0.18s;
-        }
-        .poke-button:hover {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-      `}</style>
-    </main>
+        {showArena && (
+          <ArenaChallenge
+            team={team}
+            onClose={() => setShowArena(false)}
+            onWin={(medalTitle) => {
+              handleArenaMedal(medalTitle);
+              setShowArena(false);
+            }}
+          />
+        )}
+
+        <div className="mt-10">
+          <button
+            onClick={handleResetProgress}
+            className="bg-red-700 hover:bg-red-900 text-white px-4 py-2 rounded"
+          >
+            Reset All Progress
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
