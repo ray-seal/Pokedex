@@ -57,6 +57,7 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
 
+  // Load game from localStorage only on client
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -67,12 +68,14 @@ export default function Home() {
     }
   }, []);
 
+  // Persist game changes to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && game) {
       window.localStorage.setItem('game', JSON.stringify(game));
     }
   }, [game]);
 
+  // Fetch wildlife journal data from /public
   useEffect(() => {
     fetch('/wildlifejournal.json')
       .then(res => res.json())
@@ -80,6 +83,7 @@ export default function Home() {
       .catch(() => setWildlifeJournal([]));
   }, []);
 
+  // Sync selectedTeam with game.team
   useEffect(() => {
     if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
   }, [game?.team]);
@@ -98,49 +102,92 @@ export default function Home() {
   // When displaying team, only show if they're caught
   const filteredTeam = team.filter(id => caughtAnimals.some(a => a.id === id));
 
-  function getRandomFromType(type) {
-    const pool = wildlifeJournal.filter(a => Array.isArray(a.type) && a.type.includes(type));
-    if (!pool.length) return null;
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-
+  // GRASS SEARCH
   function searchLongGrass() {
-    const grassAnimal = getRandomFromType("grass");
-    if (!grassAnimal) {
+    const candidates = wildlifeJournal.filter(
+      w => w && Array.isArray(w.type) && w.type.includes('grass')
+    );
+    if (!candidates.length) {
       setMessage("No wild grass-type animals found!");
       return;
     }
-    setMessage(`A wild ${grassAnimal.name} appeared!`);
+    const found = candidates[Math.floor(Math.random() * candidates.length)];
+    setMessage(`You found a wild ${found.name}!`);
   }
 
+  // FRESHWATER FISHING
   function goFreshwaterFishing() {
-    if ((game.maggots || 0) < 1) {
+    if (!game.maggots || game.maggots < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
     }
-    const animal = getRandomFromType("freshwater");
-    if (!animal) {
-      setMessage("No freshwater animals found!");
+    const candidates = wildlifeJournal.filter(
+      w => w && Array.isArray(w.type) && w.type.includes('freshwater')
+    );
+    const junk = [
+      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
+      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
+    ];
+    // 80% wildlife, 20% junk
+    const pool = [
+      ...candidates,
+      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
+    ];
+    if (!pool.length) {
+      setMessage("No freshwater animals available!");
       return;
     }
-    setMessage(`You fished up a ${animal.name}!`);
-    const nextJournal = journal.includes(animal.id) ? journal : [...journal, animal.id];
-    setGame({ ...game, maggots: (game.maggots || 0) - 1, journal: nextJournal });
+    const catchItem = pool[Math.floor(Math.random() * pool.length)];
+    let updated = { ...game, maggots: game.maggots - 1 };
+    if (!catchItem.id) {
+      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
+    } else {
+      if (!updated.journal.includes(catchItem.id)) {
+        updated.journal = [...updated.journal, catchItem.id];
+        setMessage(`You caught a ${catchItem.name}!`);
+      } else {
+        setMessage(`You caught another ${catchItem.name}!`);
+      }
+    }
+    setGame(updated);
   }
 
+  // SALTWATER FISHING (uses same structure)
   function goSaltwaterFishing() {
-    if ((game.lugworm || 0) < 1) {
+    if (!game.lugworm || game.lugworm < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
     }
-    const animal = getRandomFromType("saltwater");
-    if (!animal) {
-      setMessage("No saltwater animals found!");
+    const candidates = wildlifeJournal.filter(
+      w => w && Array.isArray(w.type) && w.type.includes('saltwater')
+    );
+    const junk = [
+      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
+      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
+    ];
+    const pool = [
+      ...candidates,
+      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
+    ];
+    if (!pool.length) {
+      setMessage("No saltwater animals available!");
       return;
     }
-    setMessage(`You fished up a ${animal.name}!`);
-    const nextJournal = journal.includes(animal.id) ? journal : [...journal, animal.id];
-    setGame({ ...game, lugworm: (game.lugworm || 0) - 1, journal: nextJournal });
+    const catchItem = pool[Math.floor(Math.random() * pool.length)];
+    let updated = { ...game, lugworm: game.lugworm - 1 };
+    if (!catchItem.id) {
+      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
+    } else {
+      if (!updated.journal.includes(catchItem.id)) {
+        updated.journal = [...updated.journal, catchItem.id];
+        setMessage(`You caught a ${catchItem.name}!`);
+      } else {
+        setMessage(`You caught another ${catchItem.name}!`);
+      }
+    }
+    setGame(updated);
   }
 
   function handleLocationChange(e) {
@@ -305,12 +352,12 @@ export default function Home() {
           </button>
           {(game.fwrod || 0) > 0 && (
             <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: '0 8px' }}>
-              🎣 Fish Freshwater
+              🎣 Go Freshwater Fishing
             </button>
           )}
           {(game.swrod || 0) > 0 && (
             <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: '0 8px' }}>
-              🪝 Fish Saltwater
+              🪝 Go Saltwater Fishing
             </button>
           )}
         </div>
