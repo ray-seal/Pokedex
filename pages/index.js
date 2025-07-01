@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useGame } from '../context/GameContext';
 import { useRouter } from 'next/router';
 
 const ITEMS = [
@@ -30,39 +29,78 @@ const ARENAS = {
   "East Sussex": { name: "Brighton Arena", emoji: "🏟️" },
 };
 
+const DEFAULT_GAME = {
+  team: [],
+  journal: [],
+  maggots: 0,
+  lugworm: 0,
+  fwrod: 0,
+  swrod: 0,
+  pokeballs: 0,
+  greatballs: 0,
+  ultraballs: 0,
+  masterballs: 0,
+  potions: 0,
+  superpotions: 0,
+  fullheals: 0,
+  boot: 0,
+  lure: 0,
+  location: LOCATIONS[0],
+};
+
 export default function Home() {
-  const { game, setGame } = useGame();
+  const router = useRouter();
+  const [game, setGame] = useState(null);
+  const [wildlifeJournal, setWildlifeJournal] = useState(null);
   const [message, setMessage] = useState('');
   const [showTeamSelect, setShowTeamSelect] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState([]);
-  const [locationSelect, setLocationSelect] = useState(LOCATIONS[0]);
   const [showInventory, setShowInventory] = useState(false);
-  const [wildlifeJournal, setWildlifeJournal] = useState(null); // null, not []
-  const router = useRouter();
 
-  // SSR-safe: fetch wildlifeJournal on client
+  // Load game state from localStorage (client-side only)
   useEffect(() => {
-    let cancelled = false;
-    fetch('/wildlifejournal.json')
-      .then(res => res.json())
-      .then(data => {
-        if (!cancelled) setWildlifeJournal(Array.isArray(data) ? data : []);
-      });
-    return () => { cancelled = true; };
+    if (typeof window === 'undefined') return;
+    const saved = window.localStorage.getItem('game');
+    let g;
+    if (saved) {
+      try {
+        g = JSON.parse(saved);
+      } catch {
+        g = { ...DEFAULT_GAME };
+      }
+    } else {
+      g = { ...DEFAULT_GAME };
+    }
+    setGame(g);
   }, []);
 
-  // Wait for game or wildlifeJournal to load
-  if (!game || wildlifeJournal === null) return <p>Loading...</p>;
-
-  const journal = Array.isArray(game.journal) ? game.journal : [];
-  const team = Array.isArray(game.team) ? game.team : [];
-
-  // Sync selectedTeam with context
+  // Persist game state to localStorage
   useEffect(() => {
-    setSelectedTeam(team);
-  }, [game.team]);
+    if (typeof window === 'undefined') return;
+    if (game) {
+      window.localStorage.setItem('game', JSON.stringify(game));
+    }
+  }, [game]);
 
+  // Fetch wildlifeJournal.json on client
+  useEffect(() => {
+    fetch('/wildlifejournal.json')
+      .then(res => res.json())
+      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []));
+  }, []);
+
+  // Sync selectedTeam with game.team
+  useEffect(() => {
+    if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
+  }, [game?.team]);
+
+  // Defensive empty arrays
+  const journal = Array.isArray(game?.journal) ? game.journal : [];
+  const team = Array.isArray(game?.team) ? game.team : [];
+
+  // Helper: Get random animal by type
   function getRandomFromType(type) {
+    if (!wildlifeJournal) return null;
     const pool = wildlifeJournal.filter(a => Array.isArray(a.type) && a.type.includes(type));
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -75,7 +113,7 @@ export default function Home() {
       return;
     }
     setMessage(`A wild ${grassAnimal.name} appeared!`);
-    // You might want to add to journal or trigger encounter here
+    // Add to journal? (optional for your logic)
   }
 
   function goFreshwaterFishing() {
@@ -109,7 +147,6 @@ export default function Home() {
   }
 
   function handleLocationChange(e) {
-    setLocationSelect(e.target.value);
     setGame({ ...game, location: e.target.value });
   }
 
@@ -136,6 +173,9 @@ export default function Home() {
   if (journal.length >= 6) medals.push("Silver");
   if (journal.length >= 12) medals.push("Gold");
   if (journal.length >= 18) medals.push("Platinum");
+
+  // Block UI until both are loaded client-side
+  if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
   return (
     <main style={{
@@ -199,12 +239,11 @@ export default function Home() {
         <div style={{ margin: "18px 0" }}>
           <label>
             <b>Current Location: </b>
-            <select value={game.location || locationSelect} onChange={handleLocationChange}>
+            <select value={game.location || LOCATIONS[0]} onChange={handleLocationChange}>
               {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </label>
         </div>
-
         {/* Arena if at correct location */}
         {ARENAS[game.location] && (
           <div style={{ margin: '12px 0', padding: '10px', border: '2px solid #888', borderRadius: 8, background: '#ffe' }}>
@@ -212,7 +251,6 @@ export default function Home() {
             <button className="poke-button" style={{marginTop:8}}>🏆 Enter Arena Battle</button>
           </div>
         )}
-
         {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
           <b>Current Team:</b>
@@ -256,17 +294,14 @@ export default function Home() {
             <button className="poke-button" style={{marginLeft:8}} onClick={()=>setShowTeamSelect(false)}>Cancel</button>
           </div>
         )}
-
         {/* Medals */}
         <div style={{margin: '10px 0'}}>
           <b>Medals:</b> {medals.length ? medals.map(m => (
             <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
           )) : <span style={{color:'#888'}}>None yet!</span>}
         </div>
-
         {/* Wildlife Journal */}
         <button className="poke-button" style={{margin:'8px 0'}} onClick={()=>router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
-
         {/* Main Actions */}
         <div style={{margin: '20px 0'}}>
           <button className='poke-button' onClick={searchLongGrass} style={{marginRight:8}}>
@@ -284,7 +319,6 @@ export default function Home() {
           )}
         </div>
         <p style={{ marginTop: 16 }}>{message}</p>
-
         <button className='poke-button' onClick={() => router.push('/store')}>Go to Store</button>
         <button className='poke-button' onClick={() => router.push('/bag')}>Open Inventory</button>
       </div>
