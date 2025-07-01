@@ -1,383 +1,537 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useGame } from '../context/GameContext';
+import SatNav from '../components/SatNav';
+import ArenaChallenge from '../components/ArenaChallenge';
+import { counties } from '../data/regions';
+import wildlifejournal from '../public/wildlifejournal.json';
+import { getPokemonStats } from '../lib/pokemonStats';
 
-const ITEMS = [
-  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️' },
-  { key: 'greatballs', name: 'Medium Net', emoji: '🦑' },
-  { key: 'ultraballs', name: 'Large Net', emoji: '🦈' },
-  { key: 'masterballs', name: 'Large Chains', emoji: '⚓️' },
-  { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪' },
-  { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🥤' },
-  { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧' },
-  { key: 'fwrod', name: 'Freshwater Rod', emoji: '🎣' },
-  { key: 'swrod', name: 'Saltwater Rod', emoji: '🪝' },
-  { key: 'maggots', name: 'Maggots (Bait)', emoji: '🪱' },
-  { key: 'lugworm', name: 'Lug-worm (Bait)', emoji: '🪱' },
-  { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-  { key: 'lure', name: 'Lost Lure', emoji: '🪝' },
+const ALL_MEDALS = [
+  { title: 'South England Medal', emoji: '🏅' },
+  { title: 'West England Medal', emoji: '🥇' },
+  { title: 'North England Medal', emoji: '🥈' },
+  { title: 'England Medal', emoji: '🏆' },
+  { title: 'South Wales Medal', emoji: '🏅' },
+  { title: 'West Wales Medal', emoji: '🥇' },
+  { title: 'North Wales Medal', emoji: '🥈' },
+  { title: 'Wales Medal', emoji: '🏆' },
+  { title: 'South Scotland Medal', emoji: '🏅' },
+  { title: 'West Scotland Medal', emoji: '🥇' },
+  { title: 'North Scotland Medal', emoji: '🥈' },
+  { title: 'Scotland Medal', emoji: '🏆' },
+  { title: 'Northern Ireland Medal', emoji: '🏆' }
 ];
 
-const LOCATIONS = [
-  "East Sussex",
-  "West Sussex",
-  "Kent",
-  "Surrey",
-  "London"
+const NET_TYPES = [
+  { key: 'pokeballs', label: 'Small Net', emoji: '🕸️', short: 'S' },
+  { key: 'greatballs', label: 'Medium Net', emoji: '🪢', short: 'M' },
+  { key: 'ultraballs', label: 'Large Net', emoji: '🪣', short: 'L' },
+  { key: 'masterballs', label: 'Large Chains', emoji: '⛓️', short: 'LC' }
 ];
 
-const ARENAS = {
-  "East Sussex": { name: "Brighton Arena", emoji: "🏟️" },
-};
+function getUnlockedRegions(game) {
+  const unlocked = ['South'];
+  if (game?.medals?.includes('South England Medal')) unlocked.push('West');
+  if (game?.medals?.includes('West England Medal')) unlocked.push('North');
+  if (game?.medals?.includes('North England Medal')) unlocked.push('East');
+  if (game?.medals?.includes('England Medal')) unlocked.push('South Wales');
+  if (game?.medals?.includes('South Wales Medal')) unlocked.push('West Wales');
+  if (game?.medals?.includes('West Wales Medal')) unlocked.push('North Wales');
+  if (game?.medals?.includes('North Wales Medal')) unlocked.push('East Wales');
+  if (game?.medals?.includes('Wales Medal')) unlocked.push('South Scotland');
+  if (game?.medals?.includes('South Scotland Medal')) unlocked.push('West Scotland');
+  if (game?.medals?.includes('West Scotland Medal')) unlocked.push('North Scotland');
+  if (game?.medals?.includes('North Scotland Medal')) unlocked.push('East Scotland');
+  if (game?.medals?.includes('Scotland Medal')) unlocked.push('Northern Ireland');
+  return unlocked;
+}
 
-const DEFAULT_GAME = {
-  team: [],
-  journal: [],
-  maggots: 0,
-  lugworm: 0,
-  fwrod: 0,
-  swrod: 0,
-  pokeballs: 0,
-  greatballs: 0,
-  ultraballs: 0,
-  masterballs: 0,
-  potions: 0,
-  superpotions: 0,
-  fullheals: 0,
-  boot: 0,
-  lure: 0,
-  coins: 100,
-  location: LOCATIONS[0],
-};
+function xpForNextLevel(level) {
+  if (level >= 100) return Infinity;
+  return Math.ceil(10 * Math.pow(1.2, level - 5));
+}
+function getStartingLevel(animal) {
+  if (animal.legendary) return 50;
+  if (animal.stage === 3) return 30;
+  if (animal.stage === 2) return 15;
+  return 5;
+}
 
 export default function Home() {
+  const { game, setGame, reloadGame } = useGame();
+  const [team, setTeam] = useState([]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [showArena, setShowArena] = useState(false);
+  const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
+  const [encounter, setEncounter] = useState(null);
+  const [encounterMsg, setEncounterMsg] = useState("");
+  const [chosenNet, setChosenNet] = useState(null);
   const router = useRouter();
-  const [game, setGame] = useState(null);
-  const [wildlifeJournal, setWildlifeJournal] = useState(null);
-  const [message, setMessage] = useState('');
-  const [showTeamSelect, setShowTeamSelect] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState([]);
-  const [showInventory, setShowInventory] = useState(false);
-  const [wildEncounter, setWildEncounter] = useState(null);
 
-  const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
+  const currentCounty =
+    game?.location ||
+    router.query.county ||
+    (counties.length > 0 ? counties[0].id : '');
+
+  // Reload on tab focus for up-to-date state
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') reloadGame();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [reloadGame]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const saved = window.localStorage.getItem('gameState');
-      setGame(saved ? JSON.parse(saved) : { ...DEFAULT_GAME });
-    } catch {
-      setGame({ ...DEFAULT_GAME });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && game) {
-      window.localStorage.setItem('gameState', JSON.stringify(game));
-    }
+    if (!game) return;
+    if (!game.team) game.team = [];
+    if (!game.duplicates) game.duplicates = {};
+    if (!game.wildlifejournal) game.wildlifejournal = [];
+    const newTeam = game.team.map(animal => {
+      const stats = getPokemonStats(animal);
+      return {
+        ...animal,
+        level: animal.level || getStartingLevel(animal),
+        xp: animal.xp || 0,
+        hp: typeof animal.hp === "number" ? animal.hp : stats.hp,
+        maxhp: stats.hp
+      };
+    });
+    setTeam(newTeam);
+    setActiveIdx(0);
   }, [game]);
 
-  useEffect(() => {
-    fetch('/wildlifejournal.json')
-      .then(res => res.json())
-      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []))
-      .catch(() => setWildlifeJournal([]));
-  }, []);
+  const unlockedRegions = getUnlockedRegions(game);
+  const unlockedCounties = counties.filter(c => unlockedRegions.includes(c.region));
+  const countyInfo = counties.find(c => c.id === currentCounty);
 
-  useEffect(() => {
-    if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
-  }, [game?.team]);
-
-  if (!game || !wildlifeJournal) return <p>Loading...</p>;
-
-  const journal = Array.isArray(game.journal) ? game.journal : [];
-  const team = Array.isArray(game.team) ? game.team : [];
-  const caughtAnimals = wildlifeJournal.filter(animal => animal && journal.includes(animal.id));
-  const filteredTeam = team.filter(id => caughtAnimals.some(a => a.id === id));
-
-  function searchLongGrass() {
-    const candidates = wildlifeJournal.filter(
-      w => w && Array.isArray(w.type) && w.type.includes('grass')
-    );
-    if (!candidates.length) {
-      setMessage("No wild grass-type animals found!");
-      return;
-    }
-    const found = candidates[Math.floor(Math.random() * candidates.length)];
-    setWildEncounter(found);
-    setMessage(`🌾 A wild ${found.name} appeared! Choose a net to catch it.`);
-  }
-
-  function tryCatch(animal, ballKey) {
-    const updated = { ...game };
-    updated[ballKey] = getNum(updated[ballKey]) - 1;
-
-    const successChance = {
-      pokeballs: 0.4,
-      greatballs: 0.6,
-      ultraballs: 0.8,
-      masterballs: 1.0
-    }[ballKey];
-
-    const caught = Math.random() < successChance;
-    if (caught) {
-      if (!updated.journal.includes(animal.id)) {
-        updated.journal = [...updated.journal, animal.id];
-        setMessage(`🎉 You caught ${animal.name} with a ${ITEMS.find(i => i.key === ballKey).name}!`);
-      } else {
-        setMessage(`🎉 You caught another ${animal.name}!`);
+  function handleArenaMedal(medalTitle, setUnlockedAreas) {
+    setGame(g => {
+      if (g.medals?.includes(medalTitle)) return g;
+      const unlocks = [];
+      if (medalTitle === "South England Medal") unlocks.push("West");
+      if (medalTitle === "West England Medal") unlocks.push("North");
+      if (medalTitle === "North England Medal") unlocks.push("East");
+      if (medalTitle === "England Medal") unlocks.push("South Wales");
+      if (medalTitle === "South Wales Medal") unlocks.push("West Wales");
+      if (medalTitle === "West Wales Medal") unlocks.push("North Wales");
+      if (medalTitle === "North Wales Medal") unlocks.push("East Wales");
+      if (medalTitle === "Wales Medal") unlocks.push("South Scotland");
+      if (medalTitle === "South Scotland Medal") unlocks.push("West Scotland");
+      if (medalTitle === "West Scotland Medal") unlocks.push("North Scotland");
+      if (medalTitle === "North Scotland Medal") unlocks.push("East Scotland");
+      if (medalTitle === "Scotland Medal") unlocks.push("Northern Ireland");
+      const newMedals = [...(g.medals || []), medalTitle];
+      const updated = { ...g, medals: newMedals };
+      localStorage.setItem("gameState", JSON.stringify(updated));
+      setUnlockedAreas && setUnlockedAreas(unlocks);
+      if (unlocks.length) {
+        setArenaUnlockMsg(`New areas unlocked: ${unlocks.join(', ')}`);
+        setTimeout(() => setArenaUnlockMsg(''), 5000);
       }
-    } else {
-      setMessage(`😢 ${animal.name} escaped your ${ITEMS.find(i => i.key === ballKey).name}!`);
-    }
-    setWildEncounter(null);
-    setGame(updated);
-  }
-
-  function goFreshwaterFishing() {
-    if (getNum(game.fwrod) < 1) {
-      setMessage("You need a Freshwater Rod to fish freshwater!");
-      return;
-    }
-    if (getNum(game.maggots) < 1) {
-      setMessage("You need maggots to fish freshwater! Buy some from the store.");
-      return;
-    }
-    const candidates = wildlifeJournal.filter(
-      w => w && Array.isArray(w.type) && w.type.includes('freshwater')
-    );
-    const junk = [
-      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-    ];
-    const pool = [
-      ...candidates,
-      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
-    ];
-    if (!pool.length) {
-      setMessage("No freshwater animals available!");
-      return;
-    }
-    const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, maggots: getNum(game.maggots) - 1 };
-    if (!catchItem.id) {
-      updated[catchItem.key] = getNum(updated[catchItem.key]) + 1;
-      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-    } else {
-      if (!updated.journal.includes(catchItem.id)) {
-        updated.journal = [...updated.journal, catchItem.id];
-        setMessage(`🎣 You caught a ${catchItem.name}!`);
-      } else {
-        setMessage(`🎣 You caught another ${catchItem.name}!`);
-      }
-    }
-    setGame(updated);
-  }
-
-  function goSaltwaterFishing() {
-    if (getNum(game.swrod) < 1) {
-      setMessage("You need a Saltwater Rod to fish saltwater!");
-      return;
-    }
-    if (getNum(game.lugworm) < 1) {
-      setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
-      return;
-    }
-    const candidates = wildlifeJournal.filter(
-      w => w && Array.isArray(w.type) && w.type.includes('saltwater')
-    );
-    const junk = [
-      { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-      { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-    ];
-    const pool = [
-      ...candidates,
-      ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
-    ];
-    if (!pool.length) {
-      setMessage("No saltwater animals available!");
-      return;
-    }
-    const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, lugworm: getNum(game.lugworm) - 1 };
-    if (!catchItem.id) {
-      updated[catchItem.key] = getNum(updated[catchItem.key]) + 1;
-      setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-    } else {
-      if (!updated.journal.includes(catchItem.id)) {
-        updated.journal = [...updated.journal, catchItem.id];
-        setMessage(`🪝 You caught a ${catchItem.name}!`);
-      } else {
-        setMessage(`🪝 You caught another ${catchItem.name}!`);
-      }
-    }
-    setGame(updated);
-  }
-
-  function handleLocationChange(e) {
-    setGame({ ...game, location: e.target.value });
-  }
-
-  function handleTeamChange() {
-    const validTeam = selectedTeam.filter(id => caughtAnimals.some(a => a.id === id)).slice(0, 6);
-    setGame({ ...game, team: validTeam });
-    setShowTeamSelect(false);
-  }
-
-  function toggleTeamMember(id) {
-    setSelectedTeam(prev => {
-      if (prev.includes(id)) return prev.filter(i => i !== id);
-      if (prev.length < 6) return [...prev, id];
-      return prev;
+      return updated;
     });
   }
 
-  const medals = [];
-  if (journal.length >= 3) medals.push("Bronze");
-  if (journal.length >= 6) medals.push("Silver");
-  if (journal.length >= 12) medals.push("Gold");
-  if (journal.length >= 18) medals.push("Platinum");
+  function handleSearchGrass() {
+    const wildPool = wildlifejournal.filter(a => !a.legendary);
+    const random = wildPool[Math.floor(Math.random() * wildPool.length)];
+    setEncounter(random);
+    setEncounterMsg("");
+    setChosenNet(null);
+  }
+
+  // This will be called when user selects a net and clicks "Use Net"
+  function handleCatchWithNet(netKey) {
+    if (!game[netKey] || game[netKey] < 1) {
+      setEncounterMsg("You don't have any of that net left!");
+      return;
+    }
+    const alreadyCaught = (game.wildlifejournal || []).includes(encounter.id);
+    const newCount = (game[netKey] || 0) - 1;
+    let newJournal = [...(game.wildlifejournal || [])];
+    let newDuplicates = { ...(game.duplicates || {}) };
+    let msg = "";
+
+    if (!alreadyCaught) {
+      newJournal.push(encounter.id);
+      msg = `You caught a ${encounter.name}!`;
+    } else {
+      newDuplicates[encounter.id] = (newDuplicates[encounter.id] || 0) + 1;
+      msg = `You caught another ${encounter.name}! (Added to duplicates for Lab)`;
+    }
+
+    const updatedGame = {
+      ...game,
+      [netKey]: newCount,
+      wildlifejournal: newJournal,
+      duplicates: newDuplicates
+    };
+
+    setGame(updatedGame);
+    setEncounterMsg(msg);
+    setChosenNet(null);
+  }
+
+  const handleResetProgress = () => {
+    if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+  };
+
+  // Helper: does the user have any nets?
+  function userHasAnyNet() {
+    return NET_TYPES.some(nt => (game[nt.key] || 0) > 0);
+  }
+
+  // If no save, show intro/start
+  if (!game) {
+    return (
+      <main style={{
+        fontFamily: 'monospace',
+        minHeight: '100vh',
+        color: 'white',
+        background: '#184218',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative'
+      }}>
+        <div style={{ position: "fixed", top: 18, right: 24, fontSize: 22, background: "#252", borderRadius: 10, padding: "6px 18px", boxShadow: "0 2px 8px #0009", display: "flex", alignItems: "center" }}>
+          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+          <b>0</b>
+          <span style={{ margin: "0 0 0 16px", fontSize: 20 }}>🕸️</span>
+          <b style={{marginLeft:2}}>0</b>
+        </div>
+        <h1>Wildlife Hunter</h1>
+        <p>Welcome adventurer! Start your British wildlife journey.</p>
+        <button className="poke-button" style={{ fontSize: 22, marginTop: 18 }} onClick={() => {
+          const starterSave = {
+            coins: 100,
+            pokeballs: 10,
+            greatballs: 0,
+            ultraballs: 0,
+            masterballs: 0,
+            medals: [],
+            team: [],
+            wildlifejournal: [],
+            wildlifeProgress: {},
+            duplicates: {},
+            location: counties.length > 0 ? counties[0].id : "",
+          };
+          localStorage.setItem('gameState', JSON.stringify(starterSave));
+          window.location.href = '/';
+        }}>
+          🚀 Start Adventure
+        </button>
+        <button className="poke-button" style={{ marginTop: 40, background: "#300", color: "white" }} onClick={handleResetProgress}>
+          🗑️ Reset All Progress
+        </button>
+        <style jsx>{`
+          .poke-button {
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            padding: 12px 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+            margin: 6px 0;
+            cursor: pointer;
+            color: #222;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: background 0.18s, border 0.18s;
+          }
+          .poke-button:hover {
+            background: #e0e0e0;
+            border-color: #888;
+          }
+        `}</style>
+      </main>
+    );
+  }
 
   return (
-    <main style={{
-      fontFamily: 'monospace',
-      minHeight: '100vh',
-      background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)',
-      color: '#222'
-    }}>
-      <div style={{position:'fixed',top:0,right:0,zIndex:999}}>
-        <button
-          onClick={() => setShowInventory(!showInventory)}
-          style={{
-            fontSize: 18,
-            background: '#222',
-            color: '#fff',
-            border: 'none',
-            padding: '8px 16px'
-          }}>
-          {showInventory ? "▲ Hide Inventory" : "▼ Show Inventory"}
+    <main
+      style={{
+        fontFamily: 'monospace',
+        minHeight: '100vh',
+        color: 'white',
+        background: '#184218',
+        padding: 0,
+        margin: 0,
+        textShadow: '0 2px 8px #000, 0 0px 2px #000, 2px 2px 8px #000, 0 0 4px #000',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        position: 'relative',
+      }}
+    >
+      {/* Coins and nets visual */}
+      <div style={{
+        position: "fixed",
+        top: 18,
+        right: 24,
+        fontSize: 22,
+        background: "#252",
+        borderRadius: 10,
+        padding: "6px 18px",
+        boxShadow: "0 2px 8px #0009",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        zIndex: 10
+      }}>
+        <div>
+          <span style={{ fontSize: 26, marginRight: 7 }}>🪙</span>
+          <b>{game.coins || 0}</b>
+        </div>
+        <div style={{ fontSize: 17, marginTop: 3 }}>
+          {NET_TYPES.map(nt => (
+            <span key={nt.key} title={nt.label} style={{marginRight: 6}}>
+              {nt.emoji}{nt.short}: <b>{game[nt.key] || 0}</b>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* SatNav */}
+      <SatNav
+        currentCounty={currentCounty}
+        onChange={countyId => {
+          setGame(g => g ? { ...g, location: countyId } : g);
+          router.push({ pathname: "/", query: { county: countyId } });
+          setShowArena(false);
+        }}
+        counties={unlockedCounties}
+      />
+
+      {/* NAVIGATION BUTTONS */}
+      <div style={{ display: 'flex', gap: 16, margin: '14px 0' }}>
+        <button className="poke-button" onClick={() => router.push('/store')}>🛒 Store</button>
+        <button className="poke-button" onClick={() => router.push('/lab')}>🧑‍🔬 Lab</button>
+        <button className="poke-button" onClick={() => router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
+        <button className="poke-button" onClick={() => router.push('/team')}>🧑‍🤝‍🧑 Choose Team</button>
+      </div>
+
+      {(!game.team || game.team.length === 0) && (
+        <div style={{margin: "20px", color: "#ffd700", fontWeight: "bold", fontSize: "1.1em"}}>
+          You have no team yet! Search wild grass to catch wildlife, then build your team.
+        </div>
+      )}
+      {game.wildlifejournal && game.wildlifejournal.length > 0 && (!game.team || game.team.length === 0) && (
+        <button className="poke-button" style={{marginBottom:18, marginTop:0}} onClick={() => router.push('/team')}>
+          🧑‍🤝‍🧑 Build Your Team
         </button>
-        {showInventory && (
-          <ul style={{
-            listStyle: 'none',
-            padding: 0,
-            marginTop: 0,
-            background: '#333',
-            color: '#fff',
-            width: 240,
-            zIndex: 998,
-            maxHeight: '40vh',
-            overflowY: 'scroll',
-            borderRadius: 0,
-          }}>
-            {ITEMS.filter(item => getNum(game[item.key]) > 0).map(item =>
-              <li key={item.key} style={{
-                fontSize: 18,
-                marginBottom: 12,
-                display: '                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '4px 8px',
-                borderBottom: '1px solid #555'
-              }}>
-                <span>{item.emoji} {item.name}</span>
-                <span>x{getNum(game[item.key])}</span>
-              </li>
-            )}
-          </ul>
+      )}
+
+      {/* SEARCH WILD GRASS BUTTON & ENCOUNTER */}
+      <button
+        className="poke-button"
+        style={{ marginBottom: 18, marginTop: 0, background: "#329932", color: "white", fontWeight: "bold", fontSize: "1.13rem" }}
+        onClick={handleSearchGrass}
+      >
+        🌿 Search Wild Grass
+      </button>
+
+      {encounter && (
+        <div style={{
+          background: "rgba(0,0,0,0.65)",
+          borderRadius: 10,
+          padding: 18,
+          margin: "12px 0",
+          boxShadow: "0 4px 20px #000b",
+          maxWidth: 360,
+          textAlign: "center"
+        }}>
+          <img src={encounter.sprite} alt={encounter.name} style={{ width: 60, marginBottom: 8 }} />
+          <h3 style={{ margin: 0 }}>{encounter.name}</h3>
+          <div>Type: {encounter.type.join(", ")}</div>
+          <div>Level: {encounter.level || 1}</div>
+          <div style={{ margin: '6px 0 12px 0' }}>Region: {Array.isArray(encounter.regions_found) ? encounter.regions_found.join(", ") : encounter.regions_found}</div>
+          {userHasAnyNet() ? (
+            <>
+              <div style={{ marginBottom: 8, marginTop: 4 }}>Choose a net to use:</div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                {NET_TYPES.filter(nt => (game[nt.key] || 0) > 0).map(nt => (
+                  <button
+                    key={nt.key}
+                    className="poke-button"
+                    style={{ fontWeight: 'bold', background: '#338', color: 'white', minWidth: 90 }}
+                    onClick={() => {
+                      setChosenNet(nt.key);
+                      handleCatchWithNet(nt.key);
+                    }}
+                  >
+                    {nt.emoji} {nt.label} ({game[nt.key]})
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ color: '#f44', marginTop: 6 }}>No nets left!</div>
+          )}
+          <div style={{ color: '#af0', marginTop: 8 }}>{encounterMsg}</div>
+        </div>
+      )}
+
+      {/* Medals Box */}
+      <div style={{
+        background: "rgba(0,0,0,0.4)",
+        padding: 14,
+        borderRadius: 10,
+        margin: '18px 0',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 10,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <b style={{ width: '100%', textAlign: 'center' }}>Your Medals:</b>
+        {ALL_MEDALS.map(m => (
+          <span
+            key={m.title}
+            title={m.title}
+            style={{
+              fontSize: 28,
+              opacity: game?.medals?.includes(m.title) ? 1 : 0.18,
+              filter: game?.medals?.includes(m.title) ? 'drop-shadow(0 0 4px gold)' : 'none',
+              margin: 2
+            }}
+          >
+            {m.emoji}
+          </span>
+        ))}
+      </div>
+
+      {/* Arena Button */}
+      {countyInfo?.arena && countyInfo.id === currentCounty && (
+        <button
+          className="poke-button"
+          style={{ margin: '14px 0', fontWeight: 'bold', fontSize: '1.1rem' }}
+          onClick={() => setShowArena(true)}
+        >
+          🏟️ Enter {countyInfo.arena.name}
+        </button>
+      )}
+
+      {/* Arena Modal */}
+      {showArena && countyInfo?.arena && (
+        <ArenaChallenge
+          arena={countyInfo.arena}
+          game={game}
+          setGame={setGame}
+          onMedalEarned={handleArenaMedal}
+        />
+      )}
+      {arenaUnlockMsg && (
+        <div style={{
+          background: "#173e11",
+          color: "#2fd80a",
+          fontWeight: "bold",
+          borderRadius: 8,
+          padding: "8px 18px",
+          margin: "10px 0"
+        }}>{arenaUnlockMsg}</div>
+      )}
+
+      {/* County info */}
+      <div
+        style={{
+          background: "rgba(0,0,0,0.35)",
+          padding: 16,
+          borderRadius: 12,
+          marginBottom: 24,
+          maxWidth: 350,
+        }}
+      >
+        <h2 style={{ margin: "0 0 8px 0" }}>
+          {countyInfo?.name || currentCounty}
+        </h2>
+        <div style={{ fontSize: 16, marginBottom: 6 }}>
+          {countyInfo?.description}
+        </div>
+        {countyInfo?.arena && (
+          <div style={{ fontSize: 15, marginTop: 5 }}>
+            <b>Arena:</b> {countyInfo.arena.name}
+            <br />
+            <b>Reward:</b> {countyInfo.arena.reward}
+          </div>
         )}
       </div>
 
-      <section style={{ padding: 16, maxWidth: 720 }}>
-        <h1>🌿 Wildlife Adventures</h1>
-        <p>📍 Location:
-          <select value={game.location} onChange={handleLocationChange} style={{ marginLeft: 8 }}>
-            {LOCATIONS.map(loc => <option key={loc}>{loc}</option>)}
-          </select>
-        </p>
-        {ARENAS[game.location] && (
-          <p>🏟️ Arena: {ARENAS[game.location].name}</p>
-        )}
-
-        <div style={{ margin: '12px 0' }}>
-          <button onClick={searchLongGrass}>🌾 Search Long Grass</button>
-          <button onClick={goFreshwaterFishing}>🎣 Fish Freshwater</button>
-          <button onClick={goSaltwaterFishing}>🪝 Fish Saltwater</button>
-          <button onClick={() => setShowTeamSelect(true)}>👥 Choose Team</button>
-        </div>
-
-        {message && <p style={{ fontSize: 16, marginTop: 8 }}>{message}</p>}
-
-        {wildEncounter && (
-          <div style={{
-            background: '#fff',
-            padding: 16,
-            border: '2px solid #444',
-            borderRadius: 8,
-            marginTop: 16
-          }}>
-            <h3>🐾 Wild Encounter!</h3>
-            <p>A wild <strong>{wildEncounter.name}</strong> appeared!</p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              {['pokeballs', 'greatballs', 'ultraballs', 'masterballs']
-                .filter(key => getNum(game[key]) > 0)
-                .map(key => {
-                  const item = ITEMS.find(i => i.key === key);
-                  return (
-                    <button key={key} onClick={() => tryCatch(wildEncounter, key)}>
-                      {item?.emoji} {item?.name} (x{getNum(game[key])})
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-        {showTeamSelect && (
-          <div style={{ background: '#fff', padding: 16, marginTop: 16 }}>
-            <h3>🧢 Select Your Team (Max 6)</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {caughtAnimals.map(animal => (
-                <button
-                  key={animal.id}
-                  onClick={() => toggleTeamMember(animal.id)}
-                  style={{
-                    padding: 8,
-                    background: selectedTeam.includes(animal.id) ? '#4caf50' : '#ccc',
-                    color: '#000'
-                  }}
-                >
-                  {animal.name}
-                </button>
-              ))}
-            </div>
-            <button onClick={handleTeamChange} style={{ marginTop: 12 }}>✅ Confirm Team</button>
-          </div>
-        )}
-
-        <div style={{ marginTop: 32 }}>
-          <h2>📓 Journal ({journal.length})</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {caughtAnimals.map(animal => (
-              <div key={animal.id} style={{
-                padding: 8,
-                border: '1px solid #444',
-                borderRadius: 6,
-                background: '#eee'
-              }}>
+      {/* TEAM DISPLAY */}
+      {game.team && game.team.length > 0 && (
+        <>
+          <h2>Your Team</h2>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {team.map((animal, idx) => (
+              <div key={animal.id}
+                style={{
+                  border: idx === activeIdx ? '2px solid gold' : '2px solid #fff',
+                  borderRadius: 12,
+                  background: animal.hp > 0 ? 'rgba(50,200,50,0.65)' : 'rgba(200,50,50,0.65)',
+                  padding: 12,
+                  minWidth: 95,
+                  textAlign: 'center',
+                  opacity: animal.hp > 0 ? 1 : 0.5,
+                  position: 'relative'
+                }}>
+                <img src={animal.sprite} alt={animal.name} width="48" /><br />
                 <strong>{animal.name}</strong><br />
-                <span>{animal.type?.join(', ')}</span>
+                Level: {animal.level}<br />
+                XP: {animal.xp} / {xpForNextLevel(animal.level)}<br />
+                HP: {animal.hp} / {animal.maxhp}
+                <br />
+                <button
+                  disabled={idx === activeIdx || animal.hp <= 0}
+                  className="poke-button"
+                  style={{ fontSize: 12, marginTop: 4, opacity: (idx === activeIdx || animal.hp <= 0) ? 0.5 : 1 }}
+                  onClick={() => setActiveIdx(idx)}
+                >{idx === activeIdx ? 'Active' : 'Switch'}
+                </button>
               </div>
             ))}
           </div>
-        </div>
+        </>
+      )}
 
-        {medals.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <h3>🏅 Medals</h3>
-            <p>{medals.join(', ')}</p>
-          </div>
-        )}
-      </section>
+      {/* RESET ALL PROGRESS BUTTON */}
+      <button
+        className="poke-button"
+        style={{ background: "#300", color: "white", marginTop: 32, marginBottom: 18, fontWeight: 'bold' }}
+        onClick={handleResetProgress}
+      >
+        🗑️ Reset All Progress
+      </button>
+
+      <style jsx>{`
+        .poke-button {
+          border: 1px solid #ccc;
+          background: #f9f9f9;
+          padding: 10px 18px;
+          border-radius: 7px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+          margin: 6px 0;
+          cursor: pointer;
+          color: #222;
+          text-decoration: none;
+          font-family: inherit;
+          font-size: 1rem;
+          display: inline-block;
+          transition: background 0.18s, border 0.18s;
+        }
+        .poke-button:hover {
+          background: #e0e0e0;
+          border-color: #888;
+        }
+      `}</style>
     </main>
   );
 }
