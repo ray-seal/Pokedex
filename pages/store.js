@@ -31,8 +31,8 @@ export default function Store() {
       const newBuy = {};
       const newSell = {};
       ITEMS.forEach(item => {
-        const owned = game[item.key] || 0;
-        const maxBuy = Math.floor((game.coins || 0) / item.price);
+        const owned = parseInt(game[item.key], 10) || 0;
+        const maxBuy = Math.floor((parseInt(game.coins, 10) || 0) / item.price);
         newBuy[item.key] = maxBuy >= 1 ? 1 : 0;
         newSell[item.key] = owned > 0 ? 1 : 0;
       });
@@ -44,20 +44,21 @@ export default function Store() {
   if (!game) return <p>Loading store...</p>;
 
   function handleBuy(item) {
-    if (item.oneTime && (game[item.key] || 0) > 0) {
+    const owned = parseInt(game[item.key], 10) || 0;
+    if (item.oneTime && owned > 0) {
       setMessage(`You already own ${item.name}!`);
       return;
     }
     const quantity = buyQuantities[item.key] || 1;
-    const maxBuy = Math.floor((game.coins || 0) / item.price);
+    const maxBuy = Math.floor((parseInt(game.coins, 10) || 0) / item.price);
     if (maxBuy < 1) {
       setMessage(`Not enough coins for ${item.name}!`);
       return;
     }
     const qty = Math.min(quantity, maxBuy);
     const totalCost = qty * item.price;
-    const updated = { ...game, coins: (game.coins || 0) - totalCost };
-    updated[item.key] = (updated[item.key] || 0) + qty;
+    const updated = { ...game, coins: (parseInt(game.coins, 10) || 0) - totalCost };
+    updated[item.key] = owned + qty;
     setGame(updated);
     setMessage(`Bought ${qty} ${item.name}${qty > 1 ? 's' : ''} for ${totalCost} coins!`);
     const newMax = Math.floor(updated.coins / item.price);
@@ -66,7 +67,7 @@ export default function Store() {
   }
 
   function handleSell(item) {
-    const owned = game[item.key] || 0;
+    const owned = parseInt(game[item.key], 10) || 0;
     const quantity = sellQuantities[item.key] || 1;
     if (owned < 1) {
       setMessage(`You don't have any ${item.name} to sell!`);
@@ -75,7 +76,7 @@ export default function Store() {
     const qty = Math.min(quantity, owned);
     const sellPrice = Math.floor(item.price / 2);
     const totalGain = qty * sellPrice;
-    const updated = { ...game, coins: (game.coins || 0) + totalGain };
+    const updated = { ...game, coins: (parseInt(game.coins, 10) || 0) + totalGain };
     updated[item.key] = owned - qty;
     setGame(updated);
     setMessage(`Sold ${qty} ${item.name}${qty > 1 ? 's' : ''} for ${totalGain} coins!`);
@@ -157,43 +158,45 @@ export default function Store() {
                   <th>Buy</th>
                 </tr>
               </thead>
-             <tbody>
-  {ITEMS.filter(item => {
-      // Never show junk in buy tab
-      if (item.sellOnly) return false;
-      // Only show oneTime (rods) if not owned
-      if (item.oneTime && (game[item.key] || 0) > 0) return false;
-      // Show everything else (including bait)
-      return true;
-    })
-    .map(item => {
-      const owned = game[item.key] || 0;
-      const maxBuy = Math.floor((game.coins || 0) / item.price);
-      return (
-        <tr key={item.key}>
-          <td>
-            <span style={{ fontSize: 20 }}>{item.emoji}</span> {item.name}
-          </td>
-          <td style={{ textAlign: 'center' }}>{owned}</td>
-          <td style={{ color: '#ffde59', fontWeight: 'bold' }}>{item.price}🪙</td>
-          <td>
-            {renderQuantityDropdown("buy", item, maxBuy)}
-            <button
-              className="poke-button"
-              style={{ fontSize: 14, padding: '2px 12px' }}
-              disabled={maxBuy < 1}
-              onClick={() => handleBuy(item)}
-            >
-              Buy
-            </button>
-            <span style={{ fontSize: 13, color: '#aaa', marginLeft: 5 }}>
-              {maxBuy > 0 ? `(max: ${maxBuy})` : ''}
-            </span>
-          </td>
-        </tr>
-      );
-    })}
-</tbody>
+              <tbody>
+                {ITEMS.filter(item => {
+                  // Never show junk in buy tab
+                  if (item.sellOnly) return false;
+                  // Always show rods, but disable buy if owned (oneTime)
+                  return true;
+                }).map(item => {
+                  const owned = parseInt(game[item.key], 10) || 0;
+                  const maxBuy = item.oneTime && owned > 0 ? 0 : Math.floor((parseInt(game.coins, 10) || 0) / item.price);
+                  return (
+                    <tr key={item.key}>
+                      <td>
+                        <span style={{ fontSize: 20 }}>{item.emoji}</span> {item.name}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>{owned}</td>
+                      <td style={{ color: '#ffde59', fontWeight: 'bold' }}>{item.price}🪙</td>
+                      <td>
+                        {item.oneTime && owned > 0
+                          ? <span style={{color:'#aaa'}}>Owned</span>
+                          : <>
+                              {renderQuantityDropdown("buy", item, maxBuy)}
+                              <button
+                                className="poke-button"
+                                style={{ fontSize: 14, padding: '2px 12px' }}
+                                disabled={maxBuy < 1}
+                                onClick={() => handleBuy(item)}
+                              >
+                                Buy
+                              </button>
+                              <span style={{ fontSize: 13, color: '#aaa', marginLeft: 5 }}>
+                                {maxBuy > 0 ? `(max: ${maxBuy})` : ''}
+                              </span>
+                            </>
+                        }
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
             </table>
           </>
         )}
@@ -210,8 +213,8 @@ export default function Store() {
                 </tr>
               </thead>
               <tbody>
-                {ITEMS.filter(item => game[item.key] > 0 && (!item.oneTime || item.sellOnly)).map(item => {
-                  const owned = game[item.key] || 0;
+                {ITEMS.filter(item => parseInt(game[item.key], 10) > 0).map(item => {
+                  const owned = parseInt(game[item.key], 10) || 0;
                   const maxSell = owned;
                   return (
                     <tr key={item.key}>
