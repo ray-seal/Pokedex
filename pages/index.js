@@ -37,18 +37,22 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [locationSelect, setLocationSelect] = useState(LOCATIONS[0]);
   const [showInventory, setShowInventory] = useState(false);
-  const [wildlifeJournal, setWildlifeJournal] = useState([]);
+  const [wildlifeJournal, setWildlifeJournal] = useState(null); // null, not []
   const router = useRouter();
 
   // SSR-safe: fetch wildlifeJournal on client
   useEffect(() => {
+    let cancelled = false;
     fetch('/wildlifejournal.json')
       .then(res => res.json())
-      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []));
+      .then(data => {
+        if (!cancelled) setWildlifeJournal(Array.isArray(data) ? data : []);
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  // Wait for game to load
-  if (!game) return <p>Loading...</p>;
+  // Wait for game or wildlifeJournal to load
+  if (!game || wildlifeJournal === null) return <p>Loading...</p>;
 
   const journal = Array.isArray(game.journal) ? game.journal : [];
   const team = Array.isArray(game.team) ? game.team : [];
