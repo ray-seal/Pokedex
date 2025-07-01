@@ -256,6 +256,62 @@ export default function Home() {
       </main>
     );
   }
+  function goFreshwaterFishing() {
+  if (!game.maggots || game.maggots < 1) {
+    setMessage("You need maggots to fish freshwater! Buy some from the store.");
+    return;
+  }
+  const candidates = wildlifejournal.filter(w => w && w.habitat === 'freshwater');
+  const junk = [
+    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
+    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
+  ];
+  const pool = [...candidates, ...junk];
+  const catchItem = pool[Math.floor(Math.random() * pool.length)];
+  let updated = { ...game, maggots: game.maggots - 1 };
+  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
+    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
+  } else {
+    // Add animal to journal
+    if (!updated.wildlifejournal.includes(catchItem.id)) {
+      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
+      setMessage(`You caught a ${catchItem.name}!`);
+    } else {
+      setMessage(`You caught another ${catchItem.name}!`);
+    }
+  }
+  setGame(updated);
+  localStorage.setItem('gameState', JSON.stringify(updated));
+}
+
+function goSaltwaterFishing() {
+  if (!game.lugworm || game.lugworm < 1) {
+    setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
+    return;
+  }
+  const candidates = wildlifejournal.filter(w => w && w.habitat === 'saltwater');
+  const junk = [
+    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
+    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
+  ];
+  const pool = [...candidates, ...junk];
+  const catchItem = pool[Math.floor(Math.random() * pool.length)];
+  let updated = { ...game, lugworm: game.lugworm - 1 };
+  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
+    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
+  } else {
+    if (!updated.wildlifejournal.includes(catchItem.id)) {
+      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
+      setMessage(`You caught a ${catchItem.name}!`);
+    } else {
+      setMessage(`You caught another ${catchItem.name}!`);
+    }
+  }
+  setGame(updated);
+  localStorage.setItem('gameState', JSON.stringify(updated));
+}
 
   return (
     <main
@@ -377,62 +433,6 @@ export default function Home() {
                   >
                     {nt.emoji} {nt.label} ({game[nt.key]})
                   </button>
-                  function goFreshwaterFishing() {
-  if (!game.maggots || game.maggots < 1) {
-    setMessage("You need maggots to fish freshwater! Buy some from the store.");
-    return;
-  }
-  const candidates = wildlifejournal.filter(w => w && w.habitat === 'freshwater');
-  const junk = [
-    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-  ];
-  const pool = [...candidates, ...junk];
-  const catchItem = pool[Math.floor(Math.random() * pool.length)];
-  let updated = { ...game, maggots: game.maggots - 1 };
-  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
-    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-  } else {
-    // Add animal to journal
-    if (!updated.wildlifejournal.includes(catchItem.id)) {
-      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-      setMessage(`You caught a ${catchItem.name}!`);
-    } else {
-      setMessage(`You caught another ${catchItem.name}!`);
-    }
-  }
-  setGame(updated);
-  localStorage.setItem('gameState', JSON.stringify(updated));
-}
-
-function goSaltwaterFishing() {
-  if (!game.lugworm || game.lugworm < 1) {
-    setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
-    return;
-  }
-  const candidates = wildlifejournal.filter(w => w && w.habitat === 'saltwater');
-  const junk = [
-    { key: 'boot', name: 'Old Boot', emoji: '🥾' },
-    { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
-  ];
-  const pool = [...candidates, ...junk];
-  const catchItem = pool[Math.floor(Math.random() * pool.length)];
-  let updated = { ...game, lugworm: game.lugworm - 1 };
-  if (catchItem.key === 'boot' || catchItem.key === 'lure') {
-    updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
-    setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
-  } else {
-    if (!updated.wildlifejournal.includes(catchItem.id)) {
-      updated.wildlifejournal = [...updated.wildlifejournal, catchItem.id];
-      setMessage(`You caught a ${catchItem.name}!`);
-    } else {
-      setMessage(`You caught another ${catchItem.name}!`);
-    }
-  }
-  setGame(updated);
-  localStorage.setItem('gameState', JSON.stringify(updated));
-}
                 ))}
               </div>
             </>
