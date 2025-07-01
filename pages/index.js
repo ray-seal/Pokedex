@@ -35,20 +35,25 @@ export default function Home() {
   const { game, setGame } = useGame();
   const [message, setMessage] = useState('');
   const [showTeamSelect, setShowTeamSelect] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState(game?.team || []);
-  const [locationSelect, setLocationSelect] = useState(game?.location || LOCATIONS[0]);
+  const [selectedTeam, setSelectedTeam] = useState([]);
+  const [locationSelect, setLocationSelect] = useState(LOCATIONS[0]);
   const [showInventory, setShowInventory] = useState(false);
   const router = useRouter();
 
-  // Update team if game.team changes
-  useEffect(() => {
-    setSelectedTeam(game?.team || []);
-  }, [game?.team]);
+  // Wait for game to load
+  if (!game) return <p>Loading...</p>;
 
-  // --- ACTIONS ---
+  // Always use fallback for journal
+  const journal = Array.isArray(game.journal) ? game.journal : [];
+  // Always use fallback for team
+  const team = Array.isArray(game.team) ? game.team : [];
+
+  useEffect(() => {
+    setSelectedTeam(team);
+  }, [game.team]);
 
   function getRandomFromType(type) {
-    const pool = wildlifeJournal.filter(a => a.type.includes(type));
+    const pool = wildlifeJournal.filter(a => Array.isArray(a.type) && a.type.includes(type));
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
   }
@@ -60,11 +65,11 @@ export default function Home() {
       return;
     }
     setMessage(`A wild ${grassAnimal.name} appeared!`);
-    // Here you could add logic for encounter/capture etc
+    // TODO: Add encounter/capture logic if needed
   }
 
   function goFreshwaterFishing() {
-    if (!game.maggots || game.maggots < 1) {
+    if ((game.maggots || 0) < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
     }
@@ -74,17 +79,12 @@ export default function Home() {
       return;
     }
     setMessage(`You fished up a ${animal.name}!`);
-    // Example: add to journal if not already there
-    if (!game.journal) game.journal = [];
-    if (!game.journal.includes(animal.id)) {
-      setGame({ ...game, maggots: game.maggots - 1, journal: [...game.journal, animal.id] });
-    } else {
-      setGame({ ...game, maggots: game.maggots - 1 });
-    }
+    const nextJournal = journal.includes(animal.id) ? journal : [...journal, animal.id];
+    setGame({ ...game, maggots: (game.maggots || 0) - 1, journal: nextJournal });
   }
 
   function goSaltwaterFishing() {
-    if (!game.lugworm || game.lugworm < 1) {
+    if ((game.lugworm || 0) < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
     }
@@ -94,12 +94,8 @@ export default function Home() {
       return;
     }
     setMessage(`You fished up a ${animal.name}!`);
-    if (!game.journal) game.journal = [];
-    if (!game.journal.includes(animal.id)) {
-      setGame({ ...game, lugworm: game.lugworm - 1, journal: [...game.journal, animal.id] });
-    } else {
-      setGame({ ...game, lugworm: game.lugworm - 1 });
-    }
+    const nextJournal = journal.includes(animal.id) ? journal : [...journal, animal.id];
+    setGame({ ...game, lugworm: (game.lugworm || 0) - 1, journal: nextJournal });
   }
 
   function handleLocationChange(e) {
@@ -124,21 +120,18 @@ export default function Home() {
     });
   }
 
-  // --- MEDALS (example: unlock for 3, 6, 12, 18 unique wildlife) ---
+  // Medals
   const medals = [];
-  const journalCount = (game.journal || []).length;
-  if (journalCount >= 3) medals.push("Bronze");
-  if (journalCount >= 6) medals.push("Silver");
-  if (journalCount >= 12) medals.push("Gold");
-  if (journalCount >= 18) medals.push("Platinum");
-
-  if (!game) return <p>Loading...</p>;
+  if (journal.length >= 3) medals.push("Bronze");
+  if (journal.length >= 6) medals.push("Silver");
+  if (journal.length >= 12) medals.push("Gold");
+  if (journal.length >= 18) medals.push("Platinum");
 
   return (
     <main style={{
       fontFamily: 'monospace',
       minHeight: '100vh',
-      background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)', // green gradient
+      background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)',
       color: '#222'
     }}>
       {/* Inventory Dropdown */}
@@ -173,7 +166,7 @@ export default function Home() {
           overflowY: 'scroll',
           borderRadius: 0,
         }}>
-          {ITEMS.filter(item => game[item.key] > 0).map(item =>
+          {ITEMS.filter(item => (game[item.key] || 0) > 0).map(item =>
             <li key={item.key} style={{
               fontSize: 18,
               marginBottom: 12,
@@ -213,8 +206,8 @@ export default function Home() {
         {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
           <b>Current Team:</b>
-          {Array.isArray(game.team) && game.team.length > 0 ? (
-            game.team.map(id => {
+          {team.length > 0 ? (
+            team.map(id => {
               const animal = wildlifeJournal.find(w => w.id === id);
               return animal ? (
                 <span key={id} style={{marginLeft:8}}>
@@ -269,12 +262,12 @@ export default function Home() {
           <button className='poke-button' onClick={searchLongGrass} style={{marginRight:8}}>
             🌾 Search Long Grass
           </button>
-          {game.fwrod > 0 && (
+          {(game.fwrod || 0) > 0 && (
             <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: '0 8px' }}>
               🎣 Fish Freshwater
             </button>
           )}
-          {game.swrod > 0 && (
+          {(game.swrod || 0) > 0 && (
             <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: '0 8px' }}>
               🪝 Fish Saltwater
             </button>
