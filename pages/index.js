@@ -45,6 +45,7 @@ const DEFAULT_GAME = {
   fullheals: 0,
   boot: 0,
   lure: 0,
+  coins: 100, // <-- Added coins to match store
   location: LOCATIONS[0],
 };
 
@@ -57,10 +58,9 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
 
-  // Defensive: convert string numbers to numbers just in case
+  // Defensive parse
   const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
 
-  // Load game from localStorage only on client
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -71,14 +71,12 @@ export default function Home() {
     }
   }, []);
 
-  // Persist game changes to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && game) {
       window.localStorage.setItem('gameState', JSON.stringify(game));
     }
   }, [game]);
 
-  // Fetch wildlife journal data from /public
   useEffect(() => {
     fetch('/wildlifejournal.json')
       .then(res => res.json())
@@ -86,20 +84,17 @@ export default function Home() {
       .catch(() => setWildlifeJournal([]));
   }, []);
 
-  // Sync selectedTeam with game.team
   useEffect(() => {
     if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
   }, [game?.team]);
 
   if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
-  // Only allow caught animals for team selection
   const journal = Array.isArray(game.journal) ? game.journal : [];
   const team = Array.isArray(game.team) ? game.team : [];
   const caughtAnimals = wildlifeJournal.filter(animal => animal && journal.includes(animal.id));
   const filteredTeam = team.filter(id => caughtAnimals.some(a => a.id === id));
 
-  // GRASS SEARCH
   function searchLongGrass() {
     const candidates = wildlifeJournal.filter(
       w => w && Array.isArray(w.type) && w.type.includes('grass')
@@ -112,7 +107,6 @@ export default function Home() {
     setMessage(`You found a wild ${found.name}!`);
   }
 
-  // FRESHWATER FISHING
   function goFreshwaterFishing() {
     if (getNum(game.fwrod) < 1) {
       setMessage("You need a Freshwater Rod to fish freshwater!");
@@ -153,7 +147,6 @@ export default function Home() {
     setGame(updated);
   }
 
-  // SALTWATER FISHING
   function goSaltwaterFishing() {
     if (getNum(game.swrod) < 1) {
       setMessage("You need a Saltwater Rod to fish saltwater!");
@@ -216,7 +209,6 @@ export default function Home() {
     });
   }
 
-  // Medals
   const medals = [];
   if (journal.length >= 3) medals.push("Bronze");
   if (journal.length >= 6) medals.push("Silver");
@@ -230,52 +222,58 @@ export default function Home() {
       background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)',
       color: '#222'
     }}>
-      <button
-        onClick={() => setShowInventory(!showInventory)}
-        style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          zIndex: 999,
-          fontSize: 18,
-          background: '#222',
-          color: '#fff',
-          border: 'none',
-          padding: '8px 16px'
-        }}>
-        {showInventory ? "▲ Hide Inventory" : "▼ Show Inventory"}
-      </button>
-      {showInventory && (
-        <ul style={{
-          listStyle: 'none',
-          padding: 0,
-          marginTop: 48,
-          background: '#333',
-          color: '#fff',
-          position: 'fixed',
-          top: 40,
-          right: 0,
-          width: 240,
-          zIndex: 998,
-          maxHeight: '40vh',
-          overflowY: 'scroll',
-          borderRadius: 0,
-        }}>
-          {ITEMS.filter(item => getNum(game[item.key]) > 0).map(item =>
-            <li key={item.key} style={{
+      <div style={{position:'fixed',top:0,right:0,zIndex:999}}>
+        <button
+          onClick={() => setShowInventory(!showInventory)}
+          style={{
+            fontSize: 18,
+            background: '#222',
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px'
+          }}>
+          {showInventory ? "▲ Hide Inventory" : "▼ Show Inventory"}
+        </button>
+        {showInventory && (
+          <ul style={{
+            listStyle: 'none',
+            padding: 0,
+            marginTop: 0,
+            background: '#333',
+            color: '#fff',
+            width: 240,
+            zIndex: 998,
+            maxHeight: '40vh',
+            overflowY: 'scroll',
+            borderRadius: 0,
+          }}>
+            {ITEMS.filter(item => getNum(game[item.key]) > 0).map(item =>
+              <li key={item.key} style={{
+                fontSize: 18,
+                marginBottom: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12
+              }}>
+                <span style={{ fontSize: 22 }}>{item.emoji}</span>
+                <span>{item.name}</span>
+                <b style={{ marginLeft: 2 }}>{getNum(game[item.key])}</b>
+              </li>
+            )}
+            <li style={{
               fontSize: 18,
-              marginBottom: 12,
+              margin: '8px 0 0 0',
               display: 'flex',
               alignItems: 'center',
               gap: 12
             }}>
-              <span style={{ fontSize: 22 }}>{item.emoji}</span>
-              <span>{item.name}</span>
-              <b style={{ marginLeft: 2 }}>{getNum(game[item.key])}</b>
+              <span style={{ fontSize: 22 }}>🪙</span>
+              <span>Coins</span>
+              <b style={{ marginLeft: 2 }}>{getNum(game.coins)}</b>
             </li>
-          )}
-        </ul>
-      )}
+          </ul>
+        )}
+      </div>
 
       <div style={{ paddingTop: 70, maxWidth: 480, margin: "0 auto" }}>
         <h1>Wildlife Hunter</h1>
