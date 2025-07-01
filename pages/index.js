@@ -50,7 +50,6 @@ const DEFAULT_GAME = {
 
 export default function Home() {
   const router = useRouter();
-  // Game state and wildlife journal are both client-only
   const [game, setGame] = useState(null);
   const [wildlifeJournal, setWildlifeJournal] = useState(null);
   const [message, setMessage] = useState('');
@@ -58,7 +57,6 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
 
-  // Load game from localStorage only on client
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -69,14 +67,12 @@ export default function Home() {
     }
   }, []);
 
-  // Persist game changes to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && game) {
       window.localStorage.setItem('game', JSON.stringify(game));
     }
   }, [game]);
 
-  // Fetch wildlife journal data from /public
   useEffect(() => {
     fetch('/wildlifejournal.json')
       .then(res => res.json())
@@ -84,15 +80,23 @@ export default function Home() {
       .catch(() => setWildlifeJournal([]));
   }, []);
 
-  // Sync selectedTeam with game.team
   useEffect(() => {
     if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
   }, [game?.team]);
 
   if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
+  // Only allow caught animals for team selection
   const journal = Array.isArray(game.journal) ? game.journal : [];
   const team = Array.isArray(game.team) ? game.team : [];
+
+  // Filter wildlifeJournal to only caught animals
+  const caughtAnimals = wildlifeJournal.filter(
+    animal => animal && journal.includes(animal.id)
+  );
+
+  // When displaying team, only show if they're caught
+  const filteredTeam = team.filter(id => caughtAnimals.some(a => a.id === id));
 
   function getRandomFromType(type) {
     const pool = wildlifeJournal.filter(a => Array.isArray(a.type) && a.type.includes(type));
@@ -144,7 +148,9 @@ export default function Home() {
   }
 
   function handleTeamChange() {
-    setGame({ ...game, team: selectedTeam });
+    // Only setTeam with caught animals
+    const validTeam = selectedTeam.filter(id => caughtAnimals.some(a => a.id === id)).slice(0, 6);
+    setGame({ ...game, team: validTeam });
     setShowTeamSelect(false);
   }
 
@@ -244,9 +250,9 @@ export default function Home() {
         {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
           <b>Current Team:</b>
-          {team.length > 0 && wildlifeJournal.length > 0 ? (
-            team.map(id => {
-              const animal = wildlifeJournal.find(w => w.id === id);
+          {filteredTeam.length > 0 ? (
+            filteredTeam.map(id => {
+              const animal = caughtAnimals.find(a => a.id === id);
               return animal ? (
                 <span key={id} style={{marginLeft:8}}>
                   <img src={animal.sprite} alt={animal.name} width={30} style={{verticalAlign:'middle'}}/>
@@ -259,11 +265,11 @@ export default function Home() {
             Change Team
           </button>
         </div>
-        {showTeamSelect && wildlifeJournal.length > 0 && (
+        {showTeamSelect && caughtAnimals.length > 0 && (
           <div style={{ margin: "12px 0", background:'#fff', border:'1px solid #bbb', borderRadius:8, padding:12 }}>
             <b>Choose up to 6 animals for your team:</b>
             <div style={{display:'flex', flexWrap:'wrap', margin:'10px 0', gap:8}}>
-              {wildlifeJournal.map(animal => (
+              {caughtAnimals.map(animal => (
                 <button key={animal.id}
                   style={{
                     border: selectedTeam.includes(animal.id) ? '2px solid #308c3e' : '1px solid #ccc',
