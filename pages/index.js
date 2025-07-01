@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { useRouter } from 'next/router';
+import wildlifeJournal from '../public/wildlifejournal.json';
 
 const ITEMS = [
   { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', type: 'ball' },
@@ -28,64 +29,118 @@ const LOCATIONS = [
 
 const ARENAS = {
   "East Sussex": { name: "Brighton Arena", emoji: "🏟️" },
-  // Add more arenas and their locations if needed
 };
 
 export default function Home() {
   const { game, setGame } = useGame();
   const [message, setMessage] = useState('');
-  const [collapsed, setCollapsed] = useState(true);
   const [showTeamSelect, setShowTeamSelect] = useState(false);
-  const [teamInput, setTeamInput] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState(game?.team || []);
   const [locationSelect, setLocationSelect] = useState(game?.location || LOCATIONS[0]);
-  const router = useRouter();
-  const [wildlifejournal, setWildlifejournal] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
+  const router = useRouter();
 
+  // Update team if game.team changes
   useEffect(() => {
-    // Simulate wildlifejournal loading
-    if (window && window.wildlifejournal) setWildlifejournal(window.wildlifejournal);
-  }, []);
+    setSelectedTeam(game?.team || []);
+  }, [game?.team]);
+
+  // --- ACTIONS ---
+
+  function getRandomFromType(type) {
+    const pool = wildlifeJournal.filter(a => a.type.includes(type));
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function searchLongGrass() {
+    const grassAnimal = getRandomFromType("grass");
+    if (!grassAnimal) {
+      setMessage("No wild grass-type animals found!");
+      return;
+    }
+    setMessage(`A wild ${grassAnimal.name} appeared!`);
+    // Here you could add logic for encounter/capture etc
+  }
 
   function goFreshwaterFishing() {
     if (!game.maggots || game.maggots < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
     }
-    setMessage("You went freshwater fishing!"); // Stub
-    // ...actual fishing logic...
+    const animal = getRandomFromType("freshwater");
+    if (!animal) {
+      setMessage("No freshwater animals found!");
+      return;
+    }
+    setMessage(`You fished up a ${animal.name}!`);
+    // Example: add to journal if not already there
+    if (!game.journal) game.journal = [];
+    if (!game.journal.includes(animal.id)) {
+      setGame({ ...game, maggots: game.maggots - 1, journal: [...game.journal, animal.id] });
+    } else {
+      setGame({ ...game, maggots: game.maggots - 1 });
+    }
   }
+
   function goSaltwaterFishing() {
     if (!game.lugworm || game.lugworm < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
     }
-    setMessage("You went saltwater fishing!"); // Stub
-    // ...actual fishing logic...
+    const animal = getRandomFromType("saltwater");
+    if (!animal) {
+      setMessage("No saltwater animals found!");
+      return;
+    }
+    setMessage(`You fished up a ${animal.name}!`);
+    if (!game.journal) game.journal = [];
+    if (!game.journal.includes(animal.id)) {
+      setGame({ ...game, lugworm: game.lugworm - 1, journal: [...game.journal, animal.id] });
+    } else {
+      setGame({ ...game, lugworm: game.lugworm - 1 });
+    }
   }
-  function searchLongGrass() {
-    setMessage("You searched the long grass!"); // Stub
-    // ...actual logic...
-  }
-  function handleTeamChange() {
-    setGame({ ...game, team: teamInput });
-    setShowTeamSelect(false);
-    setTeamInput('');
-  }
+
   function handleLocationChange(e) {
     setLocationSelect(e.target.value);
     setGame({ ...game, location: e.target.value });
   }
 
+  function handleTeamChange() {
+    setGame({ ...game, team: selectedTeam });
+    setShowTeamSelect(false);
+  }
+
+  function toggleTeamMember(id) {
+    setSelectedTeam(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(i => i !== id);
+      } else if (prev.length < 6) {
+        return [...prev, id];
+      } else {
+        return prev;
+      }
+    });
+  }
+
+  // --- MEDALS (example: unlock for 3, 6, 12, 18 unique wildlife) ---
+  const medals = [];
+  const journalCount = (game.journal || []).length;
+  if (journalCount >= 3) medals.push("Bronze");
+  if (journalCount >= 6) medals.push("Silver");
+  if (journalCount >= 12) medals.push("Gold");
+  if (journalCount >= 18) medals.push("Platinum");
+
   if (!game) return <p>Loading...</p>;
 
-  // Medals display stub (customize as needed)
-  const medalsOwned = (game.medals || []).map(m => (
-    <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
-  ));
-
   return (
-    <main style={{ fontFamily: 'monospace', minHeight: '100vh', background: '#f9f9f9', color: '#222' }}>
+    <main style={{
+      fontFamily: 'monospace',
+      minHeight: '100vh',
+      background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)', // green gradient
+      color: '#222'
+    }}>
       {/* Inventory Dropdown */}
       <button
         onClick={() => setShowInventory(!showInventory)}
@@ -157,19 +212,43 @@ export default function Home() {
 
         {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
-          <b>Current Team:</b> {game.team || <span style={{color:'#888'}}>No team selected</span>}{" "}
+          <b>Current Team:</b>
+          {Array.isArray(game.team) && game.team.length > 0 ? (
+            game.team.map(id => {
+              const animal = wildlifeJournal.find(w => w.id === id);
+              return animal ? (
+                <span key={id} style={{marginLeft:8}}>
+                  <img src={animal.sprite} alt={animal.name} width={30} style={{verticalAlign:'middle'}}/>
+                  {animal.name}
+                </span>
+              ) : null;
+            })
+          ) : <span style={{color:'#888', marginLeft:8}}>No team selected</span>}
           <button className="poke-button" style={{marginLeft:8}} onClick={() => setShowTeamSelect(true)}>
-            Choose Team
+            Change Team
           </button>
         </div>
         {showTeamSelect && (
-          <div style={{ margin: "12px 0" }}>
-            <input
-              value={teamInput}
-              onChange={e => setTeamInput(e.target.value)}
-              placeholder="Enter team name"
-              style={{fontSize:16, marginRight:8}}
-            />
+          <div style={{ margin: "12px 0", background:'#fff', border:'1px solid #bbb', borderRadius:8, padding:12 }}>
+            <b>Choose up to 6 animals for your team:</b>
+            <div style={{display:'flex', flexWrap:'wrap', margin:'10px 0', gap:8}}>
+              {wildlifeJournal.map(animal => (
+                <button key={animal.id}
+                  style={{
+                    border: selectedTeam.includes(animal.id) ? '2px solid #308c3e' : '1px solid #ccc',
+                    background: selectedTeam.includes(animal.id) ? '#c7f7d9' : '#f9f9f9',
+                    borderRadius: '6px',
+                    margin: 2,
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => toggleTeamMember(animal.id)}
+                  disabled={!selectedTeam.includes(animal.id) && selectedTeam.length >= 6}
+                >
+                  <img src={animal.sprite} alt={animal.name} width={26} style={{verticalAlign:'middle'}} /> {animal.name}
+                </button>
+              ))}
+            </div>
             <button className="poke-button" onClick={handleTeamChange}>Set Team</button>
             <button className="poke-button" style={{marginLeft:8}} onClick={()=>setShowTeamSelect(false)}>Cancel</button>
           </div>
@@ -177,7 +256,9 @@ export default function Home() {
 
         {/* Medals */}
         <div style={{margin: '10px 0'}}>
-          <b>Medals:</b> {medalsOwned.length ? medalsOwned : <span style={{color:'#888'}}>None yet!</span>}
+          <b>Medals:</b> {medals.length ? medals.map(m => (
+            <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
+          )) : <span style={{color:'#888'}}>None yet!</span>}
         </div>
 
         {/* Wildlife Journal */}
@@ -227,17 +308,6 @@ export default function Home() {
         .poke-button:disabled {
           opacity: 0.45;
           cursor: not-allowed;
-        }
-        @media (max-width: 600px) {
-          button[style*="position: fixed"] {
-            position: fixed !important;
-            bottom: 0 !important;
-            top: auto !important;
-            left: 0;
-            width: 100vw;
-            border-radius: 0;
-            box-shadow: 0 -2px 10px #000a;
-          }
         }
       `}</style>
     </main>
