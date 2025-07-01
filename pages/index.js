@@ -61,7 +61,7 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const saved = window.localStorage.getItem('game');
+      const saved = window.localStorage.getItem('gameState');
       setGame(saved ? JSON.parse(saved) : { ...DEFAULT_GAME });
     } catch {
       setGame({ ...DEFAULT_GAME });
@@ -71,7 +71,7 @@ export default function Home() {
   // Persist game changes to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && game) {
-      window.localStorage.setItem('game', JSON.stringify(game));
+      window.localStorage.setItem('gameState', JSON.stringify(game));
     }
   }, [game]);
 
