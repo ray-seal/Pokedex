@@ -57,6 +57,9 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
 
+  // Defensive: convert string numbers to numbers just in case
+  const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
+
   // Load game from localStorage only on client
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -90,9 +93,6 @@ export default function Home() {
 
   if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
-  // Defensive: convert string numbers to numbers just in case
-  const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
-
   // Only allow caught animals for team selection
   const journal = Array.isArray(game.journal) ? game.journal : [];
   const team = Array.isArray(game.team) ? game.team : [];
@@ -114,6 +114,10 @@ export default function Home() {
 
   // FRESHWATER FISHING
   function goFreshwaterFishing() {
+    if (getNum(game.fwrod) < 1) {
+      setMessage("You need a Freshwater Rod to fish freshwater!");
+      return;
+    }
     if (getNum(game.maggots) < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
@@ -125,7 +129,6 @@ export default function Home() {
       { key: 'boot', name: 'Old Boot', emoji: '🥾' },
       { key: 'lure', name: 'Lost Lure', emoji: '🪝' }
     ];
-    // 80% wildlife, 20% junk
     const pool = [
       ...candidates,
       ...(Math.random() < 0.2 ? [junk[Math.floor(Math.random() * junk.length)]] : [])
@@ -152,6 +155,10 @@ export default function Home() {
 
   // SALTWATER FISHING
   function goSaltwaterFishing() {
+    if (getNum(game.swrod) < 1) {
+      setMessage("You need a Saltwater Rod to fish saltwater!");
+      return;
+    }
     if (getNum(game.lugworm) < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
@@ -335,19 +342,43 @@ export default function Home() {
         </div>
         <button className="poke-button" style={{margin:'8px 0'}} onClick={()=>router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
         <div style={{margin: '20px 0'}}>
-          <button className='poke-button' onClick={searchLongGrass} style={{marginRight:8}}>
+          <button
+            className='poke-button'
+            onClick={searchLongGrass}
+            style={{ marginRight: 8 }}
+          >
             🌾 Search Long Grass
           </button>
-          {getNum(game.fwrod) > 0 && (
-            <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: '0 8px' }}>
-              🎣 Go Freshwater Fishing
-            </button>
-          )}
-          {getNum(game.swrod) > 0 && (
-            <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: '0 8px' }}>
-              🪝 Go Saltwater Fishing
-            </button>
-          )}
+          <button
+            className='poke-button'
+            disabled={getNum(game.fwrod) < 1 || getNum(game.maggots) < 1}
+            onClick={goFreshwaterFishing}
+            style={{ margin: '0 8px' }}
+            title={
+              getNum(game.fwrod) < 1
+                ? 'Requires Freshwater Rod'
+                : getNum(game.maggots) < 1
+                ? 'Requires Maggots'
+                : ''
+            }
+          >
+            🎣 Go Freshwater Fishing
+          </button>
+          <button
+            className='poke-button'
+            disabled={getNum(game.swrod) < 1 || getNum(game.lugworm) < 1}
+            onClick={goSaltwaterFishing}
+            style={{ margin: '0 8px' }}
+            title={
+              getNum(game.swrod) < 1
+                ? 'Requires Saltwater Rod'
+                : getNum(game.lugworm) < 1
+                ? 'Requires Lug-worms'
+                : ''
+            }
+          >
+            🪝 Go Saltwater Fishing
+          </button>
         </div>
         <p style={{ marginTop: 16 }}>{message}</p>
         <button className='poke-button' onClick={() => router.push('/store')}>Go to Store</button>
