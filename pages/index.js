@@ -2,19 +2,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const ITEMS = [
-  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', type: 'ball' },
-  { key: 'greatballs', name: 'Medium Net', emoji: '🦑', type: 'ball' },
-  { key: 'ultraballs', name: 'Large Net', emoji: '🦈', type: 'ball' },
-  { key: 'masterballs', name: 'Large Chains', emoji: '⚓️', type: 'ball' },
-  { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪', type: 'heal' },
-  { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🥤', type: 'heal' },
-  { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧', type: 'heal' },
-  { key: 'fwrod', name: 'Freshwater Rod', emoji: '🎣', type: 'rod', rodType: 'freshwater' },
-  { key: 'swrod', name: 'Saltwater Rod', emoji: '🪝', type: 'rod', rodType: 'saltwater' },
-  { key: 'maggots', name: 'Maggots (Bait)', emoji: '🪱', type: 'bait', baitType: 'freshwater' },
-  { key: 'lugworm', name: 'Lug-worm (Bait)', emoji: '🪱', type: 'bait', baitType: 'saltwater' },
-  { key: 'boot', name: 'Old Boot', emoji: '🥾', type: 'junk' },
-  { key: 'lure', name: 'Lost Lure', emoji: '🪝', type: 'junk' },
+  { key: 'pokeballs', name: 'Small Net', emoji: '🕸️' },
+  { key: 'greatballs', name: 'Medium Net', emoji: '🦑' },
+  { key: 'ultraballs', name: 'Large Net', emoji: '🦈' },
+  { key: 'masterballs', name: 'Large Chains', emoji: '⚓️' },
+  { key: 'potions', name: 'Potion (+10HP)', emoji: '🧪' },
+  { key: 'superpotions', name: 'Super Potion (+50HP)', emoji: '🥤' },
+  { key: 'fullheals', name: 'Full Heal (Full HP)', emoji: '💧' },
+  { key: 'fwrod', name: 'Freshwater Rod', emoji: '🎣' },
+  { key: 'swrod', name: 'Saltwater Rod', emoji: '🪝' },
+  { key: 'maggots', name: 'Maggots (Bait)', emoji: '🪱' },
+  { key: 'lugworm', name: 'Lug-worm (Bait)', emoji: '🪱' },
+  { key: 'boot', name: 'Old Boot', emoji: '🥾' },
+  { key: 'lure', name: 'Lost Lure', emoji: '🪝' },
 ];
 
 const LOCATIONS = [
@@ -90,16 +90,13 @@ export default function Home() {
 
   if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
+  // Defensive: convert string numbers to numbers just in case
+  const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
+
   // Only allow caught animals for team selection
   const journal = Array.isArray(game.journal) ? game.journal : [];
   const team = Array.isArray(game.team) ? game.team : [];
-
-  // Filter wildlifeJournal to only caught animals
-  const caughtAnimals = wildlifeJournal.filter(
-    animal => animal && journal.includes(animal.id)
-  );
-
-  // When displaying team, only show if they're caught
+  const caughtAnimals = wildlifeJournal.filter(animal => animal && journal.includes(animal.id));
   const filteredTeam = team.filter(id => caughtAnimals.some(a => a.id === id));
 
   // GRASS SEARCH
@@ -117,7 +114,7 @@ export default function Home() {
 
   // FRESHWATER FISHING
   function goFreshwaterFishing() {
-    if (!game.maggots || game.maggots < 1) {
+    if (getNum(game.maggots) < 1) {
       setMessage("You need maggots to fish freshwater! Buy some from the store.");
       return;
     }
@@ -138,9 +135,9 @@ export default function Home() {
       return;
     }
     const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, maggots: game.maggots - 1 };
+    let updated = { ...game, maggots: getNum(game.maggots) - 1 };
     if (!catchItem.id) {
-      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+      updated[catchItem.key] = getNum(updated[catchItem.key]) + 1;
       setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
     } else {
       if (!updated.journal.includes(catchItem.id)) {
@@ -153,9 +150,9 @@ export default function Home() {
     setGame(updated);
   }
 
-  // SALTWATER FISHING (uses same structure)
+  // SALTWATER FISHING
   function goSaltwaterFishing() {
-    if (!game.lugworm || game.lugworm < 1) {
+    if (getNum(game.lugworm) < 1) {
       setMessage("You need lug-worms to fish saltwater! Buy some from the store.");
       return;
     }
@@ -175,9 +172,9 @@ export default function Home() {
       return;
     }
     const catchItem = pool[Math.floor(Math.random() * pool.length)];
-    let updated = { ...game, lugworm: game.lugworm - 1 };
+    let updated = { ...game, lugworm: getNum(game.lugworm) - 1 };
     if (!catchItem.id) {
-      updated[catchItem.key] = (updated[catchItem.key] || 0) + 1;
+      updated[catchItem.key] = getNum(updated[catchItem.key]) + 1;
       setMessage(`You caught a ${catchItem.name}! Better luck next time.`);
     } else {
       if (!updated.journal.includes(catchItem.id)) {
@@ -195,7 +192,6 @@ export default function Home() {
   }
 
   function handleTeamChange() {
-    // Only setTeam with caught animals
     const validTeam = selectedTeam.filter(id => caughtAnimals.some(a => a.id === id)).slice(0, 6);
     setGame({ ...game, team: validTeam });
     setShowTeamSelect(false);
@@ -227,7 +223,6 @@ export default function Home() {
       background: 'linear-gradient(120deg, #5fd36c 0%, #308c3e 100%)',
       color: '#222'
     }}>
-      {/* Inventory Dropdown */}
       <button
         onClick={() => setShowInventory(!showInventory)}
         style={{
@@ -259,7 +254,7 @@ export default function Home() {
           overflowY: 'scroll',
           borderRadius: 0,
         }}>
-          {ITEMS.filter(item => (game[item.key] || 0) > 0).map(item =>
+          {ITEMS.filter(item => getNum(game[item.key]) > 0).map(item =>
             <li key={item.key} style={{
               fontSize: 18,
               marginBottom: 12,
@@ -269,16 +264,14 @@ export default function Home() {
             }}>
               <span style={{ fontSize: 22 }}>{item.emoji}</span>
               <span>{item.name}</span>
-              <b style={{ marginLeft: 2 }}>{game[item.key]}</b>
+              <b style={{ marginLeft: 2 }}>{getNum(game[item.key])}</b>
             </li>
           )}
         </ul>
       )}
 
-      {/* Main UI */}
       <div style={{ paddingTop: 70, maxWidth: 480, margin: "0 auto" }}>
         <h1>Wildlife Hunter</h1>
-        {/* Satnav / Location Selector */}
         <div style={{ margin: "18px 0" }}>
           <label>
             <b>Current Location: </b>
@@ -287,14 +280,12 @@ export default function Home() {
             </select>
           </label>
         </div>
-        {/* Arena if at correct location */}
         {ARENAS[game.location] && (
           <div style={{ margin: '12px 0', padding: '10px', border: '2px solid #888', borderRadius: 8, background: '#ffe' }}>
             <h2>{ARENAS[game.location].emoji} {ARENAS[game.location].name}</h2>
             <button className="poke-button" style={{marginTop:8}}>🏆 Enter Arena Battle</button>
           </div>
         )}
-        {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
           <b>Current Team:</b>
           {filteredTeam.length > 0 ? (
@@ -337,25 +328,22 @@ export default function Home() {
             <button className="poke-button" style={{marginLeft:8}} onClick={()=>setShowTeamSelect(false)}>Cancel</button>
           </div>
         )}
-        {/* Medals */}
         <div style={{margin: '10px 0'}}>
           <b>Medals:</b> {medals.length ? medals.map(m => (
             <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
           )) : <span style={{color:'#888'}}>None yet!</span>}
         </div>
-        {/* Wildlife Journal */}
         <button className="poke-button" style={{margin:'8px 0'}} onClick={()=>router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
-        {/* Main Actions */}
         <div style={{margin: '20px 0'}}>
           <button className='poke-button' onClick={searchLongGrass} style={{marginRight:8}}>
             🌾 Search Long Grass
           </button>
-          {(game.fwrod || 0) > 0 && (
+          {getNum(game.fwrod) > 0 && (
             <button className='poke-button' onClick={goFreshwaterFishing} style={{ margin: '0 8px' }}>
               🎣 Go Freshwater Fishing
             </button>
           )}
-          {(game.swrod || 0) > 0 && (
+          {getNum(game.swrod) > 0 && (
             <button className='poke-button' onClick={goSaltwaterFishing} style={{ margin: '0 8px' }}>
               🪝 Go Saltwater Fishing
             </button>
