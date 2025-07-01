@@ -57,7 +57,7 @@
   {
     "id": 6,
     "name": "European Hedgehog",
-    "type": ["woodland", "urban", "grass",],
+    "type": ["woodland", "urban", "grass"],
     "regions_found": ["England", "Scotland", "Wales"],
     "sprite": "/images/hedgehog.png",
     "stage": 1,
