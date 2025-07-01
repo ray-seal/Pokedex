@@ -24,7 +24,7 @@
   {
     "id": 3,
     "name": "Caterpillar",
-    "type": ["bug", "woodland"],
+    "type": ["bug", "grass"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/caterpillar.png",
     "stage": 1,
@@ -35,7 +35,7 @@
   {
     "id": 4,
     "name": "Peacock Butterfly",
-    "type": ["bug", "flying", "woodland"],
+    "type": ["bug", "flying", "grass"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/peacock_butterfly.png",
     "stage": 2,
@@ -46,7 +46,7 @@
   {
     "id": 5,
     "name": "Red Fox",
-    "type": ["woodland", "urban", "carnivore"],
+    "type": ["woodland", "urban", "grass", "carnivore"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/redfox.png",
     "stage": 1,
@@ -57,7 +57,7 @@
   {
     "id": 6,
     "name": "European Hedgehog",
-    "type": ["woodland", "urban"],
+    "type": ["woodland", "urban", "grass",],
     "regions_found": ["England", "Scotland", "Wales"],
     "sprite": "/images/hedgehog.png",
     "stage": 1,
@@ -68,7 +68,7 @@
   {
     "id": 7,
     "name": "Grass Snake",
-    "type": ["reptile", "freshwater"],
+    "type": ["reptile", "grass"],
     "regions_found": ["England", "Wales"],
     "sprite": "/images/grass_snake.png",
     "stage": 1,
@@ -101,7 +101,7 @@
   {
     "id": 10,
     "name": "Blue Tit",
-    "type": ["woodland", "flying"],
+    "type": ["grass", "flying"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/bluetit.png",
     "stage": 1,
@@ -123,7 +123,7 @@
   {
     "id": 12,
     "name": "European Badger",
-    "type": ["woodland"],
+    "type": ["grass"],
     "regions_found": ["England", "Scotland", "Wales"],
     "sprite": "/images/badger.png",
     "stage": 1,
@@ -134,7 +134,7 @@
   {
     "id": 13,
     "name": "Grey Squirrel",
-    "type": ["woodland", "urban"],
+    "type": ["grass", "urban"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/grey_squirrel.png",
     "stage": 1,
@@ -145,7 +145,7 @@
   {
     "id": 14,
     "name": "Common Lizard",
-    "type": ["reptile", "woodland"],
+    "type": ["reptile", "grass"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/common_lizard.png",
     "stage": 1,
@@ -189,7 +189,7 @@
   {
     "id": 18,
     "name": "Barn Owl",
-    "type": ["flying", "woodland"],
+    "type": ["flying", "grass"],
     "regions_found": ["England", "Wales", "Scotland", "Northern Ireland"],
     "sprite": "/images/barn_owl.png",
     "stage": 1,
@@ -200,7 +200,7 @@
   {
     "id": 19,
     "name": "Red Deer",
-    "type": ["woodland"],
+    "type": ["grass"],
     "regions_found": ["Scotland", "England", "Wales"],
     "sprite": "/images/red_deer.png",
     "stage": 1,
@@ -211,7 +211,7 @@
   {
     "id": 20,
     "name": "House Sparrow",
-    "type": ["urban", "flying"],
+    "type": ["grass", "flying"],
     "regions_found": ["England", "Scotland", "Wales", "Northern Ireland"],
     "sprite": "/images/house_sparrow.png",
     "stage": 1,
