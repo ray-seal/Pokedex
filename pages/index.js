@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { useRouter } from 'next/router';
-import wildlifeJournal from '../public/wildlifejournal.json';
 
 const ITEMS = [
   { key: 'pokeballs', name: 'Small Net', emoji: '🕸️', type: 'ball' },
@@ -38,16 +37,23 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [locationSelect, setLocationSelect] = useState(LOCATIONS[0]);
   const [showInventory, setShowInventory] = useState(false);
+  const [wildlifeJournal, setWildlifeJournal] = useState([]);
   const router = useRouter();
+
+  // SSR-safe: fetch wildlifeJournal on client
+  useEffect(() => {
+    fetch('/wildlifejournal.json')
+      .then(res => res.json())
+      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []));
+  }, []);
 
   // Wait for game to load
   if (!game) return <p>Loading...</p>;
 
-  // Always use fallback for journal
   const journal = Array.isArray(game.journal) ? game.journal : [];
-  // Always use fallback for team
   const team = Array.isArray(game.team) ? game.team : [];
 
+  // Sync selectedTeam with context
   useEffect(() => {
     setSelectedTeam(team);
   }, [game.team]);
@@ -65,7 +71,7 @@ export default function Home() {
       return;
     }
     setMessage(`A wild ${grassAnimal.name} appeared!`);
-    // TODO: Add encounter/capture logic if needed
+    // You might want to add to journal or trigger encounter here
   }
 
   function goFreshwaterFishing() {
@@ -120,7 +126,7 @@ export default function Home() {
     });
   }
 
-  // Medals
+  // Medals logic
   const medals = [];
   if (journal.length >= 3) medals.push("Bronze");
   if (journal.length >= 6) medals.push("Silver");
@@ -206,7 +212,7 @@ export default function Home() {
         {/* Current Team Display */}
         <div style={{margin: '10px 0'}}>
           <b>Current Team:</b>
-          {team.length > 0 ? (
+          {team.length > 0 && wildlifeJournal.length > 0 ? (
             team.map(id => {
               const animal = wildlifeJournal.find(w => w.id === id);
               return animal ? (
@@ -221,7 +227,7 @@ export default function Home() {
             Change Team
           </button>
         </div>
-        {showTeamSelect && (
+        {showTeamSelect && wildlifeJournal.length > 0 && (
           <div style={{ margin: "12px 0", background:'#fff', border:'1px solid #bbb', borderRadius:8, padding:12 }}>
             <b>Choose up to 6 animals for your team:</b>
             <div style={{display:'flex', flexWrap:'wrap', margin:'10px 0', gap:8}}>
