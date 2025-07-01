@@ -50,6 +50,7 @@ const DEFAULT_GAME = {
 
 export default function Home() {
   const router = useRouter();
+  // Game state and wildlife journal are both client-only
   const [game, setGame] = useState(null);
   const [wildlifeJournal, setWildlifeJournal] = useState(null);
   const [message, setMessage] = useState('');
@@ -57,36 +58,30 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
 
-  // Load game state from localStorage (client-side only)
+  // Load game from localStorage only on client
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = window.localStorage.getItem('game');
-    let g;
-    if (saved) {
-      try {
-        g = JSON.parse(saved);
-      } catch {
-        g = { ...DEFAULT_GAME };
-      }
-    } else {
-      g = { ...DEFAULT_GAME };
+    try {
+      const saved = window.localStorage.getItem('game');
+      setGame(saved ? JSON.parse(saved) : { ...DEFAULT_GAME });
+    } catch {
+      setGame({ ...DEFAULT_GAME });
     }
-    setGame(g);
   }, []);
 
-  // Persist game state to localStorage
+  // Persist game changes to localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (game) {
+    if (typeof window !== 'undefined' && game) {
       window.localStorage.setItem('game', JSON.stringify(game));
     }
   }, [game]);
 
-  // Fetch wildlifeJournal.json on client
+  // Fetch wildlife journal data from /public
   useEffect(() => {
     fetch('/wildlifejournal.json')
       .then(res => res.json())
-      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []));
+      .then(data => setWildlifeJournal(Array.isArray(data) ? data : []))
+      .catch(() => setWildlifeJournal([]));
   }, []);
 
   // Sync selectedTeam with game.team
@@ -94,13 +89,12 @@ export default function Home() {
     if (game && Array.isArray(game.team)) setSelectedTeam(game.team);
   }, [game?.team]);
 
-  // Defensive empty arrays
-  const journal = Array.isArray(game?.journal) ? game.journal : [];
-  const team = Array.isArray(game?.team) ? game.team : [];
+  if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
-  // Helper: Get random animal by type
+  const journal = Array.isArray(game.journal) ? game.journal : [];
+  const team = Array.isArray(game.team) ? game.team : [];
+
   function getRandomFromType(type) {
-    if (!wildlifeJournal) return null;
     const pool = wildlifeJournal.filter(a => Array.isArray(a.type) && a.type.includes(type));
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -113,7 +107,6 @@ export default function Home() {
       return;
     }
     setMessage(`A wild ${grassAnimal.name} appeared!`);
-    // Add to journal? (optional for your logic)
   }
 
   function goFreshwaterFishing() {
@@ -167,15 +160,12 @@ export default function Home() {
     });
   }
 
-  // Medals logic
+  // Medals
   const medals = [];
   if (journal.length >= 3) medals.push("Bronze");
   if (journal.length >= 6) medals.push("Silver");
   if (journal.length >= 12) medals.push("Gold");
   if (journal.length >= 18) medals.push("Platinum");
-
-  // Block UI until both are loaded client-side
-  if (!game || !wildlifeJournal) return <p>Loading...</p>;
 
   return (
     <main style={{
