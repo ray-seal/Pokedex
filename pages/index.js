@@ -4,7 +4,6 @@ import { useGame } from '../context/GameContext';
 import SatNav from '../components/SatNav';
 import ArenaChallenge from '../components/ArenaChallenge';
 import { counties } from '../data/regions';
-import wildlifejournal from '../public/wildlifejournal.json';
 import { getPokemonStats } from '../lib/pokemonStats';
 
 const ALL_MEDALS = [
@@ -60,18 +59,41 @@ function getStartingLevel(animal) {
 
 export default function Home() {
   const { game, setGame, reloadGame } = useGame();
+  const [wildlifejournal, setWildlifejournal] = useState([]);
+  const [loadingJournal, setLoadingJournal] = useState(true);
+  const [journalError, setJournalError] = useState(null);
+
   const [team, setTeam] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [showArena, setShowArena] = useState(false);
   const [arenaUnlockMsg, setArenaUnlockMsg] = useState('');
   const [encounter, setEncounter] = useState(null);
   const [encounterMsg, setEncounterMsg] = useState("");
+  const [chosenNet, setChosenNet] = useState(null);
+
   const router = useRouter();
 
   const currentCounty =
     game?.location ||
     router.query.county ||
     (counties.length > 0 ? counties[0].id : '');
+
+  // Load wildlife journal JSON from public folder
+  useEffect(() => {
+    fetch('/wildlifejournal.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load wildlife journal');
+        return res.json();
+      })
+      .then((data) => {
+        setWildlifejournal(data);
+        setLoadingJournal(false);
+      })
+      .catch((err) => {
+        setJournalError(err.message);
+        setLoadingJournal(false);
+      });
+  }, []);
 
   // Reload on tab focus for up-to-date state
   useEffect(() => {
@@ -89,6 +111,9 @@ export default function Home() {
     if (!game.team) game.team = [];
     if (!game.duplicates) game.duplicates = {};
     if (!game.wildlifejournal) game.wildlifejournal = [];
+    if (!game.boot) game.boot = 0;
+    if (!game.lostLure) game.lostLure = 0;
+
     const newTeam = game.team.map(animal => {
       const stats = getPokemonStats(animal);
       return {
@@ -135,178 +160,181 @@ export default function Home() {
     });
   }
 
-  function handleSearchGrass() {
-    const wildPool = wildlifejournal.filter(a => !a.legendary);
-    const random = wildPool[Math.floor(Math.random() * wildPool.length)];
-    setEncounter(random);
-    setEncounterMsg("");
-    setChosenNet(null);
+  // Utility: pick random from array
+  function getRandomFromArray(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
-
-  // This will be called when user selects a net and clicks "Use Net"
-  function handleCatchWithNet(netKey) {
-    if (!game[netKey] || game[netKey] < 1) {
-      setEncounterMsg("You don't have any of that net left!");
-      return;
-    }
-    const alreadyCaught = (game.wildlifejournal || []).includes(encounter.id);
-    const newCount = (game[netKey] || 0) - 1;
-    let newJournal = [...(game.wildlifejournal || [])];
-    let newDuplicates = { ...(game.duplicates || {}) };
-    let msg = "";
-
-    if (!alreadyCaught) {
-      newJournal.push(encounter.id);
-      msg = `You caught a ${encounter.name}!`;
-    } else {
-      newDuplicates[encounter.id] = (newDuplicates[encounter.id] || 0) + 1;
-      msg = `You caught another ${encounter.name}! (Added to duplicates for Lab)`;
-    }
-
-    const updatedGame = {
-      ...game,
-      [netKey]: newCount,
-      wildlifejournal: newJournal,
-      duplicates: newDuplicates
-    };
-
-    setGame(updatedGame);
-    setEncounterMsg(msg);
-    setChosenNet(null);
-  }
-
-  const handleResetProgress = () => {
-    if (window.confirm("Are you sure you want to reset ALL progress? This cannot be undone!")) {
-      localStorage.clear();
-      window.location.href = "/";
-    }
-  };
 
   // Helper: does the user have any nets?
   function userHasAnyNet() {
     return NET_TYPES.some(nt => (game[nt.key] || 0) > 0);
   }
 
-  const [chosenNet, setChosenNet] = useState(null);
-  const [message, setMessage] = useState('');
+  // === UPDATED SEARCH GRASS (only non-legendary grass type) ===
+  function handleSearchGrass() {
+    if (loadingJournal || journalError) {
+      setEncounterMsg("Loading wildlife data, please wait...");
+      return;
+    }
+    const wildPool = wildlifejournal.filter(a => a.type === "grass" && !a.legendary);
+    if (wildPool.length === 0) {
+      setEncounter(null);
+      setEncounterMsg("No grass wildlife found here.");
+      return;
+    }
+    const random = getRandomFromArray(wildPool);
+    setEncounter(random);
+    setEncounterMsg("");
+    setChosenNet(null);
+  }
+
+  // === FRESHWATER FISHING ===
+  function handleFreshwaterFishing() {
+    if (loadingJournal || journalError) {
+      setEncounterMsg("Loading wildlife data, please wait...");
+      return;
+    }
+
+    // 20% chance boot or lost lure
+    if (Math.random() < 0.2) {
+      const foundItem = Math.random() < 0.5 ? "boot" : "lostLure";
+      setEncounter(null);
+      setEncounterMsg(`You fished up a ${foundItem === "boot" ? "Boot" : "Lost Lure"}!`);
+      setGame(g => ({ ...g, [foundItem]: (g[foundItem] || 0) + 1 }));
+      return;
+    }
+
+    // Pick random freshwater animal (non-legendary)
+    const wildPool = wildlifejournal.filter(a => a.type === "freshwater" && !a.legendary);
+    if (wildPool.length === 0) {
+      setEncounter(null);
+      setEncounterMsg("No freshwater wildlife found here.");
+      return;
+    }
+    const random = getRandomFromArray(wildPool);
+    setEncounter(random);
+    setEncounterMsg("");
+    setChosenNet(null);
+  }
+
+  // === SALTWATER FISHING ===
+  function handleSaltwaterFishing() {
+    if (loadingJournal || journalError) {
+      setEncounterMsg("Loading wildlife data, please wait...");
+      return;
+    }
+
+    if (!game.saltwaterRod) {
+      setEncounterMsg("You need to purchase a saltwater rod to fish here.");
+      setEncounter(null);
+      return;
+    }
+
+    // 20% chance boot or lost lure
+    if (Math.random() < 0.2) {
+      const foundItem = Math.random() < 0.5 ? "boot" : "lostLure";
+      setEncounter(null);
+      setEncounterMsg(`You fished up a ${foundItem === "boot" ? "Boot" : "Lost Lure"}!`);
+      setGame(g => ({ ...g, [foundItem]: (g[foundItem] || 0) + 1 }));
+      return;
+    }
+
+    // Pick random saltwater animal (non-legendary)
+    const wildPool = wildlifejournal.filter(a => a.type === "saltwater" && !a.legendary);
+    if (wildPool.length === 0) {
+      setEncounter(null);
+      setEncounterMsg("No saltwater wildlife found here.");
+      return;
+    }
+    const random = getRandomFromArray(wildPool);
+    setEncounter(random);
+    setEncounterMsg("");
+    setChosenNet(null);
+  }
+
+  // Use net on current encounter
+  function handleCatchWithNet(netKey) {
+    if (!encounter) return;
+    if (!game[netKey] || game[netKey] <= 0) {
+      setEncounterMsg(`You don't have any ${netKey}.`);
+      return;
+    }
+
+    // Catch logic
+    const catchRate = 50 + (team[activeIdx]?.level || 5) * 2; // Example catch rate formula
+    const roll = Math.random() * 100;
+    if (roll <= catchRate) {
+      // Success
+      setEncounterMsg(`You caught a ${encounter.name}!`);
+      setGame(g => {
+        // Add to team or duplicates
+        const newTeam = [...(g.team || [])];
+        if (newTeam.length < 6) {
+          newTeam.push({ ...encounter, level: getStartingLevel(encounter), xp: 0 });
+        } else {
+          g.duplicates = g.duplicates || {};
+          g.duplicates[encounter.name] = (g.duplicates[encounter.name] || 0) + 1;
+        }
+        // Consume one net
+        g[netKey] = (g[netKey] || 1) - 1;
+        localStorage.setItem("gameState", JSON.stringify(g));
+        return { ...g, team: newTeam };
+      });
+      setEncounter(null);
+    } else {
+      setEncounterMsg(`The ${encounter.name} escaped!`);
+    }
+  }
 
   return (
     <>
       <SatNav />
-      <div className="p-4 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Wildlife Exploration Game</h1>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold">Current Location</h2>
-          <p>{countyInfo ? countyInfo.name : 'Unknown'}</p>
-        </div>
+      <main>
+        <h1>Wildlife Hunting & Fishing</h1>
 
-        <div className="mb-6">
-          <button
-            onClick={handleSearchGrass}
-            className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded"
-            disabled={!userHasAnyNet()}
-          >
-            Search the Grass for Wildlife
-          </button>
-          {!userHasAnyNet() && (
-            <p className="text-red-600 mt-2">You need at least one net to search!</p>
-          )}
-        </div>
+        <section>
+          <h2>Current Location: {countyInfo?.name || currentCounty}</h2>
 
-        {encounter && (
-          <div className="mb-6 border p-4 rounded bg-gray-100">
-            <h3 className="text-lg font-bold mb-2">Encountered: {encounter.name}</h3>
-            <p>{encounter.description || 'A wild creature!'}</p>
-            <p>Level: {getStartingLevel(encounter)}</p>
+          <div>
+            <button onClick={handleSearchGrass}>Search Grass</button>
+            <button onClick={handleFreshwaterFishing}>Freshwater Fishing</button>
+            <button onClick={handleSaltwaterFishing}>Saltwater Fishing</button>
+          </div>
 
-            <div className="mt-4">
-              <h4 className="font-semibold">Choose a Net to Catch</h4>
-              <div className="flex gap-2 mt-2">
+          {encounterMsg && <p>{encounterMsg}</p>}
+
+          {encounter && (
+            <div>
+              <h3>Encountered: {encounter.name}</h3>
+              <p>Type: {encounter.type}</p>
+              <p>Stage: {encounter.stage}</p>
+              <p>Legendary: {encounter.legendary ? "Yes" : "No"}</p>
+
+              <div>
+                <h4>Use a Net to Catch:</h4>
                 {NET_TYPES.map(({ key, label, emoji }) => (
                   <button
                     key={key}
-                    className={`px-3 py-1 border rounded ${
-                      chosenNet === key ? 'bg-blue-500 text-white' : 'bg-white text-black'
-                    }`}
-                    onClick={() => setChosenNet(key)}
-                    disabled={!game[key] || game[key] < 1}
-                    title={`${label} (${game[key] || 0} left)`}
+                    disabled={!game[key] || game[key] <= 0}
+                    onClick={() => handleCatchWithNet(key)}
                   >
                     {emoji} {label} ({game[key] || 0})
                   </button>
                 ))}
               </div>
-              <button
-                onClick={() => {
-                  if (chosenNet) {
-                    handleCatchWithNet(chosenNet);
-                  } else {
-                    setEncounterMsg("Please choose a net first.");
-                  }
-                }}
-                className="mt-3 bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded"
-              >
-                Use Net
-              </button>
-              {encounterMsg && <p className="mt-2 text-green-700">{encounterMsg}</p>}
             </div>
+          )}
+
+          <div>
+            <h4>Your Boots: {game.boot || 0}</h4>
+            <h4>Your Lost Lures: {game.lostLure || 0}</h4>
           </div>
-        )}
+        </section>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold">Your Team</h2>
-          {team.length === 0 ? (
-            <p>You have no animals on your team yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {team.map((animal, idx) => (
-                <li
-                  key={animal.id}
-                  className={`p-2 border rounded cursor-pointer ${
-                    idx === activeIdx ? 'bg-yellow-200' : 'bg-white'
-                  }`}
-                  onClick={() => setActiveIdx(idx)}
-                >
-                  {animal.name} (Lvl {animal.level}) HP: {animal.hp}/{animal.maxhp}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <ArenaChallenge onMedalEarned={handleArenaMedal} />
 
-        <div className="mb-6">
-          <button
-            onClick={() => setShowArena(true)}
-            className="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded"
-          >
-            Challenge Arena
-          </button>
-          {arenaUnlockMsg && (
-            <p className="mt-2 text-indigo-600 font-semibold">{arenaUnlockMsg}</p>
-          )}
-        </div>
-
-        {showArena && (
-          <ArenaChallenge
-            team={team}
-            onClose={() => setShowArena(false)}
-            onWin={(medalTitle) => {
-              handleArenaMedal(medalTitle);
-              setShowArena(false);
-            }}
-          />
-        )}
-
-        <div className="mt-10">
-          <button
-            onClick={handleResetProgress}
-            className="bg-red-700 hover:bg-red-900 text-white px-4 py-2 rounded"
-          >
-            Reset All Progress
-          </button>
-        </div>
-      </div>
+      </main>
     </>
   );
 }
