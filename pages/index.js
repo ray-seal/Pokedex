@@ -45,7 +45,7 @@ const DEFAULT_GAME = {
   fullheals: 0,
   boot: 0,
   lure: 0,
-  coins: 100, // <-- Added coins to match store
+  coins: 100,
   location: LOCATIONS[0],
 };
 
@@ -57,8 +57,8 @@ export default function Home() {
   const [showTeamSelect, setShowTeamSelect] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState([]);
   const [showInventory, setShowInventory] = useState(false);
+  const [wildEncounter, setWildEncounter] = useState(null);
 
-  // Defensive parse
   const getNum = v => typeof v === "string" ? parseInt(v, 10) || 0 : (v || 0);
 
   useEffect(() => {
@@ -104,7 +104,34 @@ export default function Home() {
       return;
     }
     const found = candidates[Math.floor(Math.random() * candidates.length)];
-    setMessage(`You found a wild ${found.name}!`);
+    setWildEncounter(found);
+    setMessage(`🌾 A wild ${found.name} appeared! Choose a net to catch it.`);
+  }
+
+  function tryCatch(animal, ballKey) {
+    const updated = { ...game };
+    updated[ballKey] = getNum(updated[ballKey]) - 1;
+
+    const successChance = {
+      pokeballs: 0.4,
+      greatballs: 0.6,
+      ultraballs: 0.8,
+      masterballs: 1.0
+    }[ballKey];
+
+    const caught = Math.random() < successChance;
+    if (caught) {
+      if (!updated.journal.includes(animal.id)) {
+        updated.journal = [...updated.journal, animal.id];
+        setMessage(`🎉 You caught ${animal.name} with a ${ITEMS.find(i => i.key === ballKey).name}!`);
+      } else {
+        setMessage(`🎉 You caught another ${animal.name}!`);
+      }
+    } else {
+      setMessage(`😢 ${animal.name} escaped your ${ITEMS.find(i => i.key === ballKey).name}!`);
+    }
+    setWildEncounter(null);
+    setGame(updated);
   }
 
   function goFreshwaterFishing() {
@@ -139,9 +166,9 @@ export default function Home() {
     } else {
       if (!updated.journal.includes(catchItem.id)) {
         updated.journal = [...updated.journal, catchItem.id];
-        setMessage(`You caught a ${catchItem.name}!`);
+        setMessage(`🎣 You caught a ${catchItem.name}!`);
       } else {
-        setMessage(`You caught another ${catchItem.name}!`);
+        setMessage(`🎣 You caught another ${catchItem.name}!`);
       }
     }
     setGame(updated);
@@ -179,9 +206,9 @@ export default function Home() {
     } else {
       if (!updated.journal.includes(catchItem.id)) {
         updated.journal = [...updated.journal, catchItem.id];
-        setMessage(`You caught a ${catchItem.name}!`);
+        setMessage(`🪝 You caught a ${catchItem.name}!`);
       } else {
-        setMessage(`You caught another ${catchItem.name}!`);
+        setMessage(`🪝 You caught another ${catchItem.name}!`);
       }
     }
     setGame(updated);
@@ -199,13 +226,9 @@ export default function Home() {
 
   function toggleTeamMember(id) {
     setSelectedTeam(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(i => i !== id);
-      } else if (prev.length < 6) {
-        return [...prev, id];
-      } else {
-        return prev;
-      }
+      if (prev.includes(id)) return prev.filter(i => i !== id);
+      if (prev.length < 6) return [...prev, id];
+      return prev;
     });
   }
 
@@ -251,162 +274,110 @@ export default function Home() {
               <li key={item.key} style={{
                 fontSize: 18,
                 marginBottom: 12,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12
+                display: '                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '4px 8px',
+                borderBottom: '1px solid #555'
               }}>
-                <span style={{ fontSize: 22 }}>{item.emoji}</span>
-                <span>{item.name}</span>
-                <b style={{ marginLeft: 2 }}>{getNum(game[item.key])}</b>
+                <span>{item.emoji} {item.name}</span>
+                <span>x{getNum(game[item.key])}</span>
               </li>
             )}
-            <li style={{
-              fontSize: 18,
-              margin: '8px 0 0 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12
-            }}>
-              <span style={{ fontSize: 22 }}>🪙</span>
-              <span>Coins</span>
-              <b style={{ marginLeft: 2 }}>{getNum(game.coins)}</b>
-            </li>
           </ul>
         )}
       </div>
 
-      <div style={{ paddingTop: 70, maxWidth: 480, margin: "0 auto" }}>
-        <h1>Wildlife Hunter</h1>
-        <div style={{ margin: "18px 0" }}>
-          <label>
-            <b>Current Location: </b>
-            <select value={game.location || LOCATIONS[0]} onChange={handleLocationChange}>
-              {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-            </select>
-          </label>
-        </div>
+      <section style={{ padding: 16, maxWidth: 720 }}>
+        <h1>🌿 Wildlife Adventures</h1>
+        <p>📍 Location:
+          <select value={game.location} onChange={handleLocationChange} style={{ marginLeft: 8 }}>
+            {LOCATIONS.map(loc => <option key={loc}>{loc}</option>)}
+          </select>
+        </p>
         {ARENAS[game.location] && (
-          <div style={{ margin: '12px 0', padding: '10px', border: '2px solid #888', borderRadius: 8, background: '#ffe' }}>
-            <h2>{ARENAS[game.location].emoji} {ARENAS[game.location].name}</h2>
-            <button className="poke-button" style={{marginTop:8}}>🏆 Enter Arena Battle</button>
+          <p>🏟️ Arena: {ARENAS[game.location].name}</p>
+        )}
+
+        <div style={{ margin: '12px 0' }}>
+          <button onClick={searchLongGrass}>🌾 Search Long Grass</button>
+          <button onClick={goFreshwaterFishing}>🎣 Fish Freshwater</button>
+          <button onClick={goSaltwaterFishing}>🪝 Fish Saltwater</button>
+          <button onClick={() => setShowTeamSelect(true)}>👥 Choose Team</button>
+        </div>
+
+        {message && <p style={{ fontSize: 16, marginTop: 8 }}>{message}</p>}
+
+        {wildEncounter && (
+          <div style={{
+            background: '#fff',
+            padding: 16,
+            border: '2px solid #444',
+            borderRadius: 8,
+            marginTop: 16
+          }}>
+            <h3>🐾 Wild Encounter!</h3>
+            <p>A wild <strong>{wildEncounter.name}</strong> appeared!</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {['pokeballs', 'greatballs', 'ultraballs', 'masterballs']
+                .filter(key => getNum(game[key]) > 0)
+                .map(key => {
+                  const item = ITEMS.find(i => i.key === key);
+                  return (
+                    <button key={key} onClick={() => tryCatch(wildEncounter, key)}>
+                      {item?.emoji} {item?.name} (x{getNum(game[key])})
+                    </button>
+                  );
+                })}
+            </div>
           </div>
         )}
-        <div style={{margin: '10px 0'}}>
-          <b>Current Team:</b>
-          {filteredTeam.length > 0 ? (
-            filteredTeam.map(id => {
-              const animal = caughtAnimals.find(a => a.id === id);
-              return animal ? (
-                <span key={id} style={{marginLeft:8}}>
-                  <img src={animal.sprite} alt={animal.name} width={30} style={{verticalAlign:'middle'}}/>
-                  {animal.name}
-                </span>
-              ) : null;
-            })
-          ) : <span style={{color:'#888', marginLeft:8}}>No team selected</span>}
-          <button className="poke-button" style={{marginLeft:8}} onClick={() => setShowTeamSelect(true)}>
-            Change Team
-          </button>
-        </div>
-        {showTeamSelect && caughtAnimals.length > 0 && (
-          <div style={{ margin: "12px 0", background:'#fff', border:'1px solid #bbb', borderRadius:8, padding:12 }}>
-            <b>Choose up to 6 animals for your team:</b>
-            <div style={{display:'flex', flexWrap:'wrap', margin:'10px 0', gap:8}}>
+
+        {showTeamSelect && (
+          <div style={{ background: '#fff', padding: 16, marginTop: 16 }}>
+            <h3>🧢 Select Your Team (Max 6)</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {caughtAnimals.map(animal => (
-                <button key={animal.id}
-                  style={{
-                    border: selectedTeam.includes(animal.id) ? '2px solid #308c3e' : '1px solid #ccc',
-                    background: selectedTeam.includes(animal.id) ? '#c7f7d9' : '#f9f9f9',
-                    borderRadius: '6px',
-                    margin: 2,
-                    padding: '6px 10px',
-                    cursor: 'pointer',
-                  }}
+                <button
+                  key={animal.id}
                   onClick={() => toggleTeamMember(animal.id)}
-                  disabled={!selectedTeam.includes(animal.id) && selectedTeam.length >= 6}
+                  style={{
+                    padding: 8,
+                    background: selectedTeam.includes(animal.id) ? '#4caf50' : '#ccc',
+                    color: '#000'
+                  }}
                 >
-                  <img src={animal.sprite} alt={animal.name} width={26} style={{verticalAlign:'middle'}} /> {animal.name}
+                  {animal.name}
                 </button>
               ))}
             </div>
-            <button className="poke-button" onClick={handleTeamChange}>Set Team</button>
-            <button className="poke-button" style={{marginLeft:8}} onClick={()=>setShowTeamSelect(false)}>Cancel</button>
+            <button onClick={handleTeamChange} style={{ marginTop: 12 }}>✅ Confirm Team</button>
           </div>
         )}
-        <div style={{margin: '10px 0'}}>
-          <b>Medals:</b> {medals.length ? medals.map(m => (
-            <span key={m} style={{ marginRight: 10, fontSize: 22 }}>🏅{m}</span>
-          )) : <span style={{color:'#888'}}>None yet!</span>}
+
+        <div style={{ marginTop: 32 }}>
+          <h2>📓 Journal ({journal.length})</h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {caughtAnimals.map(animal => (
+              <div key={animal.id} style={{
+                padding: 8,
+                border: '1px solid #444',
+                borderRadius: 6,
+                background: '#eee'
+              }}>
+                <strong>{animal.name}</strong><br />
+                <span>{animal.type?.join(', ')}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <button className="poke-button" style={{margin:'8px 0'}} onClick={()=>router.push('/wildlifejournal')}>📖 Wildlife Journal</button>
-        <div style={{margin: '20px 0'}}>
-          <button
-            className='poke-button'
-            onClick={searchLongGrass}
-            style={{ marginRight: 8 }}
-          >
-            🌾 Search Long Grass
-          </button>
-          <button
-            className='poke-button'
-            disabled={getNum(game.fwrod) < 1 || getNum(game.maggots) < 1}
-            onClick={goFreshwaterFishing}
-            style={{ margin: '0 8px' }}
-            title={
-              getNum(game.fwrod) < 1
-                ? 'Requires Freshwater Rod'
-                : getNum(game.maggots) < 1
-                ? 'Requires Maggots'
-                : ''
-            }
-          >
-            🎣 Go Freshwater Fishing
-          </button>
-          <button
-            className='poke-button'
-            disabled={getNum(game.swrod) < 1 || getNum(game.lugworm) < 1}
-            onClick={goSaltwaterFishing}
-            style={{ margin: '0 8px' }}
-            title={
-              getNum(game.swrod) < 1
-                ? 'Requires Saltwater Rod'
-                : getNum(game.lugworm) < 1
-                ? 'Requires Lug-worms'
-                : ''
-            }
-          >
-            🪝 Go Saltwater Fishing
-          </button>
-        </div>
-        <p style={{ marginTop: 16 }}>{message}</p>
-        <button className='poke-button' onClick={() => router.push('/store')}>Go to Store</button>
-        <button className='poke-button' onClick={() => router.push('/bag')}>Open Inventory</button>
-      </div>
-      <style jsx>{`
-        .poke-button {
-          border: 1px solid #ccc;
-          background: #f9f9f9;
-          padding: 10px 18px;
-          border-radius: 7px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
-          margin: 6px 0;
-          cursor: pointer;
-          color: #222;
-          text-decoration: none;
-          font-family: inherit;
-          font-size: 1rem;
-          display: inline-block;
-          transition: background 0.18s, border 0.18s;
-        }
-        .poke-button:hover:enabled {
-          background: #e0e0e0;
-          border-color: #888;
-        }
-        .poke-button:disabled {
-          opacity: 0.45;
-          cursor: not-allowed;
-        }
-      `}</style>
+
+        {medals.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <h3>🏅 Medals</h3>
+            <p>{medals.join(', ')}</p>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
